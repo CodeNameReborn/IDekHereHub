@@ -2317,7 +2317,7 @@ end
                     local AllMon = workspace.Monster:FindFirstChild("Boss") or workspace.Monster:FindFirstChild("Mon")
                     if AllMon then
                         for i, Mon in ipairs(AllMon:GetChildren()) do
-                            if Mon:FindFirstChild("Humanoid") and Mon:FindFirstChild("HumanoidRootPart") and Mon.Humanoid.Health <= 0 then
+                            if Mon:FindFirstChild("Humanoid") and Mon:FindFirstChild("HumanoidRootPart") and Mon.Humanoid.Health > 0 then
                                 local monHRP = Mon.HumanoidRootPart
                                 local distance = (hrp.Position - monHRP.Position).Magnitude
                                 if distance <= _G.SST.Select_Distance_Aura then
