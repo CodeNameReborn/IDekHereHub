@@ -2116,6 +2116,7 @@ function EquipItem(ToolSe)
 end
 -- Ken Haki (Auto) --
 function kenhaki()
+    local NamePlayer = game.GetService("Players").LocalPlayer.Name
 	if game:GetService("Workspace").PlayerCharacters.NamePlayer.Services.KenOpen.Value == false then
 		game:GetService("ReplicatedStorage"):WaitForChild("Chest"):WaitForChild("Remotes"):WaitForChild("Functions"):WaitForChild("KenEvent"):InvokeServer()
 	end
@@ -2123,32 +2124,32 @@ end
 -- AimSkill UseSkill --
 function UseSkill(skill, CFrameMon)
     local remote = game:GetService("ReplicatedStorage").Chest.Remotes.Functions.SkillAction
-    remote:InvokeServer(TypeWeapon .. "_" .. WeaPon_Select .. "_" .. skill, { 
+    remote:InvokeServer(_G.TypeWeapon .. "_" .. _G.RealWeaponSelect .. "_" .. skill, { 
         Type = "Up", 
         MouseHit = CFrameMon * CFrame.Angles(0, 0, 0) 
     })
 	game:GetService("VirtualInputManager"):SendKeyEvent(true,skill,false,game)
 	task.wait(5)
-    remote:InvokeServer(TypeWeapon .. "_" .. WeaPon_Select .. "_" .. skill, { 
+    remote:InvokeServer(_G.TypeWeapon .. "_" .. _G.RealWeaponSelect .. "_" .. skill, { 
         Type = "Down", 
         MouseHit = CFrameMon * CFrame.Angles(0, 0, 0) 
     })
 	game:GetService("VirtualInputManager"):SendKeyEvent(false,skill,false,game)
 end
 -- Check Type Weapon --
-task.spawn(function()
+spawn(function()
 	while true do
 		pcall(function()
 		local playerStats = game:GetService("Players").LocalPlayer.PlayerStats
 		    if _G.SST.Select_Weapon_Type == "Melee" then
-			    WeaPon_Select = playerStats.FightingStyle.Value
-			    TypeWeapon = "FS"
+			    _G.RealWeaponSelect = playerStats.FightingStyle.Value
+			    _G.TypeWeapon = "FS"
 		    elseif _G.SST.Select_Weapon_Type == "Sword" then
-			    WeaPon_Select = playerStats.SwordName.Value
-			    TypeWeapon = "SW"
+			    _G.RealWeaponSelect = playerStats.SwordName.Value
+			    _G.TypeWeapon = "SW"
 		    elseif _G.SST.Select_Weapon_Type == "Fruit + Melee" then
-			    WeaPon_Select = playerStats.DFName.Value 
-			    TypeWeapon = "FS"
+			    _G.RealWeaponSelect = playerStats.DFName.Value 
+			    _G.TypeWeapon = "FS"
 		    end
 		    wait()
 	    end)
@@ -2156,7 +2157,7 @@ task.spawn(function()
 end)
 -- Click Function --
 function Click()
-    game:GetService("ReplicatedStorage").Chest.Remotes.Functions.SkillAction:InvokeServer(TypeWeapon .."_"..WeaPon_Select.."_M1")
+    game:GetService("ReplicatedStorage").Chest.Remotes.Functions.SkillAction:InvokeServer(_G.TypeWeapon .."_".._G.RealWeaponSelect.."_M1")
 end
 -- Anti Pysics --
 spawn(function()
@@ -2321,7 +2322,7 @@ end
                                 local monHRP = Mon.HumanoidRootPart
                                 local distance = (hrp.Position - monHRP.Position).Magnitude
                                 if distance <= _G.SST.Select_Distance_Aura then
-                                    EquipItem(WeaPon_Select)
+                                    EquipItem(_G.RealWeaponSelect)
                                     TP(Mon.HumanoidRootPart.CFrame * _G.MethodFarm)
                                     kenhaki()
                                     Click()
