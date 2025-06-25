@@ -2325,6 +2325,7 @@ end
                                     TP(Mon.HumanoidRootPart.CFrame * _G.MethodFarm)
                                     kenhaki()
                                     Click()
+                                    print(Mon.HumanoidRootPart.CFrame)
                                 end
                             end
                         end
