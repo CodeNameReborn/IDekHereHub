@@ -2285,7 +2285,7 @@ end
     MAIN:AddLineL("")
 
     MAIN:AddSeperatorL("Level Farm")
-    MAIN:AddtoggleL("Auto Farm Level",_G.SST.Auto_Farm_Level,function(value)
+    MAIN:AddToggleL("Auto Farm Level",_G.SST.Auto_Farm_Level,function(value)
         Auto_Farm_Level = value
         _G.SST.Auto_Farm_Level = Auto_Farm_Level
         SS()
