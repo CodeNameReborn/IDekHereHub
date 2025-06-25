@@ -2270,9 +2270,8 @@ end
     local IDekhereUiMain = Update:AddWindow("IDekhere Hub", "10039618734", Enum.KeyCode.RightControl)
 
     local MAIN = IDekhereUiMain:AddTab("Main", "6026568198")
-    local AP = IDekhereUiMain:AddTab("Auto Play", "")
-	local CH = IDekhereUiMain:AddTab("Item Check", "")
-    local WH = IDekhereUiMain:AddTab("WebHook - BostFps", "")
+    local SHOP = IDekhereUiMain:AddTab("Shop", "")
+	local MISC = IDekhereUiMain:AddTab("Misc", "")
     local DEVFUNCTION = IDekhereUiMain:AddTab("", "")
     local Setting = IDekhereUiMain:AddTabH("Main Setting", "14134158045")
     
@@ -2359,6 +2358,12 @@ end
 	    Distance_Mob = value
 	    _G.SST.Distance_Mob = Distance_Mob
 	    SS()
+    end)
+
+    MAIN:AddToggleR("Auto Skill",_G.SST.Auto_skill,function(value)
+        Auto_skill = value
+        _G.SST.Auto_skill = Auto_skill
+        SS()
     end)
 
 
