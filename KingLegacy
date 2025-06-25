@@ -3,7 +3,7 @@
 
 ------------------------------------------------------ SeveSetting function
 function loadcheck()
-    local fileName = "IDekhere Hub Hub KL [ " .. game.Players.LocalPlayer.Name .. " ].json"
+    local fileName = "IDekhere Hub KL [ " .. game.Players.LocalPlayer.Name .. " ].json"
     
 
     if not isfile(fileName) then
@@ -18,7 +18,7 @@ end)
 
 
 function LoadSetting()
-    local fileName = "IDekhere Hub Hub KL [ " .. game.Players.LocalPlayer.Name .. " ].json"
+    local fileName = "IDekhere Hub KL [ " .. game.Players.LocalPlayer.Name .. " ].json"
     if isfile(fileName) then
         local fileContent = readfile(fileName)
         local success, decoded = pcall(function()
@@ -34,7 +34,7 @@ function LoadSetting()
 end
 
 function SS()
-    local fileName = "IDekhere Hub Hub KL [ " .. game.Players.LocalPlayer.Name .. " ].json"
+    local fileName = "IDekhere Hub KL [ " .. game.Players.LocalPlayer.Name .. " ].json"
     
     if isfile(fileName) then
         writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
@@ -53,7 +53,7 @@ LoadSetting()
         OCui:Destroy()
     end
     
-    local IDekhere Hub = Instance.new("ScreenGui")
+    local IDekhere = Instance.new("ScreenGui")
     local Open = Instance.new("TextButton")
     local fuckshit = Instance.new("UICorner")
     local MODILEMAGE = Instance.new("ImageLabel")
@@ -79,7 +79,7 @@ LoadSetting()
     -- ฟังก์ชันสำหรับการคลิก
     local TweenService = game:GetService("TweenService")
     ImageButton.MouseButton1Click:Connect(function()
-        local ui = game:GetService("CoreGui"):FindFirstChild("IDekhere Hub Hub") -- ค้นหา UI
+        local ui = game:GetService("CoreGui"):FindFirstChild("IDekhere Hub") -- ค้นหา UI
         if ui and ui:FindFirstChild("Main") then -- ตรวจสอบว่ามี "Main" อยู่ใน UI
             local main = ui.Main
             if main.Size.X.Offset == 600 and main.Size.Y.Offset == 400 then
@@ -140,7 +140,7 @@ LoadSetting()
      _G.SectionOn = Color3.fromRGB(0, 255, 0) 
      
     _G.Color1 = Color3.fromRGB(255,255,255)
-    do local GUI = game.CoreGui:FindFirstChild("IDekhere Hub Hub");if GUI then GUI:Destroy();end;if _G.Color == nil then
+    do local GUI = game.CoreGui:FindFirstChild("IDekhere Hub");if GUI then GUI:Destroy();end;if _G.Color == nil then
     _G.Color = Color3.fromRGB(255,255,255)
     end 
     end
@@ -216,17 +216,17 @@ LoadSetting()
         local keybind = keybind or Enum.KeyCode.RightControl
         local yoo = string.gsub(tostring(keybind),"Enum.KeyCode.","")
         
-        local IDekhere Hub_Hub = Instance.new("ScreenGui")
-        IDekhere Hub_Hub.Name = "IDekhere Hub Hub"
-        IDekhere Hub_Hub.Parent = game.CoreGui
-        IDekhere Hub_Hub.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        local IDekhere_Hub = Instance.new("ScreenGui")
+        IDekhere_Hub.Name = "IDekhere Hub"
+        IDekhere_Hub.Parent = game.CoreGui
+        IDekhere_Hub.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
     local osfunc = {}
      local osfunc2 = {}
         local Main = Instance.new("Frame")
         local WindowStrokemain = Instance.new("UIStroke")
         Main.Name = "Main"
-        Main.Parent = IDekhere Hub_Hub
+        Main.Parent = IDekhere_Hub
         Main.ClipsDescendants = true
         Main.AnchorPoint = Vector2.new(0.5,0.5)
         Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -300,7 +300,7 @@ LoadSetting()
         local NofList = Instance.new("UIListLayout")
     
         ListNof.Name = "ListNof"
-        ListNof.Parent = IDekhere Hub_Hub
+        ListNof.Parent = IDekhere_Hub
         ListNof.BackgroundColor3 = Color3.fromRGB(255,255,255)
         ListNof.BackgroundTransparency = 1.000
         ListNof.Position = UDim2.new(0.778017223, 0, -0.00217864919, 0)
@@ -410,7 +410,7 @@ LoadSetting()
         local defaultOkayColor = Color3.fromRGB(12, 12, 12)
     
         NotificationFrame.Name = "NotificationFrame"
-        NotificationFrame.Parent = IDekhere Hub_Hub
+        NotificationFrame.Parent = IDekhere_Hub
         NotificationFrame.AnchorPoint = Vector2.new(0.5, 0.5) -- ตั้งจุดยึดตรงกลาง
         NotificationFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
         NotificationFrame.BorderColor3 = SectionColor
@@ -2267,19 +2267,19 @@ function SeverHop()
 	Teleport()
 end
 ---------------------------------------------------------------- Custom Ui
-    local IDekhere HubUiMain = Update:AddWindow("IDekhere Hub Hub", "10039618734", Enum.KeyCode.RightControl)
+    local IDekhereUiMain = Update:AddWindow("IDekhere Hub", "10039618734", Enum.KeyCode.RightControl)
 
-    local MAIN = IDekhere HubUiMain:AddTab("Main", "6026568198")
-    local AP = IDekhere HubUiMain:AddTab("Auto Play", "")
-	local CH = IDekhere HubUiMain:AddTab("Item Check", "")
-    local WH = IDekhere HubUiMain:AddTab("WebHook - BostFps", "")
-    local DEVFUNCTION = IDekhere HubUiMain:AddTab("", "")
-    local Setting = IDekhere HubUiMain:AddTabH("Main Setting", "14134158045")
+    local MAIN = IDekhereUiMain:AddTab("Main", "6026568198")
+    local AP = IDekhereUiMain:AddTab("Auto Play", "")
+	local CH = IDekhereUiMain:AddTab("Item Check", "")
+    local WH = IDekhereUiMain:AddTab("WebHook - BostFps", "")
+    local DEVFUNCTION = IDekhereUiMain:AddTab("", "")
+    local Setting = IDekhereUiMain:AddTabH("Main Setting", "14134158045")
     
 ----------------------------------------------------------------- Main Left Ui
 
     MAIN:AddSeperatorL("Info")
-    MAIN:AddLabelL("Wecome To IDekhere Hub Hub Script")
+    MAIN:AddLabelL("Wecome To IDekhere Hub Script")
     MAIN:AddLabelL("Map :  - - - ")
     Date = os.date("%d" .. " " .. "%B" .. " " .. "%Y")
     MAIN:AddLabelL("Day : " .. Date)
