@@ -2162,7 +2162,7 @@ spawn(function()
             local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
             local humanoid = character and character:FindFirstChild("Humanoid")
 
-            if  then
+            if Mob_Aura then
                 if humanoidRootPart and humanoid then
                     local noclip = humanoidRootPart:FindFirstChild("BodyClip")
                     if not noclip then
@@ -2188,7 +2188,7 @@ end)
 spawn(function()
 	pcall(function()
 		game:GetService("RunService").Stepped:Connect(function()
-			if  then
+			if Mob_Aura then
 				for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
 					if v:IsA("BasePart") then
 						v.CanCollide = false    
