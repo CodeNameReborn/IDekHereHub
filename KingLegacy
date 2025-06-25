@@ -2347,7 +2347,6 @@ end
     MAIN:AddDropdownR("Select Method",{"Behind","Below","Upper"},_G.SST.Select_Method,function(value)
         Select_Method = value
         _G.SST.Select_Method = Select_Method
-        SS()
         if _G.SST.Select_Method == "Behind" then
             _G.MethodFarm = CFrame.new(0, 0, _G.SST.Distance_Mob) 
         elseif _G.SST.Select_Method == "Below" then
@@ -2357,6 +2356,7 @@ end
         else
 			_G.MethodFarm = CFrame.new(0, 0, _G.SST.Distance_Mob) 
         end
+        SS()
     end)
 
     MAIN:AddSliderR("Distance",1,100,_G.SST.Distance_Mob,function(value)
