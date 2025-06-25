@@ -2099,7 +2099,12 @@ elseif game.PlaceId == 4520749081 then
 end
 -- Teleport Function --
 function TP(Posplayer)
-    game.GetService("players").localPlayer.Character.HumonoidRootPart.CFrame = Posplayer
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    if char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.CFrame = Posplayer
+    end
 end
 -- Equip Item --
 function EquipItem(ToolSe)
