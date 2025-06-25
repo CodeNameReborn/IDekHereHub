@@ -2090,13 +2090,16 @@ end
     end
 ---------------------------------------------------------------- Main Function
 -- Code Map --
-if game.PlaceId == 6381829480 then
-	World2 = true
-	MapPlaceId = "6381829480"
-elseif game.PlaceId == 4520749081 then
-	World1 = true
-    MapPlaceId = "4520749081"
-end
+    if game.PlaceId == 15759515082 then
+        World3 = true
+	    MapPlaceId = "15759515082"
+    elseif game.PlaceId == 6381829480 then
+	    World2 = true
+	    MapPlaceId = "6381829480"
+    elseif game.PlaceId == 4520749081 then
+	    World1 = true
+	    MapPlaceId = "4520749081"
+    end
 -- Teleport Function --
 function TP(Posplayer)
     local Players = game:GetService("Players")
@@ -2109,7 +2112,7 @@ end
 -- Equip Item --
 function EquipItem(ToolSe)
 	if game.Players.LocalPlayer.Backpack:FindFirstChild(ToolSe) then
-		_G.tool = game.Players.LocalPlayer.Backpack:FindFirstChild(ToolSe)
+		getgenv().tool = game.Players.LocalPlayer.Backpack:FindFirstChild(ToolSe)
 		wait()
 		game.Players.LocalPlayer.Character.Humanoid:EquipTool(tool)
 	end
@@ -2141,15 +2144,16 @@ spawn(function()
 	while true do
 		pcall(function()
 		local playerStats = game:GetService("Players").LocalPlayer.PlayerStats
+        local FightF = playerStats.FightingStyle.Value or "None"
 		    if _G.SST.Select_Weapon_Type == "Melee" then
-			    _G.RealWeaponSelect = playerStats.FightingStyle.Value
+			    _G.RealWeaponSelect = FightF
 			    _G.TypeWeapon = "FS"
 		    elseif _G.SST.Select_Weapon_Type == "Sword" then
 			    _G.RealWeaponSelect = playerStats.SwordName.Value
 			    _G.TypeWeapon = "SW"
 		    elseif _G.SST.Select_Weapon_Type == "Fruit + Melee" then
 			    _G.RealWeaponSelect = playerStats.DFName.Value 
-			    _G.TypeWeapon = "FS"
+			    _G.TypeWeapon = "DF"
 		    end
 		    wait()
 	    end)
@@ -2160,16 +2164,15 @@ function Click()
     game:GetService("ReplicatedStorage").Chest.Remotes.Functions.SkillAction:InvokeServer(_G.TypeWeapon .."_".._G.RealWeaponSelect.."_M1")
 end
 -- Anti Pysics --
-spawn(function()
-    while wait() do 
-        pcall(function()
-            local player = game:GetService("Players").LocalPlayer
-            local character = player.Character
-            local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-            local humanoid = character and character:FindFirstChild("Humanoid")
-
-            if Mob_Aura then
-                if humanoidRootPart and humanoid then
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+player.CharacterAdded:Connect(function(character)
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local humanoid = character:WaitForChild("Humanoid")
+    spawn(function()
+        while task.wait() do
+            pcall(function()
+                if Mob_Aura then
                     local noclip = humanoidRootPart:FindFirstChild("BodyClip")
                     if not noclip then
                         local Noclip = Instance.new("BodyVelocity")
@@ -2178,17 +2181,15 @@ spawn(function()
                         Noclip.MaxForce = Vector3.new(1000000, 1000000, 1000000)
                         Noclip.Velocity = Vector3.new(0, 0, 0)
                     end
-                end
-            else
-                if humanoidRootPart then
+                else
                     local noclip = humanoidRootPart:FindFirstChild("BodyClip")
                     if noclip then
                         noclip:Destroy()
                     end
                 end
-            end
-        end)
-    end
+            end)
+        end
+    end)
 end)
 -- Noclip --
 spawn(function()
@@ -2326,7 +2327,6 @@ end
                                     TP(Mon.HumanoidRootPart.CFrame * _G.MethodFarm)
                                     kenhaki()
                                     Click()
-                                    print(Mon.HumanoidRootPart.CFrame)
                                 end
                             end
                         end
