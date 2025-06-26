@@ -2161,7 +2161,7 @@ spawn(function()
 end)
 -- Click Function --
 function Click()
-    game:GetService("ReplicatedStorage").Chest.Remotes.Functions.SkillAction:InvokeServer(_G.TypeWeapon .."_".._G.RealWeaponSelect.."_M1")
+    game:GetService("ReplicatedStorage").Chest.Remotes.Functions.SkillAction:InvokeServer(_G.TypeWeapon .."_".. _G.RealWeaponSelect.. "_M1")
 end
 -- Anti Pysics --
 local Players = game:GetService("Players")
