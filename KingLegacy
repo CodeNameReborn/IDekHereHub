@@ -2139,27 +2139,38 @@ function UseSkill(skill, CFrameMon)
     })
 	game:GetService("VirtualInputManager"):SendKeyEvent(false,skill,false,game)
 end
+-- Attack --
+spawn(function()
+    local player = game:GetService("Players").LocalPlayer
+    local playerStats = player:WaitForChild("PlayerStats")
+    
+    while true do
+        pcall(function()
+            local FightF = (playerStats:FindFirstChild("FightingStyle") and playerStats.FightingStyle.Value) or "None"
+            local Sword = (playerStats:FindFirstChild("SwordName") and playerStats.SwordName.Value) or "None"
+            local Fruit = (playerStats:FindFirstChild("DFName") and playerStats.DFName.Value) or "None"
 
-while true do
-    pcall(function()
-    local playerStats = game:GetService("Players").LocalPlayer.PlayerStats
-    local FightF = playerStats.FightingStyle.Value or "None"
-		if _G.SST.Select_Weapon_Type == "Melee" then
-			_G.RealWeaponSelect = FightF
-			_G.TypeWeapon = "FS"
-		elseif _G.SST.Select_Weapon_Type == "Sword" then
-			_G.RealWeaponSelect = playerStats.SwordName.Value
-			_G.TypeWeapon = "SW"
-		elseif _G.SST.Select_Weapon_Type == "Fruit + Melee" then
-			_G.RealWeaponSelect = playerStats.DFName.Value 
-			_G.TypeWeapon = "DF"
-		end
-    end)
-        task.wait()
-end
-
+            if _G.SST.Select_Weapon_Type == "Melee" then
+                _G.RealWeaponSelect = FightF
+                _G.TypeWeapon = "FS"
+            elseif _G.SST.Select_Weapon_Type == "Sword" then
+                _G.RealWeaponSelect = Sword
+                _G.TypeWeapon = "SW"
+            elseif _G.SST.Select_Weapon_Type == "Fruit + Melee" then
+                _G.RealWeaponSelect = Fruit
+                _G.TypeWeapon = "DF"
+            end
+        end)
+        task.wait(0.2)
+    end
+end)
+-- Click --
 function Click()
-    game:GetService("ReplicatedStorage").Chest.Remotes.Functions.SkillAction:InvokeServer(_G.TypeWeapon .."_".. _G.RealWeaponSelect.. "_M1")
+    if _G.TypeWeapon and _G.RealWeaponSelect then
+        game:GetService("ReplicatedStorage").Chest.Remotes.Functions.SkillAction:InvokeServer(
+            _G.TypeWeapon .. "_" .. _G.RealWeaponSelect .. "_M1"
+        )
+    end
 end
 -- Anti Pysics --
 local Players = game:GetService("Players")
