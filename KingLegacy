@@ -2119,7 +2119,7 @@ function EquipItem(ToolSe)
 end
 -- Ken Haki (Auto) --
 function kenhaki()
-    local NamePlayer = game.GetService("Players").LocalPlayer.Name
+    local NamePlayer = game.GetService("Players").LocalPlayer
 	if game:GetService("Workspace").PlayerCharacters.NamePlayer.Services.KenOpen.Value == false then
 		game:GetService("ReplicatedStorage"):WaitForChild("Chest"):WaitForChild("Remotes"):WaitForChild("Functions"):WaitForChild("KenEvent"):InvokeServer()
 	end
@@ -2139,28 +2139,20 @@ function UseSkill(skill, CFrameMon)
     })
 	game:GetService("VirtualInputManager"):SendKeyEvent(false,skill,false,game)
 end
--- Check Type Weapon --
-spawn(function()
-	while true do
-		pcall(function()
-		local playerStats = game:GetService("Players").LocalPlayer.PlayerStats
-        local FightF = playerStats.FightingStyle.Value or "None"
-		    if _G.SST.Select_Weapon_Type == "Melee" then
-			    _G.RealWeaponSelect = FightF
-			    _G.TypeWeapon = "FS"
-		    elseif _G.SST.Select_Weapon_Type == "Sword" then
-			    _G.RealWeaponSelect = playerStats.SwordName.Value
-			    _G.TypeWeapon = "SW"
-		    elseif _G.SST.Select_Weapon_Type == "Fruit + Melee" then
-			    _G.RealWeaponSelect = playerStats.DFName.Value 
-			    _G.TypeWeapon = "DF"
-		    end
-		    wait()
-	    end)
-    end
-end)
--- Click Function --
+
 function Click()
+    local playerStats = game:GetService("Players").LocalPlayer.PlayerStats
+    local FightF = playerStats.FightingStyle.Value or "None"
+		if _G.SST.Select_Weapon_Type == "Melee" then
+			_G.RealWeaponSelect = FightF
+			_G.TypeWeapon = "FS"
+		elseif _G.SST.Select_Weapon_Type == "Sword" then
+			_G.RealWeaponSelect = playerStats.SwordName.Value
+			_G.TypeWeapon = "SW"
+		elseif _G.SST.Select_Weapon_Type == "Fruit + Melee" then
+			_G.RealWeaponSelect = playerStats.DFName.Value 
+			_G.TypeWeapon = "DF"
+		end
     game:GetService("ReplicatedStorage").Chest.Remotes.Functions.SkillAction:InvokeServer(_G.TypeWeapon .."_".. _G.RealWeaponSelect.. "_M1")
 end
 -- Anti Pysics --
@@ -2309,32 +2301,35 @@ end
     end)
 
 
-    spawn(function()
-        while task.wait() do
-            pcall(function()
-                if _G.SST.Mob_Aura then
-                    local player = game.Players.LocalPlayer
-                    local character = player.Character or player.CharacterAdded:Wait()
-                    local hrp = character:WaitForChild("HumanoidRootPart")
-                    local AllMon = workspace.Monster:FindFirstChild("Boss") or workspace.Monster:FindFirstChild("Mon")
-                    if AllMon then
-                        for i, Mon in ipairs(AllMon:GetChildren()) do
-                            if Mon:FindFirstChild("Humanoid") and Mon:FindFirstChild("HumanoidRootPart") and Mon.Humanoid.Health > 0 then
-                                local monHRP = Mon.HumanoidRootPart
-                                local distance = (hrp.Position - monHRP.Position).Magnitude
-                                if distance <= _G.SST.Select_Distance_Aura then
-                                    EquipItem(_G.RealWeaponSelect)
-                                    TP(Mon.HumanoidRootPart.CFrame * _G.MethodFarm)
-                                    kenhaki()
-                                    Click()
-                                end
+spawn(function()
+    while true do
+        pcall(function()
+            if _G.SST.Mob_Aura then
+                local player = game.Players.LocalPlayer
+                local character = player.Character or player.CharacterAdded:Wait()
+                local hrp = character:WaitForChild("HumanoidRootPart")
+                local AllMon = workspace.Monster:FindFirstChild("Boss") or workspace.Monster:FindFirstChild("Mon")
+
+                if AllMon then
+                    for i, Mon in ipairs(AllMon:GetChildren()) do
+                        if Mon:FindFirstChild("Humanoid") and Mon:FindFirstChild("HumanoidRootPart") and Mon.Humanoid.Health > 0 then
+                            local monHRP = Mon.HumanoidRootPart
+                            local distance = (hrp.Position - monHRP.Position).Magnitude
+                            if distance <= _G.SST.Select_Distance_Aura then
+                                TP(monHRP.CFrame * _G.MethodFarm)
+                                EquipItem(_G.RealWeaponSelect)
+                                Click()
+                                kenhaki()
                             end
                         end
                     end
                 end
-            end)
-        end
-    end)
+            end
+        end)
+        task.wait()
+    end
+end)
+
 
 
 
@@ -2349,18 +2344,18 @@ end
     MAIN:AddDropdownR("Select Method",{"Behind","Below","Upper"},_G.SST.Select_Method,function(value)
         Select_Method = value
         _G.SST.Select_Method = Select_Method
-        if _G.SST.Select_Method == "Behind" then
-            _G.MethodFarm = CFrame.new(0, 0, _G.SST.Distance_Mob) 
-        elseif _G.SST.Select_Method == "Below" then
-            _G.MethodFarm = CFrame.new(0, -_G.SST.Distance_Mob, 0) * CFrame.Angles(math.rad(90), 0, 0)
-        elseif _G.SST.Select_Method == "Upper" then
-            _G.MethodFarm = CFrame.new(0, _G.SST.Distance_Mob, 0) * CFrame.Angles(math.rad(-90), 0, 0)
-        else
-			_G.MethodFarm = CFrame.new(0, 0, _G.SST.Distance_Mob) 
-        end
+            if _G.SST.Select_Method == "Behind" then
+                _G.MethodFarm = CFrame.new(0, 0, _G.SST.Distance_Mob) 
+            elseif _G.SST.Select_Method == "Below" then
+                _G.MethodFarm = CFrame.new(0, -_G.SST.Distance_Mob, 0) * CFrame.Angles(math.rad(90), 0, 0)
+            elseif _G.SST.Select_Method == "Upper" then
+                _G.MethodFarm = CFrame.new(0, _G.SST.Distance_Mob, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+            else
+			    _G.MethodFarm = CFrame.new(0, 0, _G.SST.Distance_Mob) 
+            end
         SS()
     end)
-
+    Distance_Mob = _G.SST.Distance_Mob or 7
     MAIN:AddSliderR("Distance",1,100,_G.SST.Distance_Mob,function(value)
 	    Distance_Mob = value
 	    _G.SST.Distance_Mob = Distance_Mob
