@@ -2140,7 +2140,8 @@ function UseSkill(skill, CFrameMon)
 	game:GetService("VirtualInputManager"):SendKeyEvent(false,skill,false,game)
 end
 
-function Click()
+while true do
+    pcall(function()
     local playerStats = game:GetService("Players").LocalPlayer.PlayerStats
     local FightF = playerStats.FightingStyle.Value or "None"
 		if _G.SST.Select_Weapon_Type == "Melee" then
@@ -2153,6 +2154,11 @@ function Click()
 			_G.RealWeaponSelect = playerStats.DFName.Value 
 			_G.TypeWeapon = "DF"
 		end
+    end)
+        task.wait()
+end
+
+function Click()
     game:GetService("ReplicatedStorage").Chest.Remotes.Functions.SkillAction:InvokeServer(_G.TypeWeapon .."_".. _G.RealWeaponSelect.. "_M1")
 end
 -- Anti Pysics --
