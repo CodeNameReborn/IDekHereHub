@@ -2124,7 +2124,7 @@ end
 spawn(function()
     pcall(function()
         while wait() do
-            if TP_Mon then
+            if TP_Mon or Farm_Chest then
                 local character = game:GetService("Players").LocalPlayer.Character
                 local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
                 if humanoidRootPart and not humanoidRootPart:FindFirstChild("BodyClip") then
@@ -2184,7 +2184,7 @@ spawn(function()
             if character then
                 for _, v in pairs(character:GetDescendants()) do
                     if v:IsA("BasePart") then
-                        v.CanCollide = not TP_Mon
+                        v.CanCollide = not TP_Mon or not Farm_Chest
                     end
                 end
             end
@@ -2328,10 +2328,36 @@ task.spawn(function()
     end)
 end)
 Main:AddSeperatorR("Stats")
-Main:AddMultiDropdownR("Select Stats",{"Strength","Dexterity","Vitality","Agility","Intelligence","Focus"},_G.SST.Select_Stats,function(value)
+Main:AddMultiDropdownR("Select Stats", {"Strength", "Dexterity", "Vitality", "Agility", "Intelligence", "Focus"}, _G.SST.Select_Stats or {}, function(value)
     Select_Stats = value
     _G.SST.Select_Stats = Select_Stats
     SS()
+end)
+
+Main:AddToggleR("Auto Upgreat Stats", _G.SST.Auto_Upgreat_Stats, function(value)
+    Auto_Upgreat_Stats = value
+    _G.SST.Auto_Upgreat_Stats = Auto_Upgreat_Stats
+    SS()
+end)
+
+spawn(function()
+    while wait(0.1) do -- ใส่ wait เพื่อป้องกันสแปมเซิร์ฟเวอร์
+        pcall(function()
+            if _G.SST.Auto_Upgreat_Stats and type(_G.SST.Select_Stats) == "table" then
+                for _, stat in ipairs(_G.SST.Select_Stats) do
+                    local args = {
+                        347641,
+                        "AllocateStatPoint",
+                        {
+                            Stat = stat
+                        }
+                    }
+                    game:GetService("ReplicatedStorage"):WaitForChild("ReplicaRemoteEvents"):WaitForChild("Replica_ReplicaSignal"):FireServer(unpack(args))
+                    wait(0.05) -- หน่วงเพิ่มเล็กน้อยระหว่าง stat
+                end
+            end
+        end)
+    end
 end)
 
 Main:AddToggleL("Farm Chest",_G.SST.Farm_Chest,function(a)
