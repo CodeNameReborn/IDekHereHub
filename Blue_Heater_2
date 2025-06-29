@@ -2178,19 +2178,23 @@ spawn(function()
         local RunService = game:GetService("RunService")
         local Players = game:GetService("Players")
         local LocalPlayer = Players.LocalPlayer
-
         RunService.Stepped:Connect(function()
             local character = LocalPlayer.Character
             if character then
                 for _, v in pairs(character:GetDescendants()) do
                     if v:IsA("BasePart") then
-                        v.CanCollide = not TP_Mon or not Farm_Chest
+                        if TP_Mon or not Farm_Chest then
+                            v.CanCollide = false
+                        else
+                            v.CanCollide = true
+                        end
                     end
                 end
             end
         end)
     end)
 end)
+
 
 
 ---------------------------------------------------
