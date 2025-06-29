@@ -1,5 +1,5 @@
 function loadcheck()
-    local fileName = "RebornXer Hub Blue Heater 2 [" .. game.Players.LocalPlayer.Name .. "].json"
+    local fileName = "RebornXer Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
     
     if not isfile(fileName) then
         writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
@@ -22,7 +22,7 @@ end)
 
 
 function LoadSetting()
-    local fileName = "RebornXer Hub Blue Heater 2 [" .. game.Players.LocalPlayer.Name .. "].json"
+    local fileName = "RebornXer Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
     if isfile(fileName) then
         local fileContent = readfile(fileName)
         local success, decoded = pcall(function()
@@ -38,7 +38,7 @@ function LoadSetting()
 end
 
 function SS()
-    local fileName = "RebornXer Hub Blue Heater 2 [" .. game.Players.LocalPlayer.Name .. "].json"
+    local fileName = "RebornXer Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
     
     if isfile(fileName) then
         writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
