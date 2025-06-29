@@ -14,7 +14,7 @@ pcall(function()
         Distance_Aura = "60",
         TP_Mon = false,
         Auto_Play_Again = false,
-		Black_Screen = false,
+        Black_Screen = false,
         Disable_Fall = false,
         Auto_Block = false
     }
@@ -2173,6 +2173,26 @@ function StopTweenFunc(target)
     end
 end
 
+spawn(function()
+    pcall(function()
+        local RunService = game:GetService("RunService")
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
+        RunService.Stepped:Connect(function()
+            local character = LocalPlayer.Character
+            if character then
+                for _, v in pairs(character:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.CanCollide = not TP_Mon
+                    end
+                end
+            end
+        end)
+    end)
+end)
+
+
 ---------------------------------------------------
 local RenUi = Update:AddWindow("IDekhere Hub", "10039618734", Enum.KeyCode.RightControl)
 
@@ -2235,7 +2255,6 @@ Main:AddDropdownR("Select Mode Farm",{"TP","Tween"},_G.SST.Select_Teleport_Funct
     _G.SST.Select_Teleport_Function = Select_Teleport_Function
     SS()
 end)
-
 Main:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
     Black_Screen = value
 	_G.SST.Black_Screen = Black_Screen
@@ -2308,7 +2327,12 @@ task.spawn(function()
         end
     end)
 end)
-
+Main:AddSeperatorR("Stats")
+Main:AddMultiDropdownR("Select Stats",{"Strength","Dexterity","Vitality","Agility","Intelligence","Focus"},_G.SST.Select_Stats,function(value)
+    Select_Stats = value
+    _G.SST.Select_Stats = Select_Stats
+    SS()
+end)
 
 Main:AddToggleL("Farm Chest",_G.SST.Farm_Chest,function(a)
     Farm_Chest = a
