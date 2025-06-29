@@ -2121,22 +2121,57 @@ function TP(Pos)
     end
 end
 
-
-
-
-function StopTween(target)
-        if not target then
-            StopTween = true
-            wait()
-            Tween(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame)
-            wait()
-            if game:GetService("Players").LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyClip") or game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyVelocity1") then
-                game:GetService("Players").LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyClip"):Destroy()
+spawn(function()
+    pcall(function()
+        while wait() do
+            if TP_Mon then
+                local character = game:GetService("Players").LocalPlayer.Character
+                local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart and not humanoidRootPart:FindFirstChild("BodyClip") then
+                    local Noclip = Instance.new("BodyVelocity")
+                    Noclip.Name = "BodyClip"
+                    Noclip.Parent = humanoidRootPart
+                    Noclip.MaxForce = Vector3.new(100000, 100000, 100000)
+                    Noclip.Velocity = Vector3.new(0, 0, 0)
+                end
+            else
+                local character = game:GetService("Players").LocalPlayer.Character
+                local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    local bodyClip = humanoidRootPart:FindFirstChild("BodyClip")
+                    if bodyClip then
+                        bodyClip:Destroy()
+                    end
+                end
             end
-            StopTween = false
-            Clip = false
         end
+    end)
+end)
+
+
+
+function StopTweenFunc(target)
+    local player = game:GetService("Players").LocalPlayer
+    local character = player.Character
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    if not target and hrp then
+        StopTween = true
+        wait()
+        
+        -- เรียก Tween ไปที่ตำแหน่งปัจจุบัน
+        TP(hrp.CFrame)
+        wait()
+        
+        -- ลบ BodyClip หรือ BodyVelocity1 ถ้ามี
+        local clip1 = hrp:FindFirstChild("BodyClip")
+        local clip2 = hrp:FindFirstChild("BodyVelocity1")
+        if clip1 then clip1:Destroy() end
+        if clip2 then clip2:Destroy() end
+
+        StopTween = false
+        Clip = false
     end
+end
 
 ---------------------------------------------------
 local RenUi = Update:AddWindow("IDekhere Hub", "10039618734", Enum.KeyCode.RightControl)
@@ -2279,6 +2314,7 @@ Main:AddToggleL("Farm Chest",_G.SST.Farm_Chest,function(a)
     Farm_Chest = a
 _G.SST.Farm_Chest = Farm_Chest
 SS()
+StopTweenFunc()
 end)
 
 spawn(function()
@@ -2357,7 +2393,7 @@ end)
 Main:AddToggleL("TP Mon", _G.SST.TP_Mon, function(a)
     TP_Mon = a
     _G.SST.TP_Mon = TP_Mon
-    StopTween()
+    StopTweenFunc()
     SS()
 end)
 
