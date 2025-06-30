@@ -2329,10 +2329,11 @@ task.spawn(function()
         if _G.SST.Attack_Aura then
             attackAll()
         end
+        task.wait(0.2)
     end)
 end)
 Main:AddSeperatorR("Stats")
-Main:AddMultiDropdownR("Select Stats", {"Strength", "Dexterity", "Vitality", "Agility", "Intelligence", "Focus"}, _G.SST.Select_Stats or {}, function(value)
+Main:AddMultiDropdownR("Select Stats", {"Strength", "Dexterity", "Vitality", "Agility", "Intelligence", "Focus"}, _G.SST.Select_Stats, function(value)
     Select_Stats = value
     _G.SST.Select_Stats = Select_Stats
     SS()
@@ -2345,7 +2346,7 @@ Main:AddToggleR("Auto Upgreat Stats", _G.SST.Auto_Upgreat_Stats, function(value)
 end)
 
 spawn(function()
-    while wait(0.1) do -- ใส่ wait เพื่อป้องกันสแปมเซิร์ฟเวอร์
+    while wait(0.1) do 
         pcall(function()
             if _G.SST.Auto_Upgreat_Stats and type(_G.SST.Select_Stats) == "table" then
                 for _, stat in ipairs(_G.SST.Select_Stats) do
@@ -2357,7 +2358,7 @@ spawn(function()
                         }
                     }
                     game:GetService("ReplicatedStorage"):WaitForChild("ReplicaRemoteEvents"):WaitForChild("Replica_ReplicaSignal"):FireServer(unpack(args))
-                    wait(0.05) -- หน่วงเพิ่มเล็กน้อยระหว่าง stat
+                    wait(0.05) 
                 end
             end
         end)
@@ -2373,23 +2374,22 @@ end)
 
 spawn(function()
     local lastChest = nil
-    while wait() do
+    while task.wait() do
         pcall(function()
-            if _G.SST.Farm_Chest then
-                -- ถ้า Chest อันเก่าหายไป หรือไม่มี ProximityPrompt แล้ว
-                if not lastChest or not lastChest.Parent or not lastChest:FindFirstChild("Circle.001") or not lastChest:FindFirstChild("Circle.001"):FindFirstChild("ProximityPrompt") then
-                    for i, v in pairs(workspace.FX:GetChildren()) do
+            if _G.SST and _G.SST.Farm_Chest then
+                if not lastChest or not lastChest.Parent or not lastChest:FindFirstChild("Circle.001") then
+                    for _, v in pairs(workspace.FX:GetChildren()) do
                         if v.Name == "Chest" then
                             local circle = v:FindFirstChild("Circle.001")
-                            if circle then
-                                local prompt = circle:FindFirstChild("ProximityPrompt")
-                                if prompt then
-                                    lastChest = v -- จำ Chest อันที่กำลังฟาร์ม
-                                    TP(circle.CFrame) -- วาร์ปไปที่ Circle.001
-                                    wait(0.2) -- รอให้ตัวละครไปถึง
-                                    fireproximityprompt(prompt) -- กด ProximityPrompt
-                                    wait(0.5) -- หน่วงนิดนึงเพื่อไม่ให้ทำงานซ้ำเร็วเกิน
-                                end
+                            if circle and circle:FindFirstChild("ProximityPrompt") then
+                                local prompt = circle.ProximityPrompt
+                                lastChest = v
+                                TP(circle.CFrame) -- ฟังก์ชัน Teleport ไปตำแหน่งกล่อง
+                                repeat task.wait(0.1)
+                                until (player.Character and player.Character:FindFirstChild("HumanoidRootPart") and 
+                                       (player.Character.HumanoidRootPart.Position - circle.Position).Magnitude <= 5)
+                                fireproximityprompt(prompt)
+                                task.wait(0.5)
                             end
                         end
                     end
