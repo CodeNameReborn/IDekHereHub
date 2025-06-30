@@ -2334,8 +2334,9 @@ task.spawn(function()
     end)
 end)
 Main:AddSeperatorR("Stats")
-Select_Stats = _G.SST.Select_Stats or "Strength"
-Main:AddMultiDropdownR("Select Stats",{"Strength", "Dexterity", "Vitality", "Agility", "Intelligence", "Focus"}, _G.SST.Select_Stats, function(value)
+Select_Stats = type(_G.SST.Select_Stats) == "table" and _G.SST.Select_Stats or {"Strength"}
+
+Main:AddMultiDropdownR("Select Stats", {"Strength", "Dexterity", "Vitality", "Agility", "Intelligence", "Focus"}, Select_Stats, function(value)
     Select_Stats = value
     _G.SST.Select_Stats = Select_Stats
     SS()
