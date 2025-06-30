@@ -2376,20 +2376,30 @@ spawn(function()
     local lastChest = nil
     while task.wait() do
         pcall(function()
+            -- ตรวจสอบว่าเปิดระบบฟาร์มกล่องไว้หรือไม่
             if _G.SST and _G.SST.Farm_Chest then
+                -- ถ้ายังไม่มี lastChest หรือ chest หายไปแล้ว
                 if not lastChest or not lastChest.Parent or not lastChest:FindFirstChild("Circle.001") then
-                    for _, v in pairs(workspace.FX:GetChildren()) do
+                    for _, v in pairs(workspace:WaitForChild("FX"):GetChildren()) do
                         if v.Name == "Chest" then
                             local circle = v:FindFirstChild("Circle.001")
-                            if circle and circle:FindFirstChild("ProximityPrompt") then
+                            if circle and circle:IsA("BasePart") and circle:FindFirstChild("ProximityPrompt") then
                                 local prompt = circle.ProximityPrompt
                                 lastChest = v
-                                TP(circle.CFrame) -- ฟังก์ชัน Teleport ไปตำแหน่งกล่อง
+
+                                -- วาร์ปไปตำแหน่งกล่อง
+                                TP(circle.CFrame)
+
+                                -- รอจนกว่าผู้เล่นจะอยู่ใกล้กล่อง
                                 repeat task.wait(0.1)
-                                until (player.Character and player.Character:FindFirstChild("HumanoidRootPart") and 
-                                       (player.Character.HumanoidRootPart.Position - circle.Position).Magnitude <= 5)
+                                until player.Character 
+                                    and player.Character:FindFirstChild("HumanoidRootPart") 
+                                    and (player.Character.HumanoidRootPart.Position - circle.Position).Magnitude <= 5
+
+                                -- กด prompt
                                 fireproximityprompt(prompt)
                                 task.wait(0.5)
+                                break -- ออกจาก loop หลังเจอกล่องแรก
                             end
                         end
                     end
