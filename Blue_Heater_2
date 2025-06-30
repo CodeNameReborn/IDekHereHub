@@ -16,7 +16,8 @@ pcall(function()
         Auto_Play_Again = false,
         Black_Screen = false,
         Disable_Fall = false,
-        Auto_Block = false
+        Auto_Block = false,
+        Select_Stats = "Strength"
     }
 end)
 
