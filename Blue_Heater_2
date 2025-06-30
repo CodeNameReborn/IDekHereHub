@@ -2108,7 +2108,7 @@ function TP(Pos)
         root.CFrame = Pos
     elseif _G.SST.Select_Teleport_Function == "Tween" then
         local distance = (Pos.Position - root.Position).Magnitude
-        local tweenInfo = TweenInfo.new(distance / 250, Enum.EasingStyle.Linear)
+        local tweenInfo = TweenInfo.new(distance / 330, Enum.EasingStyle.Linear)
         local tween = game:GetService("TweenService"):Create(root, tweenInfo, {CFrame = Pos})
         tween:Play()
 
@@ -2273,7 +2273,7 @@ Main:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
     end
 end)
 
-_G.SST.Distance_Aura = Distance_Aura or 70
+Distance_Aura = _G.SST.Distance_Aura or 70
 _G.SST.Attack_Aura = _G.SST.Attack_Aura or false
 
 Main:AddSliderR("Distance Aura", 1, 200, _G.SST.Distance_Aura, function(a)
@@ -2330,7 +2330,7 @@ task.spawn(function()
         if _G.SST.Attack_Aura then
             attackAll()
         end
-        task.wait(0.2)
+        task.wait(0.3)
     end)
 end)
 Main:AddSeperatorR("Stats")
