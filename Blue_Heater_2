@@ -1,5 +1,5 @@
 function loadcheck()
-    local fileName = "Idekhere Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
+    local fileName = "RebornXer Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
     
     if not isfile(fileName) then
         writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
@@ -11,7 +11,7 @@ pcall(function()
     _G.SST = {
         Farm_Chest = false,
         Attack_Aura = false,
-        Distance_Aura = "60",
+        Distance_Aura = 75,
         TP_Mon = false,
         Auto_Play_Again = false,
         Black_Screen = false,
@@ -23,7 +23,7 @@ end)
 
 
 function LoadSetting()
-    local fileName = "Idekhere Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
+    local fileName = "RebornXer Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
     if isfile(fileName) then
         local fileContent = readfile(fileName)
         local success, decoded = pcall(function()
@@ -39,7 +39,7 @@ function LoadSetting()
 end
 
 function SS()
-    local fileName = "Idekhere Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
+    local fileName = "RebornXer Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
     
     if isfile(fileName) then
         writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
@@ -2337,45 +2337,32 @@ function TP(Pos)
     end
 end
 
--- 🟢 กำหนดค่าเริ่มต้นอย่างชัดเจน
-
--- 🟡 เริ่มลูปควบคุม BodyClip
 spawn(function()
     pcall(function()
-        local clipAdded = false
-
-        while wait(0.2) do
-            local player = game:GetService("Players").LocalPlayer
-            local character = player and player.Character
-            local hrp = character and character:FindFirstChild("HumanoidRootPart")
-
-            -- ใช้ _G เพื่อให้ค่าคงอยู่ทั่วทั้งเกม
-            local isActive = (_G.TP_Mon == true or _G.Farm_Chest == true)
-
-            if isActive then
-                if hrp and not hrp:FindFirstChild("BodyClip") then
-                    local clip = Instance.new("BodyVelocity")
-                    clip.Name = "BodyClip"
-                    clip.Velocity = Vector3.new(0, 0, 0)
-                    clip.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-                    clip.Parent = hrp
-                    clipAdded = true
-                    print("✅ สร้าง BodyClip")
+        while wait() do
+            if TP_Mon or Farm_Chest or Join_Dungeon or TPMAP or TPNPC then
+                local character = game:GetService("Players").LocalPlayer.Character
+                local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart and not humanoidRootPart:FindFirstChild("BodyClip") then
+                    local Noclip = Instance.new("BodyVelocity")
+                    Noclip.Name = "BodyClip"
+                    Noclip.Parent = humanoidRootPart
+                    Noclip.MaxForce = Vector3.new(100000, 100000, 100000)
+                    Noclip.Velocity = Vector3.new(0, 0, 0)
                 end
-            elseif clipAdded == true then
-                if hrp then
-                    local oldClip = hrp:FindFirstChild("BodyClip")
-                    if oldClip then
-                        oldClip:Destroy()
-                        print("🗑 ลบ BodyClip")
+            else
+                local character = game:GetService("Players").LocalPlayer.Character
+                local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    local bodyClip = humanoidRootPart:FindFirstChild("BodyClip")
+                    if bodyClip then
+                        bodyClip:Destroy()
                     end
                 end
-                clipAdded = false
             end
         end
     end)
 end)
-
 
 
 
@@ -2412,7 +2399,7 @@ spawn(function()
             if character then
                 for _, v in pairs(character:GetDescendants()) do
                     if v:IsA("BasePart") then
-                        if TP_Mon or not Farm_Chest then
+                        if TP_Mon or Farm_Chest or Join_Dungeon then
                             v.CanCollide = false
                         else
                             v.CanCollide = true
@@ -2501,7 +2488,7 @@ Main:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
     end
 end)
 
-Distance_Aura = _G.SST.Distance_Aura or 70
+Distance_Aura = _G.SST.Distance_Aura or 75
 _G.SST.Attack_Aura = _G.SST.Attack_Aura or false
 
 Main:AddSliderR("Distance Aura", 1, 200, _G.SST.Distance_Aura, function(a)
@@ -2558,13 +2545,11 @@ task.spawn(function()
         if _G.SST.Attack_Aura then
             attackAll()
         end
-        task.wait(0.3)
     end)
 end)
 Main:AddSeperatorR("Stats")
-Select_Stats = type(_G.SST.Select_Stats) == "table" and _G.SST.Select_Stats or {"Strength"}
-
-Main:AddMultiDropdownR("Select Stats", {"Strength", "Dexterity", "Vitality", "Agility", "Intelligence", "Focus"}, Select_Stats, function(value)
+Select_Stats = _G.SST.Select_Stats or {"Strength"}
+Main:AddMultiDropdownR("Select Stats", {"Strength", "Dexterity", "Vitality", "Agility", "Intelligence", "Focus"} , _G.SST.Select_Stats or {} , function(value)
     Select_Stats = value
     _G.SST.Select_Stats = Select_Stats
     SS()
@@ -2746,6 +2731,66 @@ Dungeon:AddDropdownL("Select Dungeon",dungeonParts,_G.SST.Select_Dungeon,functio
     SS()
 end)
 
+Dungeon:AddToggleL("join Dungeon",_G.SST.Join_Dungeon,function(value)
+    Join_Dungeon = value
+    _G.SST.Join_Dungeon = Join_Dungeon
+    SS()
+    StopTweenFunc()
+end)
+-- mine 77992687983999
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local function clickAtGui(guiObject)
+	if not guiObject or not guiObject:IsA("GuiObject") or not guiObject.Visible then
+		warn("GUI object invalid or not visible")
+		return
+	end
+
+	local absPos = guiObject.AbsolutePosition
+	local absSize = guiObject.AbsoluteSize
+	local centerX = absPos.X + absSize.X / 2
+	local centerY = absPos.Y + absSize.Y / 2
+
+	-- คลิกซ้าย: MouseButton1Down (button 0, isDown = true), แล้ว MouseButton1Up (isDown = false)
+	VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)   -- Mouse down
+	task.wait(0.05)
+	VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)  -- Mouse up
+
+	print(string.format("Clicked at (%.0f, %.0f)", centerX, centerY))
+end
+
+
+spawn(function()
+	while task.wait(0.2) do
+		pcall(function()
+			if _G.SST.Join_Dungeon then
+				local player = game.Players.LocalPlayer
+				local gui = player:WaitForChild("PlayerGui")
+				local startFrame = gui:WaitForChild("MainGui"):WaitForChild("StartingDungeonFrame")
+
+				if not startFrame.Visible then
+					local dungeon = spawnFolderd:FindFirstChild(_G.SST.Select_Dungeon)
+					if dungeon then
+						TP(dungeon.WorldPivot)
+					end
+				else
+					local enterBtnFrame = startFrame.Container.DungeonRewardsFrame.Bottombar.EnterBtnFrame
+					local realBtn = enterBtnFrame:FindFirstChildWhichIsA("TextButton") or enterBtnFrame:FindFirstChildWhichIsA("ImageButton")
+
+					if realBtn and realBtn.Visible then
+						clickAtGui(realBtn) -- คลิกซ้าย
+					elseif enterBtnFrame:IsA("TextButton") or enterBtnFrame:IsA("ImageButton") then
+						clickAtGui(enterBtnFrame)
+					end
+				end
+			end
+		end)
+	end
+end)
+
+
+
+
 
 Dungeon:AddToggleL("Auto Play Again",_G.SST.Auto_Play_Again,function(q)
     Auto_Play_Again = q
@@ -2779,6 +2824,87 @@ spawn(function()
                 end
             end
         end
+    end
+end)
+Dungeon:AddSeperatorR("Teleport")
+local MapList = {}
+local MapFolderd = workspace.RespawnPoints
+if MapFolderd then
+    for _, Mpp in ipairs(MapFolderd:GetChildren()) do
+            table.insert(MapList, Mpp.Name)
+    end
+end
+Dungeon:AddDropdownR("Select Map",MapList,_G.SST.Select_Map,function(value)
+    Select_Map = value
+    _G.SST.Select_Map = Select_Map
+    SS()
+end)
+Dungeon:AddButtonR("TP Map", function(value)
+TPMAP = true
+    local mapPart = workspace:WaitForChild("RespawnPoints"):FindFirstChild(_G.SST.Select_Map)
+    if mapPart then
+        local destination = mapPart:GetPivot().Position -- หรือ WorldPivot.Position
+        local player = game:GetService("Players").LocalPlayer
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+
+        if hrp then
+            -- เรียกฟังก์ชัน TP
+            TP(mapPart.WorldPivot)
+
+            -- เริ่มลูปรอจนวาร์ปถึง
+            spawn(function()
+                while task.wait(0.1) do
+                    if (hrp.Position - destination).Magnitude <= 5 then
+                        StopTweenFunc()
+						TPMAP = false
+                        print("✅ ถึงตำแหน่ง Map แล้ว")
+                        break
+                    end
+                end
+            end)
+        end
+    else
+        warn("❌ ไม่พบ Map:", _G.SST.Select_Map)
+    end
+end)
+
+Dungeon:AddSeperatorR("NPCs TP")
+local NPCList = {}
+local NPCFolderd = workspace.NPCs
+if NPCFolderd then
+    for _, rty in ipairs(NPCFolderd:GetChildren()) do
+            table.insert(NPCList, rty.Name)
+    end
+end
+Dungeon:AddDropdownR("Select Npc",NPCList,_G.SST.Select_NPC,function(value)
+    Select_NPC = value
+    _G.SST.Select_NPC = Select_NPC
+    SS()
+end)
+Dungeon:AddButtonR("TP Npc", function(value)
+    TPNPC = true
+
+    local npc = workspace:WaitForChild("NPCs"):FindFirstChild(_G.SST.Select_NPC)
+    if npc then
+        local targetPos = npc:GetPivot().Position -- ใช้ GetPivot() หรือ WorldPivot แล้วแต่เวอร์ชัน
+        local hrp = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+
+        -- เริ่ม tween/TP (สมมติว่า TP คือฟังก์ชัน Tween หรือ MoveTo)
+        TP(npc.WorldPivot)
+
+        -- เริ่มลูปรอจนไปถึงจุดหมาย
+        spawn(function()
+            while task.wait(0.1) do
+                if TPNPC and hrp and (hrp.Position - targetPos).Magnitude <= 5 then
+                    StopTweenFunc()
+                    TPNPC = false
+                    print("✅ ถึง NPC แล้ว")
+                    break
+                end
+            end
+        end)
+    else
+        warn("❌ ไม่พบ NPC ชื่อ:", _G.SST.Select_NPC)
     end
 end)
 
