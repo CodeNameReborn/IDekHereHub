@@ -2336,6 +2336,42 @@ function TP(Pos)
         end)
     end
 end
+local debounce = false
+
+function Equip()
+    if debounce then return end
+    debounce = true
+
+    local TheHereSusHmor = workspace:FindFirstChild("TheHereSusHmor")
+    if not TheHereSusHmor then debounce = false return end
+
+    local Equipped = TheHereSusHmor:FindFirstChild("Equipped")
+    if not Equipped then debounce = false return end
+
+    local weapon = Equipped:FindFirstChild("Weapon")
+
+    if not weapon or #weapon:GetChildren() == 0 then
+        game:GetService("ReplicatedStorage"):WaitForChild("PlayerEvents"):WaitForChild("ManageWeapon"):InvokeServer(true)
+        task.delay(1, function() debounce = false end)
+        return
+    end
+
+    local child = weapon:GetChildren()[1]
+    if not child then
+        game:GetService("ReplicatedStorage"):WaitForChild("PlayerEvents"):WaitForChild("ManageWeapon"):InvokeServer(true)
+        task.delay(1, function() debounce = false end)
+        return
+    end
+
+    local attrs = child:FindFirstChild("Attributes")
+    if not attrs or attrs:GetAttribute("Equipped") ~= true then
+        game:GetService("ReplicatedStorage"):WaitForChild("PlayerEvents"):WaitForChild("ManageWeapon"):InvokeServer(true)
+        task.delay(1, function() debounce = false end)
+        return
+    end
+
+    debounce = false
+end
 
 spawn(function()
     pcall(function()
@@ -2399,7 +2435,7 @@ spawn(function()
             if character then
                 for _, v in pairs(character:GetDescendants()) do
                     if v:IsA("BasePart") then
-                        if TP_Mon or Farm_Chest or Join_Dungeon then
+                        if TP_Mon or Farm_Chest or Join_Dungeon or TPMAP or TPNPC then
                             v.CanCollide = false
                         else
                             v.CanCollide = true
@@ -2681,7 +2717,7 @@ Main:AddDropdownL("Select Mon Farm",Monlist,_G.Select_Mon_Farm,function(a)
     SS()
 end)
 
-Main:AddToggleL("TP Mon", _G.SST.TP_Mon, function(a)
+Main:AddToggleL("Farm Mon", _G.SST.TP_Mon, function(a)
     TP_Mon = a
     _G.SST.TP_Mon = TP_Mon
     StopTweenFunc()
@@ -2704,6 +2740,7 @@ spawn(function()
                         local upOffset = Vector3.new(0, -15, 0)
                         local targetPosition = monsterRoot.CFrame.Position + backOffset + upOffset
                         TP(CFrame.new(targetPosition))
+						Equip()
                     end
                 else
                     warn("No monster found in SpawnedEntities!")
