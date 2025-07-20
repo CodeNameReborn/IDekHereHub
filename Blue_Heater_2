@@ -53,59 +53,18 @@ LoadSetting()
 
 
 ----------------------------------------------------   Ui
- local OCui = game.CoreGui:FindFirstChild("RebormXerOC")
+  local OCui = game.CoreGui:FindFirstChild("RebormXerOC")
     if OCui then
         OCui:Destroy()
     end
     
-    local RebornXer = Instance.new("ScreenGui")
+    local IDekhere = Instance.new("ScreenGui")
     local Open = Instance.new("TextButton")
     local fuckshit = Instance.new("UICorner")
     local MODILEMAGE = Instance.new("ImageLabel")
     local posto = Instance.new("UIStroke")
     
-    local ScreenGui = Instance.new("ScreenGui")
-    local ImageButton = Instance.new("ImageButton")
-    
-    -- กำหนดค่าเริ่มต้น
-    ScreenGui.Parent = game.CoreGui
-    ScreenGui.Name = "RebormXerOC"
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    ImageButton.Parent = ScreenGui
-    ImageButton.Name = "Open/CloseUi"
-    ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    ImageButton.BorderSizePixel = 0
-    ImageButton.Position = UDim2.new(0.1, 0, 0.1, 0)
-    ImageButton.Size = UDim2.new(0, 45, 0, 45)
-    ImageButton.Draggable = true
-    ImageButton.Image = "rbxassetid://108287073891881"
-    
-    -- ฟังก์ชันสำหรับการคลิก
-    local TweenService = game:GetService("TweenService")
-    ImageButton.MouseButton1Click:Connect(function()
-        local ui = game:GetService("CoreGui"):FindFirstChild("RebornXer Hub") -- ค้นหา UI
-        if ui and ui:FindFirstChild("Main") then -- ตรวจสอบว่ามี "Main" อยู่ใน UI
-            local main = ui.Main
-            if main.Size.X.Offset == 600 and main.Size.Y.Offset == 400 then
-                local tween = TweenService:Create(
-                    main,
-                    TweenInfo.new(0.20, Enum.EasingStyle.Sine, Enum.EasingDirection.In), -- กำหนดเวลา 0.35 วินาที
-                    {Size = UDim2.new(0, 0, 0, 0)}
-                )
-                tween:Play() -- เล่น Tween
-            else
-                local tween = TweenService:Create(
-                    main,
-                    TweenInfo.new(0.20, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), -- กำหนดเวลา 0.35 วินาที
-                    {Size = UDim2.new(0, 600, 0, 400)}
-                )
-                tween:Play() -- เล่น Tween
-            end
-        end
-    end)
-    
-    
+        
     fuckshit.Parent = Open
     
      MODILEMAGE.Name = "MODILEMAGE"
@@ -129,23 +88,23 @@ LoadSetting()
     
     
     
-     _G.WindowBackgroundColor = Color3.fromRGB(0, 0, 0) -- พื้นหลังหน้าต่าง (ดำ)
-     _G.BackgroundItemColor = Color3.fromRGB(30, 30, 30) -- พื้นหลังของไอเทม (ดำเข้ม)
-     _G.TabWindowColor = Color3.fromRGB(20, 20, 20) -- สีแท็บหน้าต่าง (ดำเข้ม)
-     _G.ContainerColor = Color3.fromRGB(40, 40, 40) -- สีคอนเทนเนอร์ (ดำเข้ม)
-     _G.TitleTextColor = Color3.fromRGB(255, 255, 255) -- สีข้อความหัวเรื่อง (ขาว)
-     _G.ImageColor = Color3.fromRGB(255, 255, 255) -- สีของรูปภาพ (ขาว)
-     _G.LineThemeColor = Color3.fromRGB(255, 255, 255) -- สีเส้น (ขาว)
-     _G.TabTextColor = Color3.fromRGB(255, 255, 255) -- สีข้อความในแท็บ (ขาว)
-     _G.TabImageColor = Color3.fromRGB(255, 255, 255) -- สีรูปภาพในแท็บ (ขาว)
-     _G.TabThemeColor = Color3.fromRGB(255, 255, 255) -- สีธีมของแท็บ (ขาว)
-     _G.SectionColor = Color3.fromRGB(30, 30, 30) -- สีพื้นหลังของ Section (ดำเข้ม)
-     _G.SectionImageColor = Color3.fromRGB(255, 255, 255) -- สีรูปภาพใน Section (ขาว)
-     _G.SectionTextColor = Color3.fromRGB(255, 255, 255) -- สีข้อความใน Section (ขาว)
-     _G.SectionOn = Color3.fromRGB(0, 255, 0) -- สีสถานะเปิดของ Section (เขียว)
+     _G.WindowBackgroundColor = Color3.fromRGB(0, 0, 0) 
+     _G.BackgroundItemColor = Color3.fromRGB(30, 30, 30) 
+     _G.TabWindowColor = Color3.fromRGB(20, 20, 20)
+     _G.ContainerColor = Color3.fromRGB(40, 40, 40)
+     _G.TitleTextColor = Color3.fromRGB(255, 255, 255)
+     _G.ImageColor = Color3.fromRGB(255, 255, 255) 
+     _G.LineThemeColor = Color3.fromRGB(255, 255, 255) 
+     _G.TabTextColor = Color3.fromRGB(255, 255, 255) 
+     _G.TabImageColor = Color3.fromRGB(255, 255, 255) 
+     _G.TabThemeColor = Color3.fromRGB(255, 255, 255) 
+     _G.SectionColor = Color3.fromRGB(30, 30, 30) 
+     _G.SectionImageColor = Color3.fromRGB(255, 255, 255) 
+     _G.SectionTextColor = Color3.fromRGB(255, 255, 255) 
+     _G.SectionOn = Color3.fromRGB(0, 255, 0) 
      
     _G.Color1 = Color3.fromRGB(255,255,255)
-    do local GUI = game.CoreGui:FindFirstChild("RebornXer Hub");if GUI then GUI:Destroy();end;if _G.Color == nil then
+    do local GUI = game.CoreGui:FindFirstChild("IDekhere Hub");if GUI then GUI:Destroy();end;if _G.Color == nil then
     _G.Color = Color3.fromRGB(255,255,255)
     end 
     end
@@ -221,17 +180,17 @@ LoadSetting()
         local keybind = keybind or Enum.KeyCode.RightControl
         local yoo = string.gsub(tostring(keybind),"Enum.KeyCode.","")
         
-        local RebornXer_Hub = Instance.new("ScreenGui")
-        RebornXer_Hub.Name = "RebornXer Hub"
-        RebornXer_Hub.Parent = game.CoreGui
-        RebornXer_Hub.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        local IDekhere_Hub = Instance.new("ScreenGui")
+        IDekhere_Hub.Name = "IDekhere Hub"
+        IDekhere_Hub.Parent = game.CoreGui
+        IDekhere_Hub.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
     local osfunc = {}
      local osfunc2 = {}
         local Main = Instance.new("Frame")
         local WindowStrokemain = Instance.new("UIStroke")
         Main.Name = "Main"
-        Main.Parent = RebornXer_Hub
+        Main.Parent = IDekhere_Hub
         Main.ClipsDescendants = true
         Main.AnchorPoint = Vector2.new(0.5,0.5)
         Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -260,6 +219,262 @@ LoadSetting()
         Top.Parent = Main
         Top.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
         Top.Size = UDim2.new(0, 560, 0, 28)
+
+-- ปุ่ม macOS-style บนมุมซ้ายบนของ Top
+local function createMacButton(name, color, posX, onClick)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Parent = Top
+    button.BackgroundColor3 = color
+    button.Size = UDim2.new(0, 14, 0, 14)
+    button.Position = UDim2.new(0, posX, 0, 7)
+    button.Text = ""
+    button.AutoButtonColor = false
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = button
+    button.MouseButton1Click:Connect(onClick)
+end
+-- สร้างกล่องยืนยันปิด GUI
+local confirmFrame = Instance.new("Frame")
+confirmFrame.Size = UDim2.new(0, 220, 0, 120)
+confirmFrame.Position = UDim2.new(0.5, -110, 0.5, -60)
+confirmFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+confirmFrame.Visible = false
+confirmFrame.ZIndex = 9999
+confirmFrame.Parent = screenGui
+
+local corner = Instance.new("UICorner", confirmFrame)
+corner.CornerRadius = UDim.new(0, 8)
+
+local label = Instance.new("TextLabel", confirmFrame)
+label.Size = UDim2.new(1, -20, 0, 50)
+label.Position = UDim2.new(0, 10, 0, 10)
+label.Text = "คุณต้องการปิด UI นี้จริงหรือไม่?"
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.fromRGB(255, 255, 255)
+label.TextScaled = true
+label.ZIndex = 10000
+
+local yesBtn = Instance.new("TextButton", confirmFrame)
+yesBtn.Size = UDim2.new(0.45, 0, 0, 30)
+yesBtn.Position = UDim2.new(0.05, 0, 1, -40)
+yesBtn.Text = "ตกลง"
+yesBtn.ZIndex = 10000
+local yc = Instance.new("UICorner", yesBtn)
+yc.CornerRadius = UDim.new(0, 6)
+
+local noBtn = Instance.new("TextButton", confirmFrame)
+noBtn.Size = UDim2.new(0.45, 0, 0, 30)
+noBtn.Position = UDim2.new(0.5, 0, 1, -40)
+noBtn.Text = "ยกเลิก"
+noBtn.ZIndex = 10000
+local nc = Instance.new("UICorner", noBtn)
+nc.CornerRadius = UDim.new(0, 6)
+
+-- เชื่อมปุ่ม
+yesBtn.MouseButton1Click:Connect(function()
+    local gui = game.CoreGui:FindFirstChild("IDekhere Hub")
+    if gui then gui:Destroy() end
+end)
+
+noBtn.MouseButton1Click:Connect(function()
+    confirmFrame.Visible = false
+end)
+
+-- ปุ่ม Close เรียก popup
+createMacButton("CloseBtn", Color3.fromRGB(255, 59, 48), 6, function()
+    confirmFrame.Visible = true
+end)
+
+-- 🔴 ปิด GUI
+createMacButton("CloseBtn", Color3.fromRGB(255, 59, 48), 6, function()
+    local gui = game.CoreGui:FindFirstChild("IDekhere Hub")
+    if not gui then return end
+
+    if gui:FindFirstChild("ConfirmFrame") then return end
+
+    -- สร้างพื้นหลังยืนยัน
+    local confirmFrame = Instance.new("Frame")
+    confirmFrame.Name = "ConfirmFrame"
+    confirmFrame.Size = UDim2.new(0, 300, 0, 150)
+    confirmFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+    confirmFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    confirmFrame.BackgroundTransparency = 0.1
+    confirmFrame.BorderSizePixel = 0
+    confirmFrame.Parent = gui
+
+    -- ใส่มุมโค้ง
+    local corner = Instance.new("UICorner", confirmFrame)
+    corner.CornerRadius = UDim.new(0, 10)
+
+    -- เงา
+    local shadow = Instance.new("UIStroke", confirmFrame)
+    shadow.Thickness = 2
+    shadow.Color = Color3.fromRGB(60, 60, 60)
+    shadow.Transparency = 0.4
+
+    -- ข้อความยืนยัน
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, -20, 0.5, 0)
+    textLabel.Position = UDim2.new(0, 10, 0, 10)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = "❗ คุณแน่ใจหรือไม่ว่าจะปิด UI นี้?"
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextSize = 18
+    textLabel.TextWrapped = true
+    textLabel.TextXAlignment = Enum.TextXAlignment.Center
+    textLabel.TextYAlignment = Enum.TextYAlignment.Top
+    textLabel.Parent = confirmFrame
+
+    -- Container สำหรับปุ่ม
+    local buttonContainer = Instance.new("Frame")
+    buttonContainer.Size = UDim2.new(1, 0, 0, 50)
+    buttonContainer.Position = UDim2.new(0, 0, 1, -60)
+    buttonContainer.BackgroundTransparency = 1
+    buttonContainer.Parent = confirmFrame
+
+    -- UIListLayout เพื่อจัดเรียงปุ่ม
+    local layout = Instance.new("UIListLayout", buttonContainer)
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.VerticalAlignment = Enum.VerticalAlignment.Center
+    layout.Padding = UDim.new(0, 10)
+
+    -- ปุ่ม Yes
+    local yesButton = Instance.new("TextButton")
+    yesButton.Size = UDim2.new(0, 100, 0, 35)
+    yesButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
+    yesButton.Text = "✅ ใช่"
+    yesButton.TextColor3 = Color3.new(1, 1, 1)
+    yesButton.Font = Enum.Font.GothamSemibold
+    yesButton.TextSize = 16
+    yesButton.Parent = buttonContainer
+
+    local yesCorner = Instance.new("UICorner", yesButton)
+    yesCorner.CornerRadius = UDim.new(0, 6)
+
+    -- ปุ่ม No
+    local noButton = Instance.new("TextButton")
+    noButton.Size = UDim2.new(0, 100, 0, 35)
+    noButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    noButton.Text = "❌ ไม่"
+    noButton.TextColor3 = Color3.new(1, 1, 1)
+    noButton.Font = Enum.Font.GothamSemibold
+    noButton.TextSize = 16
+    noButton.Parent = buttonContainer
+
+    local noCorner = Instance.new("UICorner", noButton)
+    noCorner.CornerRadius = UDim.new(0, 6)
+
+    -- ฟังก์ชันเมื่อกดปุ่ม
+    yesButton.MouseButton1Click:Connect(function()
+        gui:Destroy()
+    end)
+
+    noButton.MouseButton1Click:Connect(function()
+        confirmFrame:Destroy()
+    end)
+end)
+
+local TweenService = game:GetService("TweenService")
+
+createMacButton("MinimizeBtn", Color3.fromRGB(255, 204, 0), 22, function()
+    local main = Top.Parent
+    local gui = game.CoreGui:FindFirstChild("IDekhere Hub")
+    if not gui then return end
+
+    if gui:FindFirstChild("RestoreButton") then return end
+
+    -- บันทึกตำแหน่งและขนาดเดิม
+    local originalPosition = main.Position
+    local originalSize = main.Size
+
+    -- ตำแหน่งและขนาดปลายทาง
+    local minimizedSize = UDim2.new(0, 50, 0, 50)
+    local minimizedPosition = UDim2.new(0.1, 0, 0.1, 0)
+
+    local tweenInfo = TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local minimizeTween = game:GetService("TweenService"):Create(main, tweenInfo, {
+        Size = minimizedSize,
+        Position = minimizedPosition
+    })
+    minimizeTween:Play()
+
+    minimizeTween.Completed:Connect(function()
+        main.Visible = false
+
+        -- 🔄 ใช้ ImageButton แทน TextButton
+        local restoreBtn = Instance.new("ImageButton")
+        restoreBtn.Name = "RestoreButton"
+        restoreBtn.Size = minimizedSize
+        restoreBtn.Position = minimizedPosition
+        restoreBtn.AnchorPoint = Vector2.new(0, 0)
+		restoreBtn.Position = UDim2.new(0.1, 0, 0.1, 0)
+        restoreBtn.BackgroundTransparency = 1
+        restoreBtn.Image = "rbxassetid://108287073891881"
+        restoreBtn.ScaleType = Enum.ScaleType.Fit
+        restoreBtn.Draggable = true
+        restoreBtn.ZIndex = 9999
+        restoreBtn.Parent = gui
+
+        -- สร้าง UICorner และ UIStroke ได้ถ้าต้องการ
+        local corner = Instance.new("UICorner", restoreBtn)
+        corner.CornerRadius = UDim.new(0, 8)
+
+        local stroke = Instance.new("UIStroke", restoreBtn)
+        stroke.Thickness = 1
+        stroke.Color = Color3.fromRGB(200, 200, 200)
+        stroke.Transparency = 0.4
+
+        -- Restore เมื่อคลิก
+        restoreBtn.MouseButton1Click:Connect(function()
+            main.Visible = true
+            main.Size = minimizedSize
+            main.Position = minimizedPosition
+
+            local restoreTween = game:GetService("TweenService"):Create(main, tweenInfo, {
+                Size = originalSize,
+                Position = originalPosition
+            })
+            restoreTween:Play()
+            restoreBtn:Destroy()
+        end)
+    end)
+end)
+
+
+
+-- 🟢 ขยายเต็มจอ / ย่อกลับ
+local isMaximized = false
+createMacButton("MaximizeBtn", Color3.fromRGB(52, 199, 89), 38, function()
+    local main = Top.Parent
+    if not isMaximized then
+   main.AnchorPoint = Vector2.new(0.5, 0.5)
+main:TweenSizeAndPosition(
+    UDim2.new(1, 0, 1, 0),
+    UDim2.new(0.5, 0, 0.5, 0),
+    Enum.EasingDirection.Out,
+    Enum.EasingStyle.Quad,
+    0.3,
+    true
+)
+
+        isMaximized = true
+    else
+        main:TweenSizeAndPosition(
+            UDim2.new(0, 600, 0, 400),
+            UDim2.new(0.5, 0, 0.5, 0),
+            Enum.EasingDirection.Out,
+            Enum.EasingStyle.Quad,
+            0.3,
+            true
+        )
+        isMaximized = false
+    end
+end)
+
     
     
     
@@ -305,7 +520,7 @@ LoadSetting()
         local NofList = Instance.new("UIListLayout")
     
         ListNof.Name = "ListNof"
-        ListNof.Parent = RebornXer_Hub
+        ListNof.Parent = IDekhere_Hub
         ListNof.BackgroundColor3 = Color3.fromRGB(255,255,255)
         ListNof.BackgroundTransparency = 1.000
         ListNof.Position = UDim2.new(0.778017223, 0, -0.00217864919, 0)
@@ -415,7 +630,7 @@ LoadSetting()
         local defaultOkayColor = Color3.fromRGB(12, 12, 12)
     
         NotificationFrame.Name = "NotificationFrame"
-        NotificationFrame.Parent = RebornXer_Hub
+        NotificationFrame.Parent = IDekhere_Hub
         NotificationFrame.AnchorPoint = Vector2.new(0.5, 0.5) -- ตั้งจุดยึดตรงกลาง
         NotificationFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
         NotificationFrame.BorderColor3 = SectionColor
