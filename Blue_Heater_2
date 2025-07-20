@@ -17,7 +17,7 @@ pcall(function()
         Black_Screen = false,
         Disable_Fall = false,
         Auto_Block = false,
-        Select_Stats = {"Strength"}
+        Select_Stats = "Strength"
     }
 end)
 
@@ -2343,8 +2343,8 @@ local debounce = false
 function Equip()
     if debounce then return end
     debounce = true
-
-    local TheHereSusHmor = workspace:FindFirstChild("TheHereSusHmor")
+	local PN = game:GetService("Players").localPlayer.Name
+    local TheHereSusHmor = workspace:FindFirstChild(PN)
     if not TheHereSusHmor then debounce = false return end
 
     local Equipped = TheHereSusHmor:FindFirstChild("Equipped")
@@ -2379,6 +2379,9 @@ spawn(function()
     pcall(function()
         while wait() do
             if TP_Mon or Farm_Chest or Join_Dungeon or TPMAP or TPNPC then
+			 local PN = game:GetService("Players").localPlayer.Name
+    		 local Me = workspace:FindFirstChild(PN)
+			 if Me.Humanoid.Sit == true then Me.Humanoid.Sit = false end
                 local character = game:GetService("Players").LocalPlayer.Character
                 local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
                 if humanoidRootPart and not humanoidRootPart:FindFirstChild("BodyClip") then
@@ -2412,11 +2415,9 @@ function StopTweenFunc(target)
         StopTween = true
         wait()
         
-        -- เรียก Tween ไปที่ตำแหน่งปัจจุบัน
         TP(hrp.CFrame)
         wait()
         
-        -- ลบ BodyClip หรือ BodyVelocity1 ถ้ามี
         local clip1 = hrp:FindFirstChild("BodyClip")
         local clip2 = hrp:FindFirstChild("BodyVelocity1")
         if clip1 then clip1:Destroy() end
@@ -2476,43 +2477,45 @@ local player = game:GetService("Players").LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local blackScreenUI = nil
 
--- ฟังก์ชันสำหรับเปิด/ปิดจอดำ
 local function toggleBlackScreen(enable)
     if not enable then
-        -- ถ้าปิดจอดำ ให้ซ่อน UI
         if blackScreenUI then
             blackScreenUI.Enabled = false
         end
         return
     end
 
-    -- ถ้าจอดำมีอยู่แล้ว ให้แสดง UI
     if blackScreenUI then
         blackScreenUI.Enabled = true
         return
     end
 
-    -- สร้าง UI จอดำใหม่
     blackScreenUI = Instance.new("ScreenGui")
     blackScreenUI.Name = "Blackscreen"
-    blackScreenUI.DisplayOrder = 1 -- ให้แสดงอยู่เหนือ UI อื่นๆ
-    blackScreenUI.ResetOnSpawn = false -- UI จะไม่หายไปเมื่อผู้เล่นตายหรือเกิดใหม่
-    blackScreenUI.IgnoreGuiInset = true -- ให้จอดำครอบคลุมพื้นที่เต็มจอ
+    blackScreenUI.DisplayOrder = 1 
+    blackScreenUI.ResetOnSpawn = false 
+    blackScreenUI.IgnoreGuiInset = true 
     blackScreenUI.Parent = playerGui
 
-    -- สร้างเฟรมสีดำ
     local uiFrame = Instance.new("Frame")
-    uiFrame.BackgroundColor3 = Color3.new(0, 0, 0) -- สีดำสนิท
-    uiFrame.Size = UDim2.new(1, 0, 1, 0) -- เต็มหน้าจอ
-    uiFrame.Position = UDim2.new(0, 0, 0, 0) -- มุมบนซ้าย
-    uiFrame.BorderSizePixel = 0 -- ไม่มีขอบ
+    uiFrame.BackgroundColor3 = Color3.new(0, 0, 0) 
+    uiFrame.Size = UDim2.new(1, 0, 1, 0) 
+    uiFrame.Position = UDim2.new(0, 0, 0, 0) 
+    uiFrame.BorderSizePixel = 0 
     uiFrame.Parent = blackScreenUI
 end
-Main:AddDropdownR("Select Mode Farm",{"TP","Tween"},_G.SST.Select_Teleport_Function,function(x)
+Main:AddDropdownR("Select TP Farm",{"TP","Tween"},_G.SST.Select_Teleport_Function,function(x)
     Select_Teleport_Function = x
     _G.SST.Select_Teleport_Function = Select_Teleport_Function
     SS()
 end)
+Main:AddDropdownR("Select Mode Farm",{"upper","lower"},_G.SST.Select_Mode_Function,function(x)
+    Select_Mode_Function = x
+    _G.SST.Select_Mode_Function = Select_Mode_Function
+    SS()
+end)
+
+
 Main:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
     Black_Screen = value
 	_G.SST.Black_Screen = Black_Screen
@@ -2583,6 +2586,7 @@ task.spawn(function()
         if _G.SST.Attack_Aura then
             attackAll()
         end
+        task.wait(0.5)
     end)
 end)
 Main:AddSeperatorR("Stats")
@@ -2948,32 +2952,6 @@ Dungeon:AddButtonR("TP Npc", function(value)
 end)
 
 Misc:AddSeperatorL("Misc")
-spawn(function()
-    while wait() do
-        local replicatedStorage = game:GetService("ReplicatedStorage")
-        local playerEvents = replicatedStorage:FindFirstChild("PlayerEvents")
-    
-        if _G.SST.Disable_Fall then
-            if playerEvents and playerEvents:FindFirstChild("Replicate") then
-                playerEvents.Replicate:Destroy()
-            end
-        else
-            if playerEvents and not playerEvents:FindFirstChild("Replicate") then
-                local newReplicate = Instance.new("RemoteEvent")
-                newReplicate.Name = "Replicate"
-                newReplicate.Parent = playerEvents
-            end
-        end
-    end
-    
-end)
-
-Misc:AddToggleL("Disable Fall", _G.SST.Disable_Fall, function(state)
-    Disable_Fall = state
-    _G.SST.Disable_Fall = Disable_Fall
-    SS()
-end)
-
 
 Misc:AddToggleL("Auto Block", _G.SST.Auto_Block, function(x)
     Auto_Block = x
