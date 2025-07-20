@@ -17,7 +17,7 @@ pcall(function()
         Black_Screen = false,
         Disable_Fall = false,
         Auto_Block = false,
-        Select_Stats = "Strength"
+        Select_Stats = {"Strength"}
     }
 end)
 
