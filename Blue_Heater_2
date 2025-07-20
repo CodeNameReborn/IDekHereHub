@@ -2337,32 +2337,45 @@ function TP(Pos)
     end
 end
 
+-- 🟢 กำหนดค่าเริ่มต้นอย่างชัดเจน
+
+-- 🟡 เริ่มลูปควบคุม BodyClip
 spawn(function()
     pcall(function()
-        while wait() do
-            if TP_Mon or Farm_Chest then
-                local character = game:GetService("Players").LocalPlayer.Character
-                local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-                if humanoidRootPart and not humanoidRootPart:FindFirstChild("BodyClip") then
-                    local Noclip = Instance.new("BodyVelocity")
-                    Noclip.Name = "BodyClip"
-                    Noclip.Parent = humanoidRootPart
-                    Noclip.MaxForce = Vector3.new(100000, 100000, 100000)
-                    Noclip.Velocity = Vector3.new(0, 0, 0)
+        local clipAdded = false
+
+        while wait(0.2) do
+            local player = game:GetService("Players").LocalPlayer
+            local character = player and player.Character
+            local hrp = character and character:FindFirstChild("HumanoidRootPart")
+
+            -- ใช้ _G เพื่อให้ค่าคงอยู่ทั่วทั้งเกม
+            local isActive = (_G.TP_Mon == true or _G.Farm_Chest == true)
+
+            if isActive then
+                if hrp and not hrp:FindFirstChild("BodyClip") then
+                    local clip = Instance.new("BodyVelocity")
+                    clip.Name = "BodyClip"
+                    clip.Velocity = Vector3.new(0, 0, 0)
+                    clip.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+                    clip.Parent = hrp
+                    clipAdded = true
+                    print("✅ สร้าง BodyClip")
                 end
-            else
-                local character = game:GetService("Players").LocalPlayer.Character
-                local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-                if humanoidRootPart then
-                    local bodyClip = humanoidRootPart:FindFirstChild("BodyClip")
-                    if bodyClip then
-                        bodyClip:Destroy()
+            elseif clipAdded == true then
+                if hrp then
+                    local oldClip = hrp:FindFirstChild("BodyClip")
+                    if oldClip then
+                        oldClip:Destroy()
+                        print("🗑 ลบ BodyClip")
                     end
                 end
+                clipAdded = false
             end
         end
     end)
 end)
+
 
 
 
@@ -2414,7 +2427,7 @@ end)
 
 
 ---------------------------------------------------
-local RenUi = Update:AddWindow("IDekhere Hub", "10039618734", Enum.KeyCode.RightControl)
+local RenUi = Update:AddWindow("  IDekhere Hub", "", Enum.KeyCode.RightControl)
 
 local Main = RenUi:AddTab("Main","6026568198")
 local Dungeon = RenUi:AddTab("Dungeon","6035190846")
@@ -2591,12 +2604,13 @@ StopTweenFunc()
 end)
 
 spawn(function()
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
     local lastChest = nil
-    while task.wait() do
+
+    while task.wait(0.2) do
         pcall(function()
-            -- ตรวจสอบว่าเปิดระบบฟาร์มกล่องไว้หรือไม่
-            if _G.SST and _G.SST.Farm_Chest then
-                -- ถ้ายังไม่มี lastChest หรือ chest หายไปแล้ว
+            if _G.SST and _G.SST.Farm_Chest == true then
                 if not lastChest or not lastChest.Parent or not lastChest:FindFirstChild("Circle.001") then
                     for _, v in pairs(workspace:WaitForChild("FX"):GetChildren()) do
                         if v.Name == "Chest" then
@@ -2605,19 +2619,28 @@ spawn(function()
                                 local prompt = circle.ProximityPrompt
                                 lastChest = v
 
-                                -- วาร์ปไปตำแหน่งกล่อง
-                                TP(circle.CFrame)
+                                -- วาร์ปไปตำแหน่งกล่อง (แก้ให้ทำงานจริง)
+                                if typeof(TP) == "function" then
+                                    TP(circle.CFrame)
+                                else
+                                    -- ถ้าไม่มี TP function ให้ใช้แบบย้ายตำแหน่งแทน
+                                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                                    if hrp then
+                                        hrp.CFrame = circle.CFrame + Vector3.new(0, 3, 0)
+                                    end
+                                end
 
-                                -- รอจนกว่าผู้เล่นจะอยู่ใกล้กล่อง
-                                repeat task.wait(0.1)
-                                until player.Character 
-                                    and player.Character:FindFirstChild("HumanoidRootPart") 
+                                -- รอจนเข้าใกล้กล่อง
+                                repeat
+                                    task.wait(0.1)
+                                until player.Character
+                                    and player.Character:FindFirstChild("HumanoidRootPart")
                                     and (player.Character.HumanoidRootPart.Position - circle.Position).Magnitude <= 5
 
-                                -- กด prompt
+                                -- กดใช้กล่อง
                                 fireproximityprompt(prompt)
                                 task.wait(0.5)
-                                break -- ออกจาก loop หลังเจอกล่องแรก
+                                break -- ไปกล่องเดียวก่อน แล้วรอลูปรอบหน้า
                             end
                         end
                     end
@@ -2626,6 +2649,7 @@ spawn(function()
         end)
     end
 end)
+
 
 
 
