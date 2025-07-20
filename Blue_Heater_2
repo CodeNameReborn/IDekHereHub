@@ -2318,7 +2318,9 @@ function TP(Pos)
     local character = player.Character or player.CharacterAdded:Wait()
     local root = character:WaitForChild("HumanoidRootPart", 5)
     if not root then return end
-
+	if workspace.TheHereSusHmor.Humanoid.Sit == true then
+		workspace.TheHereSusHmor.Humanoid.Sit = false
+	end
     if _G.SST.Select_Teleport_Function == "TP" then
         root.CFrame = Pos
     elseif _G.SST.Select_Teleport_Function == "Tween" then
