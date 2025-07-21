@@ -381,69 +381,78 @@ end)
 local TweenService = game:GetService("TweenService")
 
 createMacButton("MinimizeBtn", Color3.fromRGB(255, 204, 0), 22, function()
-    local main = Top.Parent
-    local gui = game.CoreGui:FindFirstChild("IDekhere Hub")
-    if not gui then return end
+	local main = Top.Parent
+	local gui = game.CoreGui:FindFirstChild("IDekhere Hub")
+	if not gui then return end
+	if gui:FindFirstChild("RestoreButton") then return end
 
-    if gui:FindFirstChild("RestoreButton") then return end
+	-- บันทึกข้อมูลเดิม
+	local originalSize = main.Size
+	local originalPos = main.Position
+	local originalTransparency = main.BackgroundTransparency
 
-    -- บันทึกตำแหน่งและขนาดเดิม
-    local originalPosition = main.Position
-    local originalSize = main.Size
+	-- จุดปลายทางแบบ macOS Dock (มุมล่างซ้ายของหน้าจอ)
+	local dockPos = UDim2.new(0.1, 0, 0.1, 0) -- ปรับได้ตามใจ
+	local dockSize = UDim2.new(0, 0, 0, 0)
 
-    -- ตำแหน่งและขนาดปลายทาง
-    local minimizedSize = UDim2.new(0, 50, 0, 50)
-    local minimizedPosition = UDim2.new(0.1, 0, 0.1, 0)
+	-- Tween: ย่อหดแบบ spring เหมือน macOS
+	local shrinkTween = TweenService:Create(main, TweenInfo.new(
+		0.35, -- duration
+		Enum.EasingStyle.Back,
+		Enum.EasingDirection.In
+	), {
+		Size = dockSize,
+		Position = dockPos,
+		BackgroundTransparency = 0.7
+	})
+	shrinkTween:Play()
 
-    local tweenInfo = TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local minimizeTween = game:GetService("TweenService"):Create(main, tweenInfo, {
-        Size = minimizedSize,
-        Position = minimizedPosition
-    })
-    minimizeTween:Play()
+	shrinkTween.Completed:Once(function()
+		main.Visible = false
 
-    minimizeTween.Completed:Connect(function()
-        main.Visible = false
+		-- ปุ่ม Restore แบบกลมเหมือนใน Dock
+		local restoreBtn = Instance.new("ImageButton")
+		restoreBtn.Name = "RestoreButton"
+		restoreBtn.Size = UDim2.new(0, 48, 0, 48)
+		restoreBtn.Position = dockPos
+		restoreBtn.BackgroundTransparency = 1
+		restoreBtn.Image = "rbxassetid://108287073891881"
+		restoreBtn.ScaleType = Enum.ScaleType.Fit
+		restoreBtn.ZIndex = 9999
+		restoreBtn.Draggable = true
+		restoreBtn.Parent = gui
 
-        -- 🔄 ใช้ ImageButton แทน TextButton
-        local restoreBtn = Instance.new("ImageButton")
-        restoreBtn.Name = "RestoreButton"
-        restoreBtn.Size = minimizedSize
-        restoreBtn.Position = minimizedPosition
-        restoreBtn.AnchorPoint = Vector2.new(0, 0)
-		restoreBtn.Position = UDim2.new(0.1, 0, 0.1, 0)
-        restoreBtn.BackgroundTransparency = 1
-        restoreBtn.Image = "rbxassetid://108287073891881"
-        restoreBtn.ScaleType = Enum.ScaleType.Fit
-        restoreBtn.Draggable = true
-        restoreBtn.ZIndex = 9999
-        restoreBtn.Parent = gui
+		local corner = Instance.new("UICorner", restoreBtn)
+		corner.CornerRadius = UDim.new(0, 8) -- กลม 100%
 
-        -- สร้าง UICorner และ UIStroke ได้ถ้าต้องการ
-        local corner = Instance.new("UICorner", restoreBtn)
-        corner.CornerRadius = UDim.new(0, 8)
+		local stroke = Instance.new("UIStroke", restoreBtn)
+		stroke.Thickness = 1
+		stroke.Color = Color3.fromRGB(180, 180, 180)
+		stroke.Transparency = 0.3
 
-        local stroke = Instance.new("UIStroke", restoreBtn)
-        stroke.Thickness = 1
-        stroke.Color = Color3.fromRGB(200, 200, 200)
-        stroke.Transparency = 0.4
+		-- Restore back (พองกลับขึ้นมาจาก dock)
+		restoreBtn.MouseButton1Click:Connect(function()
+			main.Visible = true
+			main.Size = dockSize
+			main.Position = dockPos
+			main.BackgroundTransparency = 1
 
-        -- Restore เมื่อคลิก
-        restoreBtn.MouseButton1Click:Connect(function()
-            main.Visible = true
-            main.Size = minimizedSize
-            main.Position = minimizedPosition
-
-            local restoreTween = game:GetService("TweenService"):Create(main, tweenInfo, {
-                Size = originalSize,
-                Position = originalPosition
-            })
-            restoreTween:Play()
-            restoreBtn:Destroy()
-        end)
-    end)
+			local expandTween = TweenService:Create(main, TweenInfo.new(
+				0.25,
+				Enum.EasingStyle.Back,
+				Enum.EasingDirection.Out
+			), {
+				Size = originalSize,
+				Position = originalPos,
+				BackgroundTransparency = originalTransparency
+			})
+			expandTween:Play()
+			expandTween.Completed:Once(function()
+				restoreBtn:Destroy()
+			end)
+		end)
+	end)
 end)
-
 
 
 -- 🟢 ขยายเต็มจอ / ย่อกลับ
@@ -2318,14 +2327,12 @@ function TP(Pos)
     local character = player.Character or player.CharacterAdded:Wait()
     local root = character:WaitForChild("HumanoidRootPart", 5)
     if not root then return end
-	if workspace.TheHereSusHmor.Humanoid.Sit == true then
-		workspace.TheHereSusHmor.Humanoid.Sit = false
-	end
+	
     if _G.SST.Select_Teleport_Function == "TP" then
         root.CFrame = Pos
     elseif _G.SST.Select_Teleport_Function == "Tween" then
         local distance = (Pos.Position - root.Position).Magnitude
-        local tweenInfo = TweenInfo.new(distance / 330, Enum.EasingStyle.Linear)
+        local tweenInfo = TweenInfo.new(distance / 250, Enum.EasingStyle.Linear)
         local tween = game:GetService("TweenService"):Create(root, tweenInfo, {CFrame = Pos})
         tween:Play()
 
@@ -2379,9 +2386,7 @@ spawn(function()
     pcall(function()
         while wait() do
             if TP_Mon or Farm_Chest or Join_Dungeon or TPMAP or TPNPC then
-			 local PN = game:GetService("Players").localPlayer.Name
-    		 local Me = workspace:FindFirstChild(PN)
-			 if Me.Humanoid.Sit == true then Me.Humanoid.Sit = false end
+			 
                 local character = game:GetService("Players").LocalPlayer.Character
                 local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
                 if humanoidRootPart and not humanoidRootPart:FindFirstChild("BodyClip") then
@@ -2405,6 +2410,22 @@ spawn(function()
     end)
 end)
 
+spawn(function()
+while wait() do
+pcall(function()
+if TP_Mon or Farm_Chest or Join_Dungeon or TPMAP or TPNPC then
+local player = game:GetService("Players").LocalPlayer
+local character = workspace:FindFirstChild(player.Name)
+
+if character and character:FindFirstChild("Humanoid") then
+    if character.Humanoid.Sit then
+        character.Humanoid.Sit = false
+    end
+end
+end
+end)
+end
+end)
 
 
 function StopTweenFunc(target)
@@ -2509,25 +2530,33 @@ Main:AddDropdownR("Select TP Farm",{"TP","Tween"},_G.SST.Select_Teleport_Functio
     _G.SST.Select_Teleport_Function = Select_Teleport_Function
     SS()
 end)
-Main:AddDropdownR("Select Mode Farm",{"upper","lower"},_G.SST.Select_Mode_Function,function(x)
+Main:AddDropdownR("Select Mode Farm",{"Upper","Lower"},_G.SST.Select_Mode_Function,function(x)
     Select_Mode_Function = x
     _G.SST.Select_Mode_Function = Select_Mode_Function
     SS()
 end)
 
+Distance_Farm = _G.SST.Distance_Farm or 15
 
-Main:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
-    Black_Screen = value
-	_G.SST.Black_Screen = Black_Screen
+Main:AddSliderR("Distance Farm", 1, 200, Distance_Farm, function(a)
+    _G.SST.Distance_Farm = a
     SS()
-    if value then
-        game:GetService("RunService"):Set3dRenderingEnabled(false)
-        toggleBlackScreen(true)
-    else
-        game:GetService("RunService"):Set3dRenderingEnabled(true)
-        toggleBlackScreen(false)
+end)
+
+-- สร้าง loop เดียวเพื่ออัปเดตค่า _G.Distance ตามโหมด
+spawn(function()
+    while wait(0.1) do
+        local dist = tonumber(_G.SST.Distance_Farm or 15)
+        if _G.SST.Select_Mode_Function == "Upper" then
+            _G.Distance = dist
+        elseif _G.SST.Select_Mode_Function == "Lower" then
+            _G.Distance = -dist
+        else
+            _G.Distance = dist -- fallback
+        end
     end
 end)
+
 
 Distance_Aura = _G.SST.Distance_Aura or 75
 _G.SST.Attack_Aura = _G.SST.Attack_Aura or false
@@ -2582,11 +2611,14 @@ end
 
 task.spawn(function()
     local runService = game:GetService("RunService")
+    local lastAttackTime = 0
+    local cooldown = 0.3 -- ปรับเวลาตามที่ต้องการ
+
     runService.Heartbeat:Connect(function()
-        if _G.SST.Attack_Aura then
+        if _G.SST.Attack_Aura and tick() - lastAttackTime >= cooldown then
+            lastAttackTime = tick()
             attackAll()
         end
-        task.wait(0.5)
     end)
 end)
 Main:AddSeperatorR("Stats")
@@ -2783,25 +2815,27 @@ end)
 -- mine 77992687983999
 local VirtualInputManager = game:GetService("VirtualInputManager")
 
-local function clickAtGui(guiObject)
-	if not guiObject or not guiObject:IsA("GuiObject") or not guiObject.Visible then
-		warn("GUI object invalid or not visible")
-		return
-	end
+local function clickLeftAtGui(guiObject)
+    -- ตรวจสอบว่า GUI ถูกต้องและคลิกได้
+    if not guiObject or not guiObject:IsA("GuiObject") or not guiObject.Visible then
+        warn("GUI object invalid or not visible")
+        return false
+    end
 
-	local absPos = guiObject.AbsolutePosition
-	local absSize = guiObject.AbsoluteSize
-	local centerX = absPos.X + absSize.X / 2
-	local centerY = absPos.Y + absSize.Y / 2
+    -- คำนวณจุดกึ่งกลางของ GUI
+    local absPos = guiObject.AbsolutePosition
+    local absSize = guiObject.AbsoluteSize
+    local centerX = absPos.X + absSize.X / 2
+    local centerY = absPos.Y + absSize.Y / 2
 
-	-- คลิกซ้าย: MouseButton1Down (button 0, isDown = true), แล้ว MouseButton1Up (isDown = false)
-	VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)   -- Mouse down
-	task.wait(0.05)
-	VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)  -- Mouse up
+    -- ส่งเหตุการณ์คลิกซ้าย (MouseButton1)
+    VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)  -- กดเมาส์ลง
+    task.wait(0.05)  -- รอสั้นๆ เพื่อให้รู้สึกเหมือนคลิกจริง
+    VirtualInputManager:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0) -- ปล่อยเมาส์
 
-	print(string.format("Clicked at (%.0f, %.0f)", centerX, centerY))
+    print(string.format("Clicked at (%.0f, %.0f)", centerX, centerY))
+    return true
 end
-
 
 spawn(function()
 	while task.wait(0.2) do
@@ -2972,3 +3006,183 @@ spawn(function()
         end)
     end
 end)
+
+Misc:AddSeperatorR("FPS Boost")
+local originalSettings = {
+	saved = false,
+	quality = nil,
+	shadows = nil,
+	fogEnd = nil,
+	brightness = nil,
+	effects = {},
+	parts = {},
+	decals = {},
+	textures = {},
+	particles = {},
+	meshes = {}
+}
+
+function BoostFPS()
+	local lighting = game:GetService("Lighting")
+
+	if not originalSettings.saved then
+		originalSettings.saved = true
+		originalSettings.quality = settings().Rendering.QualityLevel
+		originalSettings.shadows = lighting.GlobalShadows
+		originalSettings.fogEnd = lighting.FogEnd
+		originalSettings.brightness = lighting.Brightness
+
+		-- Save post effects
+		for _, v in pairs(lighting:GetChildren()) do
+			if v:IsA("PostEffect") then
+				originalSettings.effects[v] = v.Enabled
+			end
+		end
+
+		-- Save individual objects
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("BasePart") then
+				originalSettings.parts[v] = {
+					Material = v.Material,
+					Reflectance = v.Reflectance
+				}
+				v.Material = Enum.Material.SmoothPlastic
+				v.Reflectance = 0
+
+			elseif v:IsA("Decal") then
+				originalSettings.decals[v] = v.Transparency
+				v.Transparency = 1
+
+			elseif v:IsA("Texture") then
+				originalSettings.textures[v] = v.Transparency
+				v.Transparency = 1
+
+			elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+				originalSettings.particles[v] = v.Enabled
+				v.Enabled = false
+
+			elseif v:IsA("MeshPart") then
+				originalSettings.meshes[v] = {
+					Material = v.Material,
+					TextureID = v.TextureID
+				}
+				v.Material = Enum.Material.SmoothPlastic
+				v.TextureID = ""
+			end
+		end
+	end
+
+	-- Apply low settings
+	settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+	lighting.GlobalShadows = false
+	lighting.FogEnd = 100000
+	lighting.Brightness = 1
+
+	for effect in pairs(originalSettings.effects) do
+		effect.Enabled = false
+	end
+
+	if workspace:FindFirstChildOfClass("Camera") then
+		workspace.CurrentCamera:ClearAllChildren()
+	end
+
+	print("✅ Boost FPS: ON")
+end
+
+function ResetGraphics()
+	if not originalSettings.saved then
+		warn("⚠️ ยังไม่มีการ BoostFPS มาก่อน")
+		return
+	end
+
+	local lighting = game:GetService("Lighting")
+	settings().Rendering.QualityLevel = originalSettings.quality
+	lighting.GlobalShadows = originalSettings.shadows
+	lighting.FogEnd = originalSettings.fogEnd
+	lighting.Brightness = originalSettings.brightness
+
+	for effect, state in pairs(originalSettings.effects) do
+		effect.Enabled = state
+	end
+
+	for obj, data in pairs(originalSettings.parts) do
+		if obj and obj.Parent then
+			obj.Material = data.Material
+			obj.Reflectance = data.Reflectance
+		end
+	end
+
+	for obj, transparency in pairs(originalSettings.decals) do
+		if obj and obj.Parent then
+			obj.Transparency = transparency
+		end
+	end
+
+	for obj, transparency in pairs(originalSettings.textures) do
+		if obj and obj.Parent then
+			obj.Transparency = transparency
+		end
+	end
+
+	for obj, enabled in pairs(originalSettings.particles) do
+		if obj and obj.Parent then
+			obj.Enabled = enabled
+		end
+	end
+
+	for obj, data in pairs(originalSettings.meshes) do
+		if obj and obj.Parent then
+			obj.Material = data.Material
+			obj.TextureID = data.TextureID
+		end
+	end
+
+	print("✅ Boost FPS: OFF — กู้ค่ากราฟิกทั้งหมดแล้ว")
+end
+
+
+function ResetGraphics()
+    if not originalSettings.saved then
+        warn("⚠️ ยังไม่มีการ BoostFPS มาก่อน")
+        return
+    end
+
+    -- คืนค่าที่บันทึกไว้
+    settings().Rendering.QualityLevel = originalSettings.quality or Enum.QualityLevel.Automatic
+    local lighting = game:GetService("Lighting")
+    lighting.GlobalShadows = originalSettings.shadows
+    lighting.FogEnd = originalSettings.fogEnd
+    lighting.Brightness = originalSettings.brightness
+
+    for effect, state in pairs(originalSettings.effects) do
+        effect.Enabled = state
+    end
+
+    print("✅ Boost FPS: OFF (คืนค่าเดิม)")
+end
+
+
+Misc:AddToggleR("Boost FPS",_G.SST.Boost_FPS,function(value)
+    Boost_FPS = value
+    _G.SST.Boost_FPS = Boost_FPS
+    SS()
+    if value then
+        BoostFPS()
+    else
+        ResetGraphics()
+    end
+end)
+
+Misc:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
+    Black_Screen = value
+	_G.SST.Black_Screen = Black_Screen
+    SS()
+    if value then
+        game:GetService("RunService"):Set3dRenderingEnabled(false)
+        toggleBlackScreen(true)
+    else
+        game:GetService("RunService"):Set3dRenderingEnabled(true)
+        toggleBlackScreen(false)
+    end
+end)
+
