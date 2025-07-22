@@ -1,47 +1,51 @@
-function loadcheck()
-    local fileName = "RebornXer Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
-    
-    if not isfile(fileName) then
-        writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
-        return
-    end
+local folderName = "IDekHere Hub Data"
+local playerName = game.Players.LocalPlayer.Name:gsub("[^%w_ ]", "")
+local fileName = folderName .. "/Blue Heater 2 [ " .. playerName .. " ].json"
+
+local defaultSettings = {
+    Farm_Chest = false,
+    Attack_Aura = false,
+    Distance_Aura = 75,
+    TP_Mon = false,
+    Auto_Play_Again = false,
+    Black_Screen = false,
+    Disable_Fall = false,
+    Auto_Block = false,
+    Select_Stats = {"Strength"}
+}
+
+if not isfolder(folderName) then
+    makefolder(folderName)
 end
 
-pcall(function()
-    _G.SST = {
-        Farm_Chest = false,
-        Attack_Aura = false,
-        Distance_Aura = 75,
-        TP_Mon = false,
-        Auto_Play_Again = false,
-        Black_Screen = false,
-        Disable_Fall = false,
-        Auto_Block = false,
-        Select_Stats = {"Strength"}
-    }
-end)
-
+function loadcheck()
+    if not isfile(fileName) then
+        _G.SST = defaultSettings
+        writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
+    end
+end
 
 function LoadSetting()
-    local fileName = "RebornXer Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
     if isfile(fileName) then
-        local fileContent = readfile(fileName)
-        local success, decoded = pcall(function()
-            return game:GetService("HttpService"):JSONDecode(fileContent)
+        local content = readfile(fileName)
+        local success, result = pcall(function()
+            return game:GetService("HttpService"):JSONDecode(content)
         end)
-        
-        if success then
-            _G.SST = decoded
+
+        if success and result then
+            _G.SST = result
+        else
+            _G.SST = defaultSettings
+            SS()
         end
     else
-        SS()
+        loadcheck()
     end
 end
 
+
 function SS()
-    local fileName = "RebornXer Hub Blue Heater 2 [ " .. game.Players.LocalPlayer.Name .. " ].json"
-    
-    if isfile(fileName) then
+    if _G.SST then
         writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
     else
         loadcheck()
@@ -1797,9 +1801,24 @@ local function createMultiDropdown(params)
 	selectedText.TextSize = 12
 	selectedText.TextXAlignment = Enum.TextXAlignment.Center
 
+	local searchBox = Instance.new("TextBox")
+	searchBox.Parent = base
+	searchBox.Position = UDim2.new(0, 3, 0, 60)
+	searchBox.Size = UDim2.new(1, -6, 0, 25)
+	searchBox.PlaceholderText = "Search..."
+	searchBox.Text = ""
+	searchBox.Font = Enum.Font.Code
+	searchBox.TextSize = 12
+	searchBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	searchBox.BorderSizePixel = 0
+	searchBox.Visible = false
+	local searchCorner = Instance.new("UICorner", searchBox)
+	searchCorner.CornerRadius = UDim.new(0, 4)
+
 	local itemScroll = Instance.new("ScrollingFrame")
 	itemScroll.Parent = base
-	itemScroll.Position = UDim2.new(0, 3, 0, 60)
+	itemScroll.Position = UDim2.new(0, 3, 0, 85)
 	itemScroll.Size = UDim2.new(1, -6, 0, 0)
 	itemScroll.BackgroundTransparency = 1
 	itemScroll.ScrollBarThickness = 0
@@ -1808,6 +1827,8 @@ local function createMultiDropdown(params)
 
 	local layout = Instance.new("UIListLayout", itemScroll)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	local allButtons = {}
 
 	for _, item in ipairs(list) do
 		local btn = Instance.new("TextButton")
@@ -1820,13 +1841,10 @@ local function createMultiDropdown(params)
 		btn.TextXAlignment = Enum.TextXAlignment.Left
 		btn.Text = "☐ " .. item
 
-		local function updateText()
-			if selectedItems[item] then
-				btn.Text = "☑ " .. item
-			else
-				btn.Text = "☐ " .. item
-			end
+		table.insert(allButtons, {button = btn, item = item})
 
+		local function updateText()
+			btn.Text = selectedItems[item] and ("☑ " .. item) or ("☐ " .. item)
 			local resultList = {}
 			for k, _ in pairs(selectedItems) do
 				table.insert(resultList, k)
@@ -1850,9 +1868,17 @@ local function createMultiDropdown(params)
 
 	itemScroll.CanvasSize = UDim2.new(0, 0, 0, frameExtra)
 
+	searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+		local text = string.lower(searchBox.Text)
+		for _, entry in pairs(allButtons) do
+			entry.button.Visible = string.find(string.lower(entry.item), text) ~= nil
+		end
+	end)
+
 	toggleBtn.MouseButton1Click:Connect(function()
 		toggled = not toggled
-		local newSize = toggled and (60 + frameExtra) or 60
+		local newSize = toggled and (85 + frameExtra) or 60
+		searchBox.Visible = toggled
 		itemScroll:TweenSize(UDim2.new(1, -6, 0, toggled and frameExtra or 0), 'InOut', 'Linear', 0.1, true)
 		base:TweenSize(UDim2.new(1, -2, 0, newSize), 'InOut', 'Linear', 0.1, true)
 		dropFrame:TweenSize(UDim2.new(0, 280, 0, newSize), 'InOut', 'Linear', 0.1, true)
@@ -2668,39 +2694,36 @@ spawn(function()
     local lastChest = nil
 
     while task.wait(0.2) do
+        if not _G.SST or not _G.SST.Farm_Chest then continue end
+
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then continue end
+
         pcall(function()
-            if _G.SST and _G.SST.Farm_Chest == true then
-                if not lastChest or not lastChest.Parent or not lastChest:FindFirstChild("Circle.001") then
-                    for _, v in pairs(workspace:WaitForChild("FX"):GetChildren()) do
-                        if v.Name == "Chest" then
-                            local circle = v:FindFirstChild("Circle.001")
-                            if circle and circle:IsA("BasePart") and circle:FindFirstChild("ProximityPrompt") then
-                                local prompt = circle.ProximityPrompt
-                                lastChest = v
+            -- เคลียร์กล่องที่ไม่มี Circle.001 หรือถูกลบไป
+            if not lastChest or not lastChest.Parent or not lastChest:FindFirstChild("Circle.001") then
+                for _, v in pairs(workspace:WaitForChild("FX"):GetChildren()) do
+                    if v.Name == "Chest" then
+                        local circle = v:FindFirstChild("Circle.001")
+                        if circle and circle:IsA("BasePart") and circle:FindFirstChild("ProximityPrompt") then
+                            local prompt = circle.ProximityPrompt
+                            lastChest = v
 
-                                -- วาร์ปไปตำแหน่งกล่อง (แก้ให้ทำงานจริง)
-                                if typeof(TP) == "function" then
-                                    TP(circle.CFrame)
-                                else
-                                    -- ถ้าไม่มี TP function ให้ใช้แบบย้ายตำแหน่งแทน
-                                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                                    if hrp then
-                                        hrp.CFrame = circle.CFrame + Vector3.new(0, 3, 0)
-                                    end
-                                end
-
-                                -- รอจนเข้าใกล้กล่อง
-                                repeat
-                                    task.wait(0.1)
-                                until player.Character
-                                    and player.Character:FindFirstChild("HumanoidRootPart")
-                                    and (player.Character.HumanoidRootPart.Position - circle.Position).Magnitude <= 5
-
-                                -- กดใช้กล่อง
-                                fireproximityprompt(prompt)
-                                task.wait(0.5)
-                                break -- ไปกล่องเดียวก่อน แล้วรอลูปรอบหน้า
+                            -- วาร์ปหรือย้ายไปตำแหน่งกล่อง
+                            if typeof(TP) == "function" then
+                                TP(circle.CFrame)
+                            else
+                                hrp.CFrame = circle.CFrame + Vector3.new(0, 3, 0)
                             end
+
+                            -- รอจนเข้าใกล้กล่องก่อนใช้งาน
+                            repeat
+                                task.wait(0.1)
+                            until (hrp.Position - circle.Position).Magnitude <= 5
+
+                            fireproximityprompt(prompt)
+                            task.wait(0.5)
+                            break
                         end
                     end
                 end
@@ -3185,4 +3208,3 @@ Misc:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
         toggleBlackScreen(false)
     end
 end)
-
