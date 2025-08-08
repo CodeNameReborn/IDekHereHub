@@ -1,6 +1,6 @@
 local folderName = "IDekHere Hub Data"
 local playerName = game.Players.LocalPlayer.Name:gsub("[^%w_ ]", "")
-local fileName = folderName .. "/Blue Heater 2 [ " .. playerName .. " ].json"
+local fileName = folderName .. "/All Map [ " .. playerName .. " ].json"
 
 local defaultSettings = {
 
@@ -2137,58 +2137,68 @@ end
     end
     
             
-            function main:AddLabelL(text)
-                local Label = Instance.new("TextLabel")
-                local PaddingLabel = Instance.new("UIPadding")
-                local labelfunc = {}
-        
-                Label.Name = "Label"
-                Label.Parent = MainFramePage
-                Label.BackgroundColor3 = Color3.fromRGB(51,255,255)
-                Label.BackgroundTransparency = 1.000
-                Label.Size = UDim2.new(0, 360, 0, 20)
-                Label.Font = Enum.Font.Code
-                Label.TextColor3 = Color3.fromRGB(225, 225, 225)
-                Label.TextSize = 14.000
-                Label.Text = text
-                Label.TextXAlignment = Enum.TextXAlignment.Left
-    
-                PaddingLabel.PaddingLeft = UDim.new(0,15)
-                PaddingLabel.Parent = Label
-                PaddingLabel.Name = "PaddingLabel"
-        
-                function labelfunc:Set(newtext)
-                Label.Text = newtext
-            end
-            return labelfunc
-            end
-    
-            function main:AddLabelR(text)
-                local Labell = Instance.new("TextLabel")
-                local PaddingLabell = Instance.new("UIPadding")
-                local labelfunc = {}
-        
-                Labell.Name = "Label"
-                Labell.Parent = MainFramePage2
-                Labell.BackgroundColor3 = Color3.fromRGB(51,255,255)
-                Labell.BackgroundTransparency = 1.000
-                Labell.Size = UDim2.new(0, 360, 0, 20)
-                Labell.Font = Enum.Font.Code
-                Labell.TextColor3 = Color3.fromRGB(225, 225, 225)
-                Labell.TextSize = 14.000
-                Labell.Text = text
-                Labell.TextXAlignment = Enum.TextXAlignment.Left
-    
-                PaddingLabell.PaddingLeft = UDim.new(0,15)
-                PaddingLabell.Parent = Labell
-                PaddingLabell.Name = "PaddingLabel"
-        
-                function labelfunc:Set(newtext)
-                Labell.Text = newtext
-            end
-            return labelfunc
-            end
-    
+   function main:AddLabelL(text)
+    local Label = Instance.new("TextLabel")
+    local PaddingLabel = Instance.new("UIPadding")
+    local labelfunc = {}
+
+    Label.Name = "Label"
+    Label.Parent = MainFramePage
+    Label.BackgroundColor3 = Color3.fromRGB(51, 255, 255)
+    Label.BackgroundTransparency = 1.000
+    Label.Size = UDim2.new(1, 0, 0, 0) -- แก้ตรงนี้: ใช้เต็มความกว้าง
+    Label.AutomaticSize = Enum.AutomaticSize.Y
+    Label.Font = Enum.Font.Code
+    Label.TextColor3 = Color3.fromRGB(225, 225, 225)
+    Label.TextSize = 14.000
+    Label.Text = text
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextWrapped = true
+    Label.TextScaled = false
+
+    PaddingLabel.PaddingLeft = UDim.new(0, 15)
+    PaddingLabel.PaddingRight = UDim.new(0, 15) -- เพิ่มตรงนี้
+    PaddingLabel.Parent = Label
+    PaddingLabel.Name = "PaddingLabel"
+
+    function labelfunc:Set(newtext)
+        Label.Text = newtext
+    end
+
+    return labelfunc
+end
+
+function main:AddLabelR(text)
+    local Label = Instance.new("TextLabel")
+    local PaddingLabel = Instance.new("UIPadding")
+    local labelfunc = {}
+
+    Label.Name = "Label"
+    Label.Parent = MainFramePage2
+    Label.BackgroundColor3 = Color3.fromRGB(51, 255, 255)
+    Label.BackgroundTransparency = 1.000
+    Label.Size = UDim2.new(1, 0, 0, 0)
+    Label.AutomaticSize = Enum.AutomaticSize.Y
+    Label.Font = Enum.Font.Code
+    Label.TextColor3 = Color3.fromRGB(225, 225, 225)
+    Label.TextSize = 14.000
+    Label.Text = text
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextWrapped = true
+    Label.TextScaled = false
+
+    PaddingLabel.PaddingLeft = UDim.new(0, 15)
+    PaddingLabel.PaddingRight = UDim.new(0, 15)
+    PaddingLabel.Parent = Label
+    PaddingLabel.Name = "PaddingLabel"
+
+    function labelfunc:Set(newtext)
+        Label.Text = newtext
+    end
+
+    return labelfunc
+end
+
     
     function main:Label1(text)
                 local Label1 = Instance.new("TextLabel")
@@ -2360,7 +2370,7 @@ end)
 Main:AddButtonL("Dark Dex",function(value)
   if _G.SST.Select_Dex == "Mobile"then
     loadstring(game:HttpGet("https://pastebin.com/raw/8rhuG7KQ"))()
-  else _G.SST.Select_Dex == "Pc" then
+  elseif _G.SST.Select_Dex == "Pc" then
     loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
   end
 end)
@@ -2369,15 +2379,187 @@ Main:AddButtonL("Remote Spy",function(value)
 end)
 
 Main:AddSeperatorR("Copy Function")
+Main:AddLineR()
+Main:AddSeperatorR("Place Id")
+
 local PlaceId = Main:AddLabelR("")
+
 Main:AddButtonR("Copy PlaceId",function()
      setclipboard(tostring(game.PlaceId))
 end)
+Main:AddSeperatorR("Job Id")
+
 local JobId = Main:AddLabelR("")
 Main:AddButtonR("Copy JobId",function()
      setclipboard(tostring(game.JobId))
 end)
-local CFrame = Main:AddLabelR("")
+Main:AddSeperatorR("CFrame Player")
+local CFramePy = Main:AddLabelR("")
 Main:AddButtonR("Copy CFrame",function()
      setclipboard(tostring(game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame))
+end)
+
+spawn(function()
+ while wait() do
+  pcall(function()
+    PlaceId:Set(game.PlaceId)  
+    JobId:Set(game.JobId)  
+    CFramePy:Set(tostring(game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame))    
+    end)
+    end
+    end)
+
+Misc:AddSeperatorL("Players")
+PlayerList = {}
+    
+for i,v in pairs(game.Players:GetChildren()) do  
+		table.insert(PlayerList ,v.Name)
+end
+
+ Misc:AddDropdownL("Select Player",PlayerList,_G.SST.Select_Player,function(value)
+	Select_Player = value
+    _G.SST.Select_Player = Select_Player
+    SS()
+end)
+
+Misc:AddButtonL("Teleport Player", function()
+	local targetPlayer = game.Players:FindFirstChild(_G.SST.Select_Player)
+	if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+	end
+end)
+
+Misc:AddSeperatorL("Player")
+_G.SST.Select_Speed =  Select_Speed or game.Players.LocalPlayer.Character.Humanoid.WalkSpeed
+Misc:AddSliderL("Select Speed",1,1000,_G.SST.Select_Speed,function(value)
+    Select_Speed = value
+    _G.SST.Select_Speed = Select_Speed
+    while task.wait(0) do
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = _G.SST.Select_Speed
+    end
+    SS()
+end)
+_G.SST.Select_Jump =  Select_Jump or game.Players.LocalPlayer.Character.Humanoid.JumpHeight
+Misc:AddSliderL("Select Jump",1,1000,_G.SST.Select_Jump,function(value)
+    Select_Jump = value
+    _G.SST.Select_Jump = Select_Jump
+    while task.wait(0) do
+        game.Players.LocalPlayer.Character.Humanoid.JumpHeight = _G.SST.Select_Jump
+    end
+    SS()
+end)
+
+Misc:AddButtonR("Rejoin Server",function()
+	game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
+end)
+function Hop()
+	local PlaceID = game.PlaceId
+	local AllIDs = {}
+	local foundAnything = ""
+	local actualHour = os.date("!*t").hour
+	local Deleted = false
+	function TPReturner()
+		local Site;
+		if foundAnything == "" then
+			Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
+		else
+			Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+		end
+		local ID = ""
+		if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
+			foundAnything = Site.nextPageCursor
+		end
+		local num = 0;
+		for i,v in pairs(Site.data) do
+			local Possible = true
+			ID = tostring(v.id)
+			if tonumber(v.maxPlayers) > tonumber(v.playing) then
+				for _,Existing in pairs(AllIDs) do
+					if num ~= 0 then
+						if ID == tostring(Existing) then
+							Possible = false
+						end
+					else
+						if tonumber(actualHour) ~= tonumber(Existing) then
+							local delFile = pcall(function()
+								AllIDs = {}
+								table.insert(AllIDs, actualHour)
+							end)
+						end
+					end
+					num = num + 1
+				end
+				if Possible == true then
+					table.insert(AllIDs, ID)
+					wait()
+					pcall(function()
+						wait()
+						game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+					end)
+					wait(4)
+				end
+			end
+		end
+	end
+	function Teleport() 
+		while wait() do
+			pcall(function()
+				TPReturner()
+				if foundAnything ~= "" then
+					TPReturner()
+				end
+			end)
+		end
+	end
+	Teleport()
+end
+Misc:AddButtonR("Server Hop",function()
+	Hop()
+end)
+
+Misc:AddButtonR("Hop To Lower Player",function()
+	getgenv().AutoTeleport = true
+	getgenv().DontTeleportTheSameNumber = true 
+	getgenv().CopytoClipboard = false
+	if not game:IsLoaded() then
+		print("Game is loading waiting...")
+	end
+	local maxplayers = math.huge
+	local serversmaxplayer;
+	local goodserver;
+	local gamelink = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100" 
+	function serversearch()
+		for _, v in pairs(game:GetService("HttpService"):JSONDecode(game:HttpGetAsync(gamelink)).data) do
+			if type(v) == "table" and v.playing ~= nil and maxplayers > v.playing then
+				serversmaxplayer = v.maxPlayers
+				maxplayers = v.playing
+				goodserver = v.id
+			end
+		end       
+	end
+	function getservers()
+		serversearch()
+		for i,v in pairs(game:GetService("HttpService"):JSONDecode(game:HttpGetAsync(gamelink))) do
+			if i == "nextPageCursor" then
+				if gamelink:find("&cursor=") then
+					local a = gamelink:find("&cursor=")
+					local b = gamelink:sub(a)
+					gamelink = gamelink:gsub(b, "")
+				end
+				gamelink = gamelink .. "&cursor=" ..v
+				getservers()
+			end
+		end
+	end 
+	getservers()
+	if AutoTeleport then
+		if DontTeleportTheSameNumber then 
+			if #game:GetService("Players"):GetPlayers() - 4  == maxplayers then
+				return warn("It has same number of players (except you)")
+			elseif goodserver == game.JobId then
+				return warn("Your current server is the most empty server atm") 
+			end
+		end
+		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, goodserver)
+	end
 end)
