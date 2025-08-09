@@ -2422,11 +2422,28 @@ end
     SS()
 end)
 
-Misc:AddButtonL("Teleport Player", function()
-	local targetPlayer = game.Players:FindFirstChild(_G.SST.Select_Player)
-	if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-	end
+ Misc:AddToggleR("Spectate Player",_G.SST.SpectatePlys,function(value)
+        SpectatePlys = value
+        SS()
+        local plr1 = game:GetService("Players").LocalPlayer.Character.Humanoid
+        local plr2 = game:GetService("Players"):FindFirstChild(_G.SST.Select_Player)
+        repeat wait(.1)
+            game:GetService("Workspace").Camera.CameraSubject = game:GetService("Players"):FindFirstChild(SelectPly).Character.Humanoid
+        until _G.SST.SpectatePlys == false 
+        game:GetService("Workspace").Camera.CameraSubject = game:GetService("Players").LocalPlayer.Character.Humanoid
+    end)
+
+Misc:AddToggleL("Teleport Player",_G.SST.Teleport_Player, function(value)
+    Teleport_Player = value
+    _G.SST.Teleport_Player = Teleport_Player
+    SS()
+    repeat task.wait(.1)
+	    local targetPlayer = game.Players:FindFirstChild(_G.SST.Select_Player)
+	    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+		    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+	    end
+    until _G.SST.Teleport_Player == false
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
 end)
 
 Misc:AddSeperatorL("Player")
@@ -2448,7 +2465,7 @@ Misc:AddSliderL("Select Jump",1,1000,_G.SST.Select_Jump,function(value)
     end
     SS()
 end)
-
+Misc:AddSeperatorR("Server")
 Misc:AddButtonR("Rejoin Server",function()
 	game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
 end)
@@ -2561,5 +2578,45 @@ Misc:AddButtonR("Hop To Lower Player",function()
 			end
 		end
 		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, goodserver)
+	end
+end)
+Misc:AddSeperatorR("Misc")
+Misc:AddToggleR("Anti AFK",_G.SST.Anti_AFK,function(value)
+Anti_AFK = value
+_G.SST.Anti_AFK = Anti_AFK
+SS()
+end)
+
+-- ✅ Anti-AFK
+spawn(function()
+	local connected = false
+	while task.wait(1) do
+		if _G.SST and _G.SST.Anti_AFK and not connected then
+			connected = true
+			Players.LocalPlayer.Idled:Connect(function()
+				VirtualUser:Button2Down(Vector2.new(9999,9999), workspace.CurrentCamera.CFrame)
+				task.wait(1)
+				VirtualUser:Button2Up(Vector2.new(9999,9999), workspace.CurrentCamera.CFrame)
+			end)
+		end
+	end
+end)
+
+
+Misc:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin,function(value)
+Auto_Kick_Rejoin = value
+_G.SST.Auto_Kick_Rejoin = Auto_Kick_Rejoin
+SS()
+end)
+
+spawn(function()
+	while wait() do
+		if _G.SST.Auto_Kick_Rejoin then
+			Auto_Kick_Rejoin = game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+				if child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
+					game:GetService("TeleportService"):Teleport(72829404259339)
+				end
+			end)
+		end
 	end
 end)
