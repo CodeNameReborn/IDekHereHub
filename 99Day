@@ -2361,105 +2361,126 @@ Main:AddLabelL("Map : 99 Nights in the Forest")
 Date = os.date("%d".." ".."%B".." ".."%Y")
 Main:AddLabelL("Day : "..Date)
 Main:AddLineL("")
-Main:AddSeperatorL("หลัก")
-_G.SST.Select_DamegeAura = Select_DamegeAura or 200
-Main:AddSliderL("เลือกระยะการทำกาเมจมอน",1,1000,_G.SST.Select_DamegeAura,function(value)
-    Select_DamegeAura = value
-    _G.SST.Select_DamegeAura = Select_DamegeAura
-    SS()
-end)
-Main:AddToggleL("ทำดาเมจมอน",_G.SST.KillAura,function(value)
-    KillAura = value
-    _G.SST.KillAura = KillAura
-    SS()
-end)
+-- ประกาศตัวแปรส่วนกลาง
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local workspace = game:GetService("Workspace")
 
-local player = game:GetService("Players").LocalPlayer
+local player = Players.LocalPlayer
 local inventory = player:WaitForChild("Inventory")
-local tool = inventory:FindFirstChild("Old Axe") or inventory:FindFirstChild("Good Axe")
-local remote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("ToolDamageObject")
-spawn(function()
-while task.wait(0) do -- ปรับความเร็วการตีได้ เช่น 0.2 วินาที
-    if _G.SST.Select_DamegeAura and _G.SST.KillAura then
-	local character = player.Character or player.CharacterAdded:Wait()
-	local origin = character:WaitForChild("HumanoidRootPart").Position
-
-	for _, target in pairs(workspace:WaitForChild("Characters"):GetChildren()) do
-		if target:IsA("Model") and target:FindFirstChild("HumanoidRootPart") then
-			local distance = (target.HumanoidRootPart.Position - origin).Magnitude
-			if distance <= _G.SST.Select_DamegeAura then
-				local args = {
-					target,
-					tool,
-					"2_2061922722",
-					CFrame.new(target.HumanoidRootPart.Position)
-				}
-				remote:InvokeServer(unpack(args))
-			end
-		end
-	end
-end
-end
-end)
-
-_G.SST.Select_LogAura = Select_LogAura or 200
-Main:AddSliderL("เลือกระยะการไม้",1,1000,_G.SST.Select_LogAura,function(value)
-    Select_LogAura = value
-    _G.SST.Select_LogAura = Select_LogAura
-    SS()
-end)
-Main:AddToggleL("ทำดาเมจมอน",_G.SST.LogAura,function(value)
-    LogAura = value
-    _G.SST.LogAura = LogAura
-    SS()
-end)
-
-local player = game:GetService("Players").LocalPlayer
-local inventory = player:WaitForChild("Inventory")
-local tool = inventory:FindFirstChild("Old Axe") or inventory:FindFirstChild("Good Axe")
-local remote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("ToolDamageObject")
-local landmarks = workspace:WaitForChild("Map"):WaitForChild("Landmarks")
-spawn(function()
-while task.wait(0.5) do -- ปรับความเร็วการตัดได้ เช่น 0.2 วินาที
-    if _G.SST.Select_LogAura and _G.SST.LogAura then
-	for _, tree in pairs(landmarks:GetChildren()) do
-		if tree:IsA("Model") and tree:FindFirstChild("PrimaryPart") then
-			local args = {
-				tree,
-				tool,
-				"4_2061922722", -- อาจเป็น ID สำหรับการตัดไม้
-				tree.PrimaryPart.CFrame
-			}
-			remote:InvokeServer(unpack(args))
-		end
-	end
-end
-end
-end)
-
-Main:AddToggleL("เก็บของเข้า sack ออโต้",_G.SST.Auto_Sack,function(value)
-    Auto_Sack = value
-    _G.SST.Auto_Sack = Auto_Sack
-    SS()
-end)
-
-local player = game:GetService("Players").LocalPlayer
-local inventory = player:WaitForChild("Inventory")
-local sack = inventory:FindFirstChild("Old Sack")
 local itemBag = player:WaitForChild("ItemBag")
-local remote = game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("RequestBagStoreItem")
-spawn(function()
-while task.wait(0.5) do -- ปรับความเร็วการเก็บได้ เช่น 0.2 วินาที
-    if _G.SST.Auto_Sack then
-	for _, item in pairs(itemBag:GetChildren()) do
-		if item:IsA("Tool") or item:IsA("Model") or item:IsA("Folder") then
-			local args = {
-				sack,
-				item
-			}
-			remote:InvokeServer(unpack(args))
-		end
-	end
+local landmarks = workspace:WaitForChild("Map"):WaitForChild("Landmarks")
+
+local remoteDamage = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("ToolDamageObject")
+local remoteStore = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("RequestBagStoreItem")
+
+local tool = inventory:FindFirstChild("Old Axe") or inventory:FindFirstChild("Good Axe")
+local sack = inventory:FindFirstChild("Old Sack")
+
+-- ฟังก์ชันรีเฟรชค่าต่าง ๆ
+local function SS()
+    -- โค้ดรีเฟรช หรือบันทึกค่าที่นี่ (ถ้ามี)
 end
-end
+
+-- ตัวแปรเริ่มต้นและ UI
+Main:AddSeperatorL("หลัก")
+
+-- Damage Aura
+_G.SST.Select_DamegeAura = Select_DamegeAura or 200
+Main:AddSliderL("เลือกระยะการทำดาเมจมอน", 1, 1000, _G.SST.Select_DamegeAura, function(value)
+    _G.SST.Select_DamegeAura = value
+    SS()
+end)
+
+_G.SST.KillAura = KillAura
+Main:AddToggleL("ทำดาเมจมอน", _G.SST.KillAura, function(value)
+    _G.SST.KillAura = value
+    SS()
+end)
+
+-- Log Aura
+_G.SST.Select_LogAura = Select_LogAura or 200
+Main:AddSliderL("เลือกระยะการไม้", 1, 1000, _G.SST.Select_LogAura, function(value)
+    _G.SST.Select_LogAura = value
+    SS()
+end)
+
+_G.SST.LogAura = LogAura
+Main:AddToggleL("ตัดไม้อัตโนมัติ", _G.SST.LogAura, function(value)
+    _G.SST.LogAura = value
+    SS()
+end)
+
+-- Auto Sack
+_G.SST.Auto_Sack = _G.SST.Auto_Sack or false
+Main:AddToggleL("เก็บของเข้ากระเป๋าอัตโนมัติ", _G.SST.Auto_Sack, function(value)
+    _G.SST.Auto_Sack = value
+    SS()
+end)
+
+-- ฟังก์ชัน Damage Aura
+task.spawn(function()
+    while task.wait(0.2) do -- ปรับความเร็วตามต้องการ
+        if _G.SST.KillAura and _G.SST.Select_DamegeAura then
+            local character = player.Character or player.CharacterAdded:Wait()
+            local origin = character:WaitForChild("HumanoidRootPart").Position
+            tool = inventory:FindFirstChild("Old Axe") or inventory:FindFirstChild("Good Axe")
+            if not tool then continue end
+
+            for _, target in pairs(workspace:WaitForChild("Characters"):GetChildren()) do
+                if target:IsA("Model") and target:FindFirstChild("HumanoidRootPart") then
+                    local distance = (target.HumanoidRootPart.Position - origin).Magnitude
+                    if distance <= _G.SST.Select_DamegeAura then
+                        local args = {
+                            target,
+                            tool,
+                            "2_2061922722",
+                            CFrame.new(target.HumanoidRootPart.Position)
+                        }
+                        remoteDamage:InvokeServer(unpack(args))
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ฟังก์ชัน Log Aura
+task.spawn(function()
+    while task.wait(0.1) do -- ปรับความเร็วตามต้องการ
+        if _G.SST.LogAura and _G.SST.Select_LogAura then
+            tool = inventory:FindFirstChild("Old Axe") or inventory:FindFirstChild("Good Axe")
+            if not tool then continue end
+
+            for _, tree in pairs(landmarks:GetChildren()) do
+                if tree:IsA("Model") and tree:FindFirstChild("PrimaryPart") then
+                    local args = {
+                        tree,
+                        tool,
+                        "4_2061922722",
+                        tree.PrimaryPart.CFrame
+                    }
+                    remoteDamage:InvokeServer(unpack(args))
+                end
+            end
+        end
+    end
+end)
+
+-- ฟังก์ชัน Auto Sack
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.SST.Auto_Sack then
+            if not sack then
+                sack = inventory:FindFirstChild("Old Sack")
+                if not sack then continue end
+            end
+            for _, item in pairs(itemBag:GetChildren()) do
+                if item:IsA("Tool") or item:IsA("Model") or item:IsA("Folder") then
+                    local args = { sack, item }
+                    remoteStore:InvokeServer(unpack(args))
+                end
+            end
+        end
+    end
 end)
