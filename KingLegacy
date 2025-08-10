@@ -2,41 +2,46 @@
 
 
 ------------------------------------------------------ SeveSetting function
-function loadcheck()
-    local fileName = "IDekhere Hub KL [ " .. game.Players.LocalPlayer.Name .. " ].json"
-    
+local folderName = "IDekHere Hub Next Gen Data"
+local playerName = game.Players.LocalPlayer.Name:gsub("[^%w_ ]", "")
+local fileName = folderName .. "/KingLagazy V2 [ " .. playerName .. " ].json"
 
-    if not isfile(fileName) then
-        writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
-        return
-    end
+local defaultSettings = {
+
+}
+
+if not isfolder(folderName) then
+    makefolder(folderName)
 end
 
-pcall(function()
-    _G.SST = {Distance_Mob = 9,Select_Distance_Aura = 1000}
-end)
-
+function loadcheck()
+    if not isfile(fileName) then
+        _G.SST = defaultSettings
+        writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
+    end
+end
 
 function LoadSetting()
-    local fileName = "IDekhere Hub KL [ " .. game.Players.LocalPlayer.Name .. " ].json"
     if isfile(fileName) then
-        local fileContent = readfile(fileName)
-        local success, decoded = pcall(function()
-            return game:GetService("HttpService"):JSONDecode(fileContent)
+        local content = readfile(fileName)
+        local success, result = pcall(function()
+            return game:GetService("HttpService"):JSONDecode(content)
         end)
-        
-        if success then
-            _G.SST = decoded
+
+        if success and result then
+            _G.SST = result
+        else
+            _G.SST = defaultSettings
+            SS()
         end
     else
-        SS()
+        loadcheck()
     end
 end
 
+
 function SS()
-    local fileName = "IDekhere Hub KL [ " .. game.Players.LocalPlayer.Name .. " ].json"
-    
-    if isfile(fileName) then
+    if _G.SST then
         writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
     else
         loadcheck()
@@ -45,10 +50,10 @@ end
 
 loadcheck()
 LoadSetting()
-  
------------------------------------------------------------ Src Ui
 
-    local OCui = game.CoreGui:FindFirstChild("RebormXerOC")
+
+----------------------------------------------------   Ui
+  local OCui = game.CoreGui:FindFirstChild("RebormXerOC")
     if OCui then
         OCui:Destroy()
     end
@@ -59,48 +64,7 @@ LoadSetting()
     local MODILEMAGE = Instance.new("ImageLabel")
     local posto = Instance.new("UIStroke")
     
-    local ScreenGui = Instance.new("ScreenGui")
-    local ImageButton = Instance.new("ImageButton")
-    
-    -- กำหนดค่าเริ่มต้น
-    ScreenGui.Parent = game.CoreGui
-    ScreenGui.Name = "RebormXerOC"
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    ImageButton.Parent = ScreenGui
-    ImageButton.Name = "Open/CloseUi"
-    ImageButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    ImageButton.BorderSizePixel = 0
-    ImageButton.Position = UDim2.new(0.1, 0, 0.1, 0)
-    ImageButton.Size = UDim2.new(0, 45, 0, 45)
-    ImageButton.Draggable = true
-    ImageButton.Image = "rbxassetid://108287073891881"
-    
-    -- ฟังก์ชันสำหรับการคลิก
-    local TweenService = game:GetService("TweenService")
-    ImageButton.MouseButton1Click:Connect(function()
-        local ui = game:GetService("CoreGui"):FindFirstChild("IDekhere Hub") -- ค้นหา UI
-        if ui and ui:FindFirstChild("Main") then -- ตรวจสอบว่ามี "Main" อยู่ใน UI
-            local main = ui.Main
-            if main.Size.X.Offset == 600 and main.Size.Y.Offset == 400 then
-                local tween = TweenService:Create(
-                    main,
-                    TweenInfo.new(0.20, Enum.EasingStyle.Sine, Enum.EasingDirection.In), -- กำหนดเวลา 0.35 วินาที
-                    {Size = UDim2.new(0, 0, 0, 0)}
-                )
-                tween:Play() -- เล่น Tween
-            else
-                local tween = TweenService:Create(
-                    main,
-                    TweenInfo.new(0.20, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), -- กำหนดเวลา 0.35 วินาที
-                    {Size = UDim2.new(0, 600, 0, 400)}
-                )
-                tween:Play() -- เล่น Tween
-            end
-        end
-    end)
-    
-    
+        
     fuckshit.Parent = Open
     
      MODILEMAGE.Name = "MODILEMAGE"
@@ -255,6 +219,271 @@ LoadSetting()
         Top.Parent = Main
         Top.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
         Top.Size = UDim2.new(0, 560, 0, 28)
+
+-- ปุ่ม macOS-style บนมุมซ้ายบนของ Top
+local function createMacButton(name, color, posX, onClick)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Parent = Top
+    button.BackgroundColor3 = color
+    button.Size = UDim2.new(0, 14, 0, 14)
+    button.Position = UDim2.new(0, posX, 0, 7)
+    button.Text = ""
+    button.AutoButtonColor = false
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = button
+    button.MouseButton1Click:Connect(onClick)
+end
+-- สร้างกล่องยืนยันปิด GUI
+local confirmFrame = Instance.new("Frame")
+confirmFrame.Size = UDim2.new(0, 220, 0, 120)
+confirmFrame.Position = UDim2.new(0.5, -110, 0.5, -60)
+confirmFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+confirmFrame.Visible = false
+confirmFrame.ZIndex = 9999
+confirmFrame.Parent = screenGui
+
+local corner = Instance.new("UICorner", confirmFrame)
+corner.CornerRadius = UDim.new(0, 8)
+
+local label = Instance.new("TextLabel", confirmFrame)
+label.Size = UDim2.new(1, -20, 0, 50)
+label.Position = UDim2.new(0, 10, 0, 10)
+label.Text = "คุณต้องการปิด UI นี้จริงหรือไม่?"
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.fromRGB(255, 255, 255)
+label.TextScaled = true
+label.ZIndex = 10000
+
+local yesBtn = Instance.new("TextButton", confirmFrame)
+yesBtn.Size = UDim2.new(0.45, 0, 0, 30)
+yesBtn.Position = UDim2.new(0.05, 0, 1, -40)
+yesBtn.Text = "ตกลง"
+yesBtn.ZIndex = 10000
+local yc = Instance.new("UICorner", yesBtn)
+yc.CornerRadius = UDim.new(0, 6)
+
+local noBtn = Instance.new("TextButton", confirmFrame)
+noBtn.Size = UDim2.new(0.45, 0, 0, 30)
+noBtn.Position = UDim2.new(0.5, 0, 1, -40)
+noBtn.Text = "ยกเลิก"
+noBtn.ZIndex = 10000
+local nc = Instance.new("UICorner", noBtn)
+nc.CornerRadius = UDim.new(0, 6)
+
+-- เชื่อมปุ่ม
+yesBtn.MouseButton1Click:Connect(function()
+    local gui = game.CoreGui:FindFirstChild("IDekhere Hub")
+    if gui then gui:Destroy() end
+end)
+
+noBtn.MouseButton1Click:Connect(function()
+    confirmFrame.Visible = false
+end)
+
+-- ปุ่ม Close เรียก popup
+createMacButton("CloseBtn", Color3.fromRGB(255, 59, 48), 6, function()
+    confirmFrame.Visible = true
+end)
+
+-- 🔴 ปิด GUI
+createMacButton("CloseBtn", Color3.fromRGB(255, 59, 48), 6, function()
+    local gui = game.CoreGui:FindFirstChild("IDekhere Hub")
+    if not gui then return end
+
+    if gui:FindFirstChild("ConfirmFrame") then return end
+
+    -- สร้างพื้นหลังยืนยัน
+    local confirmFrame = Instance.new("Frame")
+    confirmFrame.Name = "ConfirmFrame"
+    confirmFrame.Size = UDim2.new(0, 300, 0, 150)
+    confirmFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+    confirmFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    confirmFrame.BackgroundTransparency = 0.1
+    confirmFrame.BorderSizePixel = 0
+    confirmFrame.Parent = gui
+
+    -- ใส่มุมโค้ง
+    local corner = Instance.new("UICorner", confirmFrame)
+    corner.CornerRadius = UDim.new(0, 10)
+
+    -- เงา
+    local shadow = Instance.new("UIStroke", confirmFrame)
+    shadow.Thickness = 2
+    shadow.Color = Color3.fromRGB(60, 60, 60)
+    shadow.Transparency = 0.4
+
+    -- ข้อความยืนยัน
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, -20, 0.5, 0)
+    textLabel.Position = UDim2.new(0, 10, 0, 10)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = "❗ คุณแน่ใจหรือไม่ว่าจะปิด UI นี้?"
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextSize = 18
+    textLabel.TextWrapped = true
+    textLabel.TextXAlignment = Enum.TextXAlignment.Center
+    textLabel.TextYAlignment = Enum.TextYAlignment.Top
+    textLabel.Parent = confirmFrame
+
+    -- Container สำหรับปุ่ม
+    local buttonContainer = Instance.new("Frame")
+    buttonContainer.Size = UDim2.new(1, 0, 0, 50)
+    buttonContainer.Position = UDim2.new(0, 0, 1, -60)
+    buttonContainer.BackgroundTransparency = 1
+    buttonContainer.Parent = confirmFrame
+
+    -- UIListLayout เพื่อจัดเรียงปุ่ม
+    local layout = Instance.new("UIListLayout", buttonContainer)
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.VerticalAlignment = Enum.VerticalAlignment.Center
+    layout.Padding = UDim.new(0, 10)
+
+    -- ปุ่ม Yes
+    local yesButton = Instance.new("TextButton")
+    yesButton.Size = UDim2.new(0, 100, 0, 35)
+    yesButton.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
+    yesButton.Text = "✅ ใช่"
+    yesButton.TextColor3 = Color3.new(1, 1, 1)
+    yesButton.Font = Enum.Font.GothamSemibold
+    yesButton.TextSize = 16
+    yesButton.Parent = buttonContainer
+
+    local yesCorner = Instance.new("UICorner", yesButton)
+    yesCorner.CornerRadius = UDim.new(0, 6)
+
+    -- ปุ่ม No
+    local noButton = Instance.new("TextButton")
+    noButton.Size = UDim2.new(0, 100, 0, 35)
+    noButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    noButton.Text = "❌ ไม่"
+    noButton.TextColor3 = Color3.new(1, 1, 1)
+    noButton.Font = Enum.Font.GothamSemibold
+    noButton.TextSize = 16
+    noButton.Parent = buttonContainer
+
+    local noCorner = Instance.new("UICorner", noButton)
+    noCorner.CornerRadius = UDim.new(0, 6)
+
+    -- ฟังก์ชันเมื่อกดปุ่ม
+    yesButton.MouseButton1Click:Connect(function()
+        gui:Destroy()
+    end)
+
+    noButton.MouseButton1Click:Connect(function()
+        confirmFrame:Destroy()
+    end)
+end)
+
+local TweenService = game:GetService("TweenService")
+
+createMacButton("MinimizeBtn", Color3.fromRGB(255, 204, 0), 22, function()
+	local main = Top.Parent
+	local gui = game.CoreGui:FindFirstChild("IDekhere Hub")
+	if not gui then return end
+	if gui:FindFirstChild("RestoreButton") then return end
+
+	-- บันทึกข้อมูลเดิม
+	local originalSize = main.Size
+	local originalPos = main.Position
+	local originalTransparency = main.BackgroundTransparency
+
+	-- จุดปลายทางแบบ macOS Dock (มุมล่างซ้ายของหน้าจอ)
+	local dockPos = UDim2.new(0.1, 0, 0.1, 0) -- ปรับได้ตามใจ
+	local dockSize = UDim2.new(0, 0, 0, 0)
+
+	-- Tween: ย่อหดแบบ spring เหมือน macOS
+	local shrinkTween = TweenService:Create(main, TweenInfo.new(
+		0.35, -- duration
+		Enum.EasingStyle.Back,
+		Enum.EasingDirection.In
+	), {
+		Size = dockSize,
+		Position = dockPos,
+		BackgroundTransparency = 0.7
+	})
+	shrinkTween:Play()
+
+	shrinkTween.Completed:Once(function()
+		main.Visible = false
+
+		-- ปุ่ม Restore แบบกลมเหมือนใน Dock
+		local restoreBtn = Instance.new("ImageButton")
+		restoreBtn.Name = "RestoreButton"
+		restoreBtn.Size = UDim2.new(0, 48, 0, 48)
+		restoreBtn.Position = dockPos
+		restoreBtn.BackgroundTransparency = 1
+		restoreBtn.Image = "rbxassetid://108287073891881"
+		restoreBtn.ScaleType = Enum.ScaleType.Fit
+		restoreBtn.ZIndex = 9999
+		restoreBtn.Draggable = true
+		restoreBtn.Parent = gui
+
+		local corner = Instance.new("UICorner", restoreBtn)
+		corner.CornerRadius = UDim.new(0, 8) -- กลม 100%
+
+		local stroke = Instance.new("UIStroke", restoreBtn)
+		stroke.Thickness = 1
+		stroke.Color = Color3.fromRGB(180, 180, 180)
+		stroke.Transparency = 0.3
+
+		-- Restore back (พองกลับขึ้นมาจาก dock)
+		restoreBtn.MouseButton1Click:Connect(function()
+			main.Visible = true
+			main.Size = dockSize
+			main.Position = dockPos
+			main.BackgroundTransparency = 1
+
+			local expandTween = TweenService:Create(main, TweenInfo.new(
+				0.25,
+				Enum.EasingStyle.Back,
+				Enum.EasingDirection.Out
+			), {
+				Size = originalSize,
+				Position = originalPos,
+				BackgroundTransparency = originalTransparency
+			})
+			expandTween:Play()
+			expandTween.Completed:Once(function()
+				restoreBtn:Destroy()
+			end)
+		end)
+	end)
+end)
+
+
+-- 🟢 ขยายเต็มจอ / ย่อกลับ
+local isMaximized = false
+createMacButton("MaximizeBtn", Color3.fromRGB(52, 199, 89), 38, function()
+    local main = Top.Parent
+    if not isMaximized then
+   main.AnchorPoint = Vector2.new(0.5, 0.5)
+main:TweenSizeAndPosition(
+    UDim2.new(1, 0, 1, 0),
+    UDim2.new(0.5, 0, 0.5, 0),
+    Enum.EasingDirection.Out,
+    Enum.EasingStyle.Quad,
+    0.3,
+    true
+)
+
+        isMaximized = true
+    else
+        main:TweenSizeAndPosition(
+            UDim2.new(0, 600, 0, 400),
+            UDim2.new(0.5, 0, 0.5, 0),
+            Enum.EasingDirection.Out,
+            Enum.EasingStyle.Quad,
+            0.3,
+            true
+        )
+        isMaximized = false
+    end
+end)
+
     
     
     
@@ -1568,9 +1797,24 @@ local function createMultiDropdown(params)
 	selectedText.TextSize = 12
 	selectedText.TextXAlignment = Enum.TextXAlignment.Center
 
+	local searchBox = Instance.new("TextBox")
+	searchBox.Parent = base
+	searchBox.Position = UDim2.new(0, 3, 0, 60)
+	searchBox.Size = UDim2.new(1, -6, 0, 25)
+	searchBox.PlaceholderText = "Search..."
+	searchBox.Text = ""
+	searchBox.Font = Enum.Font.Code
+	searchBox.TextSize = 12
+	searchBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	searchBox.BorderSizePixel = 0
+	searchBox.Visible = false
+	local searchCorner = Instance.new("UICorner", searchBox)
+	searchCorner.CornerRadius = UDim.new(0, 4)
+
 	local itemScroll = Instance.new("ScrollingFrame")
 	itemScroll.Parent = base
-	itemScroll.Position = UDim2.new(0, 3, 0, 60)
+	itemScroll.Position = UDim2.new(0, 3, 0, 85)
 	itemScroll.Size = UDim2.new(1, -6, 0, 0)
 	itemScroll.BackgroundTransparency = 1
 	itemScroll.ScrollBarThickness = 0
@@ -1579,6 +1823,8 @@ local function createMultiDropdown(params)
 
 	local layout = Instance.new("UIListLayout", itemScroll)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	local allButtons = {}
 
 	for _, item in ipairs(list) do
 		local btn = Instance.new("TextButton")
@@ -1591,13 +1837,10 @@ local function createMultiDropdown(params)
 		btn.TextXAlignment = Enum.TextXAlignment.Left
 		btn.Text = "☐ " .. item
 
-		local function updateText()
-			if selectedItems[item] then
-				btn.Text = "☑ " .. item
-			else
-				btn.Text = "☐ " .. item
-			end
+		table.insert(allButtons, {button = btn, item = item})
 
+		local function updateText()
+			btn.Text = selectedItems[item] and ("☑ " .. item) or ("☐ " .. item)
 			local resultList = {}
 			for k, _ in pairs(selectedItems) do
 				table.insert(resultList, k)
@@ -1621,9 +1864,17 @@ local function createMultiDropdown(params)
 
 	itemScroll.CanvasSize = UDim2.new(0, 0, 0, frameExtra)
 
+	searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+		local text = string.lower(searchBox.Text)
+		for _, entry in pairs(allButtons) do
+			entry.button.Visible = string.find(string.lower(entry.item), text) ~= nil
+		end
+	end)
+
 	toggleBtn.MouseButton1Click:Connect(function()
 		toggled = not toggled
-		local newSize = toggled and (60 + frameExtra) or 60
+		local newSize = toggled and (85 + frameExtra) or 60
+		searchBox.Visible = toggled
 		itemScroll:TweenSize(UDim2.new(1, -6, 0, toggled and frameExtra or 0), 'InOut', 'Linear', 0.1, true)
 		base:TweenSize(UDim2.new(1, -2, 0, newSize), 'InOut', 'Linear', 0.1, true)
 		dropFrame:TweenSize(UDim2.new(0, 280, 0, newSize), 'InOut', 'Linear', 0.1, true)
@@ -1890,58 +2141,68 @@ end
     end
     
             
-            function main:AddLabelL(text)
-                local Label = Instance.new("TextLabel")
-                local PaddingLabel = Instance.new("UIPadding")
-                local labelfunc = {}
-        
-                Label.Name = "Label"
-                Label.Parent = MainFramePage
-                Label.BackgroundColor3 = Color3.fromRGB(51,255,255)
-                Label.BackgroundTransparency = 1.000
-                Label.Size = UDim2.new(0, 360, 0, 20)
-                Label.Font = Enum.Font.Code
-                Label.TextColor3 = Color3.fromRGB(225, 225, 225)
-                Label.TextSize = 14.000
-                Label.Text = text
-                Label.TextXAlignment = Enum.TextXAlignment.Left
-    
-                PaddingLabel.PaddingLeft = UDim.new(0,15)
-                PaddingLabel.Parent = Label
-                PaddingLabel.Name = "PaddingLabel"
-        
-                function labelfunc:Set(newtext)
-                Label.Text = newtext
-            end
-            return labelfunc
-            end
-    
-            function main:AddLabelR(text)
-                local Labell = Instance.new("TextLabel")
-                local PaddingLabell = Instance.new("UIPadding")
-                local labelfunc = {}
-        
-                Labell.Name = "Label"
-                Labell.Parent = MainFramePage2
-                Labell.BackgroundColor3 = Color3.fromRGB(51,255,255)
-                Labell.BackgroundTransparency = 1.000
-                Labell.Size = UDim2.new(0, 360, 0, 20)
-                Labell.Font = Enum.Font.Code
-                Labell.TextColor3 = Color3.fromRGB(225, 225, 225)
-                Labell.TextSize = 14.000
-                Labell.Text = text
-                Labell.TextXAlignment = Enum.TextXAlignment.Left
-    
-                PaddingLabell.PaddingLeft = UDim.new(0,15)
-                PaddingLabell.Parent = Labell
-                PaddingLabell.Name = "PaddingLabel"
-        
-                function labelfunc:Set(newtext)
-                Labell.Text = newtext
-            end
-            return labelfunc
-            end
-    
+   function main:AddLabelL(text)
+    local Label = Instance.new("TextLabel")
+    local PaddingLabel = Instance.new("UIPadding")
+    local labelfunc = {}
+
+    Label.Name = "Label"
+    Label.Parent = MainFramePage
+    Label.BackgroundColor3 = Color3.fromRGB(51, 255, 255)
+    Label.BackgroundTransparency = 1.000
+    Label.Size = UDim2.new(1, 0, 0, 0) -- แก้ตรงนี้: ใช้เต็มความกว้าง
+    Label.AutomaticSize = Enum.AutomaticSize.Y
+    Label.Font = Enum.Font.Code
+    Label.TextColor3 = Color3.fromRGB(225, 225, 225)
+    Label.TextSize = 14.000
+    Label.Text = text
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextWrapped = true
+    Label.TextScaled = false
+
+    PaddingLabel.PaddingLeft = UDim.new(0, 15)
+    PaddingLabel.PaddingRight = UDim.new(0, 15) -- เพิ่มตรงนี้
+    PaddingLabel.Parent = Label
+    PaddingLabel.Name = "PaddingLabel"
+
+    function labelfunc:Set(newtext)
+        Label.Text = newtext
+    end
+
+    return labelfunc
+end
+
+function main:AddLabelR(text)
+    local Label = Instance.new("TextLabel")
+    local PaddingLabel = Instance.new("UIPadding")
+    local labelfunc = {}
+
+    Label.Name = "Label"
+    Label.Parent = MainFramePage2
+    Label.BackgroundColor3 = Color3.fromRGB(51, 255, 255)
+    Label.BackgroundTransparency = 1.000
+    Label.Size = UDim2.new(1, 0, 0, 0)
+    Label.AutomaticSize = Enum.AutomaticSize.Y
+    Label.Font = Enum.Font.Code
+    Label.TextColor3 = Color3.fromRGB(225, 225, 225)
+    Label.TextSize = 14.000
+    Label.Text = text
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextWrapped = true
+    Label.TextScaled = false
+
+    PaddingLabel.PaddingLeft = UDim.new(0, 15)
+    PaddingLabel.PaddingRight = UDim.new(0, 15)
+    PaddingLabel.Parent = Label
+    PaddingLabel.Name = "PaddingLabel"
+
+    function labelfunc:Set(newtext)
+        Label.Text = newtext
+    end
+
+    return labelfunc
+end
+
     
     function main:Label1(text)
                 local Label1 = Instance.new("TextLabel")
@@ -2101,19 +2362,19 @@ end
 	    MapPlaceId = "4520749081"
     end
 -- Teleport Function --
+local player = game.Players.LocalPlayer
+local char = player.Character 
+local hrp = char:FindFirstChild("HumanoidRootPart")
+
 function TP(Posplayer)
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-    local char = player.Character or player.CharacterAdded:Wait()
-    if char:FindFirstChild("HumanoidRootPart") then
-        char.HumanoidRootPart.CFrame = Posplayer
-    end
+    hrp.CFrame = Posplayer
 end
+
 -- Equip Item --
 function EquipItem(ToolSe)
 	if game.Players.LocalPlayer.Backpack:FindFirstChild(ToolSe) then
 		getgenv().tool = game.Players.LocalPlayer.Backpack:FindFirstChild(ToolSe)
-		wait()
+		task.wait()
 		game.Players.LocalPlayer.Character.Humanoid:EquipTool(tool)
 	end
 end
@@ -2161,7 +2422,7 @@ spawn(function()
                 _G.TypeWeapon = "DF"
             end
         end)
-        task.wait(0.2)
+        task.wait(0)
     end
 end)
 -- Click --
@@ -2175,31 +2436,50 @@ end
 -- Anti Pysics --
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
+
 player.CharacterAdded:Connect(function(character)
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
     local humanoid = character:WaitForChild("Humanoid")
+    
+    local noclip = nil
+    local lastState = false  -- เก็บสถานะ Mob_Aura ก่อนหน้า
+
     spawn(function()
-        while task.wait() do
-            pcall(function()
+        while true do
+            task.wait(0.05)  -- ลดเวลาหน่วงให้น้อยเพื่อรีแอคชั่นไว
+
+            local success, err = pcall(function()
                 if Mob_Aura then
-                    local noclip = humanoidRootPart:FindFirstChild("BodyClip")
-                    if not noclip then
-                        local Noclip = Instance.new("BodyVelocity")
-                        Noclip.Name = "BodyClip"
-                        Noclip.Parent = humanoidRootPart
-                        Noclip.MaxForce = Vector3.new(1000000, 1000000, 1000000)
-                        Noclip.Velocity = Vector3.new(0, 0, 0)
+                    if not lastState then
+                        -- เปิด noclip
+                        if not noclip or not noclip.Parent then
+                            noclip = Instance.new("BodyVelocity")
+                            noclip.Name = "BodyClip"
+                            noclip.Parent = humanoidRootPart
+                            noclip.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+                            noclip.Velocity = Vector3.new(0, 0, 0)
+                        end
+                        lastState = true
                     end
                 else
-                    local noclip = humanoidRootPart:FindFirstChild("BodyClip")
-                    if noclip then
-                        noclip:Destroy()
+                    if lastState then
+                        -- ปิด noclip
+                        if noclip and noclip.Parent then
+                            noclip:Destroy()
+                            noclip = nil
+                        end
+                        lastState = false
                     end
                 end
             end)
+
+            if not success then
+                warn("Error in noclip loop: ", err)
+            end
         end
     end)
 end)
+
 -- Noclip --
 spawn(function()
 	pcall(function()
@@ -2283,7 +2563,7 @@ function SeverHop()
 	Teleport()
 end
 ---------------------------------------------------------------- Custom Ui
-    local IDekhereUiMain = Update:AddWindow("IDekhere Hub", "10039618734", Enum.KeyCode.RightControl)
+    local IDekhereUiMain = Update:AddWindow("  IDekhere Hub", "", Enum.KeyCode.RightControl)
 
     local MAIN = IDekhereUiMain:AddTab("Main", "6026568198")
     local SHOP = IDekhereUiMain:AddTab("Shop", "")
@@ -2294,7 +2574,7 @@ end
 ----------------------------------------------------------------- Main Left Ui
 
     MAIN:AddSeperatorL("Info")
-    MAIN:AddLabelL("Wecome To IDekhere Hub Script")
+    MAIN:AddLabelL("Wecome To IDekhere Hub Next Gen Script")
     MAIN:AddLabelL("Map :  - - - ")
     Date = os.date("%d" .. " " .. "%B" .. " " .. "%Y")
     MAIN:AddLabelL("Day : " .. Date)
@@ -2343,9 +2623,10 @@ spawn(function()
                 end
             end
         end)
-        task.wait()
+        task.wait(0)  -- รันเร็วที่สุดเท่าที่จะทำได้
     end
 end)
+
 
 
 
@@ -2358,20 +2639,23 @@ end)
         _G.SST.Select_Weapon_Type =  Select_Weapon_Type
         SS()
     end)
-    MAIN:AddDropdownR("Select Method",{"Behind","Below","Upper"},_G.SST.Select_Method,function(value)
-        Select_Method = value
-        _G.SST.Select_Method = Select_Method
-            if _G.SST.Select_Method == "Behind" then
-                _G.MethodFarm = CFrame.new(0, 0, _G.SST.Distance_Mob) 
-            elseif _G.SST.Select_Method == "Below" then
-                _G.MethodFarm = CFrame.new(0, -_G.SST.Distance_Mob, 0) * CFrame.Angles(math.rad(90), 0, 0)
-            elseif _G.SST.Select_Method == "Upper" then
-                _G.MethodFarm = CFrame.new(0, _G.SST.Distance_Mob, 0) * CFrame.Angles(math.rad(-90), 0, 0)
-            else
-			    _G.MethodFarm = CFrame.new(0, 0, _G.SST.Distance_Mob) 
-            end
-        SS()
-    end)
+    MAIN:AddDropdownR("Select Method", {"Behind", "Below", "Upper"}, _G.SST.Select_Method, function(value)
+    Select_Method = value
+    _G.SST.Select_Method = Select_Method
+
+    local dist = _G.SST.Distance_Mob
+
+    local methodMap = {
+        Behind = CFrame.new(0, 0, dist),
+        Below = CFrame.new(0, -dist, 0) * CFrame.Angles(math.rad(90), 0, 0),
+        Upper = CFrame.new(0, dist, 0) * CFrame.Angles(math.rad(-90), 0, 0),
+    }
+
+    _G.MethodFarm = methodMap[Select_Method] or methodMap["Behind"]
+
+    SS()
+end)
+
     Distance_Mob = _G.SST.Distance_Mob or 7
     MAIN:AddSliderR("Distance",1,100,_G.SST.Distance_Mob,function(value)
 	    Distance_Mob = value
