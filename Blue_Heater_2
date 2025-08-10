@@ -2358,7 +2358,7 @@ function TP(Pos)
         root.CFrame = Pos
     elseif _G.SST.Select_Teleport_Function == "Tween" then
         local distance = (Pos.Position - root.Position).Magnitude
-        local tweenInfo = TweenInfo.new(distance / 250, Enum.EasingStyle.Linear)
+        local tweenInfo = TweenInfo.new(distance / 200, Enum.EasingStyle.Linear)
         local tween = game:GetService("TweenService"):Create(root, tweenInfo, {CFrame = Pos})
         tween:Play()
 
@@ -2591,7 +2591,11 @@ Main:AddSliderR("Distance Aura", 1, 200, _G.SST.Distance_Aura, function(a)
     _G.SST.Distance_Aura = a
     SS()
 end)
-
+Main:AddDropdownR("Select Mode Attack",{"Very Fast","Fast","Normal","Slow"},_G.SST.Select_Mode_Attack,function(value)
+    Select_Mode_Attack = value
+    _G.SST.Select_Mode_Attack = Select_Mode_Attack
+    SS()
+end)
 Main:AddToggleR("Attack Aura", _G.SST.Attack_Aura, function(a)
     _G.SST.Attack_Aura = a
     SS()
@@ -2638,7 +2642,15 @@ end
 task.spawn(function()
     local runService = game:GetService("RunService")
     local lastAttackTime = 0
-    local cooldown = 0.3 -- ปรับเวลาตามที่ต้องการ
+    if _G.SST.Select_Mode_Attack == "Very Fast" then
+     cooldown = 0 -- ปรับเวลาตามที่ต้องการ
+    elseif _G.SST.Select_Mode_Attack == "Fast" then
+     cooldown = 0.1 -- ปรับเวลาตามที่ต้องการ
+    elseif _G.SST.Select_Mode_Attack == "Normal" then
+     cooldown = 0.3 -- ปรับเวลาตามที่ต้องการ
+    elseif _G.SST.Select_Mode_Attack == "Slow" then
+     cooldown = 0.5 -- ปรับเวลาตามที่ต้องการ
+    end
 
     runService.Heartbeat:Connect(function()
         if _G.SST.Attack_Aura and tick() - lastAttackTime >= cooldown then
@@ -2662,19 +2674,25 @@ Main:AddToggleR("Auto Upgreat Stats",_G.SST.Auto_Upgreat_Stats, function(value)
 end)
 
 spawn(function()
-    while wait(0.1) do 
+    while task.wait(0.1) do 
         pcall(function()
             if _G.SST.Auto_Upgreat_Stats and type(_G.SST.Select_Stats) == "table" then
+                local remoteFolder = game:GetService("ReplicatedStorage"):FindFirstChild("ReplicaRemoteEvents")
+                local remote = remoteFolder and remoteFolder:FindFirstChild("Replica_ReplicaSignal")
+
+                if not remote then
+                    warn("❌ ไม่พบ Remote: ReplicaRemoteEvents/Replica_ReplicaSignal")
+                    return
+                end
+
                 for _, stat in ipairs(_G.SST.Select_Stats) do
-                    local args = {
+                    print("เพิ่มค่า Stat:", stat) -- debug log
+                    remote:FireServer(
                         347641,
                         "AllocateStatPoint",
-                        {
-                            Stat = stat
-                        }
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("ReplicaRemoteEvents"):WaitForChild("Replica_ReplicaSignal"):FireServer(unpack(args))
-                    wait(0.05) 
+                        { Stat = ""..stat }
+                    )
+                    task.wait(0.05)
                 end
             end
         end)
