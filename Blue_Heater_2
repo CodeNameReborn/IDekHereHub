@@ -2583,8 +2583,8 @@ spawn(function()
     end
 end)
 
-
-Distance_Aura = _G.SST.Distance_Aura or 75
+Main:AddSeperatorR("Attack Function")
+_G.SST.Distance_Aura = Distance_Aura or 75
 _G.SST.Attack_Aura = _G.SST.Attack_Aura or false
 
 Main:AddSliderR("Distance Aura", 1, 200, _G.SST.Distance_Aura, function(a)
@@ -2642,23 +2642,30 @@ end
 task.spawn(function()
     local runService = game:GetService("RunService")
     local lastAttackTime = 0
-    if _G.SST.Select_Mode_Attack == "Very Fast" then
-     cooldown = 0 -- ปรับเวลาตามที่ต้องการ
-    elseif _G.SST.Select_Mode_Attack == "Fast" then
-     cooldown = 0.1 -- ปรับเวลาตามที่ต้องการ
-    elseif _G.SST.Select_Mode_Attack == "Normal" then
-     cooldown = 0.3 -- ปรับเวลาตามที่ต้องการ
-    elseif _G.SST.Select_Mode_Attack == "Slow" then
-     cooldown = 0.5 -- ปรับเวลาตามที่ต้องการ
+
+    local function getCooldown()
+        if _G.SST.Select_Mode_Attack == "Very Fast" then
+            return 0
+        elseif _G.SST.Select_Mode_Attack == "Fast" then
+            return 0.1
+        elseif _G.SST.Select_Mode_Attack == "Normal" then
+            return 0.3
+        elseif _G.SST.Select_Mode_Attack == "Slow" then
+            return 0.5
+        else
+            return 0.3 -- ค่า default
+        end
     end
 
     runService.Heartbeat:Connect(function()
+        local cooldown = getCooldown()
         if _G.SST.Attack_Aura and tick() - lastAttackTime >= cooldown then
             lastAttackTime = tick()
             attackAll()
         end
     end)
 end)
+
 Main:AddSeperatorR("Stats")
 Select_Stats = _G.SST.Select_Stats or {"Strength"}
 Main:AddMultiDropdownR("Select Stats", {"Strength", "Dexterity", "Vitality", "Agility", "Intelligence", "Focus"} , _G.SST.Select_Stats or {} , function(value)
