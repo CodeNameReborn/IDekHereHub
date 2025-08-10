@@ -7,7 +7,8 @@ local playerName = game.Players.LocalPlayer.Name:gsub("[^%w_ ]", "")
 local fileName = folderName .. "/KingLagazy V2 [ " .. playerName .. " ].json"
 
 local defaultSettings = {
-
+    Select_Distance_Aura = 1000,
+    Distance_Mob = 10
 }
 
 if not isfolder(folderName) then
@@ -2588,6 +2589,7 @@ end
     end)
 
     MAIN:AddSeperatorL("Mob Aura")
+    Select_Distance_Aura = _G.SST.Select_Distance_Aura or 1000
     MAIN:AddSliderL("Select Distance Aura",1,3000,_G.SST.Select_Distance_Aura,function(value)
         Select_Distance_Aura = value
         SS()
