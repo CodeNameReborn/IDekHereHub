@@ -2422,7 +2422,7 @@ end
     SS()
 end)
 
- Misc:AddToggleR("Spectate Player",_G.SST.SpectatePlys,function(value)
+ Misc:AddToggleL("Spectate Player",_G.SST.SpectatePlys,function(value)
         SpectatePlys = value
         SS()
         local plr1 = game:GetService("Players").LocalPlayer.Character.Humanoid
