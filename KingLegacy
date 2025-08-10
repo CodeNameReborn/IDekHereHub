@@ -2589,7 +2589,7 @@ end
     end)
 
     MAIN:AddSeperatorL("Mob Aura")
-    Select_Distance_Aura = _G.SST.Select_Distance_Aura or 1000
+    _G.SST.Select_Distance_Aura = Select_Distance_Aura or 1000
     MAIN:AddSliderL("Select Distance Aura",1,3000,_G.SST.Select_Distance_Aura,function(value)
         Select_Distance_Aura = value
         SS()
@@ -2641,24 +2641,34 @@ end)
         _G.SST.Select_Weapon_Type =  Select_Weapon_Type
         SS()
     end)
-    MAIN:AddDropdownR("Select Method", {"Behind", "Below", "Upper"}, _G.SST.Select_Method, function(value)
-    Select_Method = value
-    _G.SST.Select_Method = Select_Method
-
+   local function UpdateMethodFarm()
     local dist = _G.SST.Distance_Mob
-
     local methodMap = {
         Behind = CFrame.new(0, 0, dist),
         Below = CFrame.new(0, -dist, 0) * CFrame.Angles(math.rad(90), 0, 0),
         Upper = CFrame.new(0, dist, 0) * CFrame.Angles(math.rad(-90), 0, 0),
     }
+    _G.MethodFarm = methodMap[_G.SST.Select_Method] or methodMap["Behind"]
+end
 
-    _G.MethodFarm = methodMap[Select_Method] or methodMap["Behind"]
-
+MAIN:AddDropdownR("Select Method", {"Behind", "Below", "Upper"}, _G.SST.Select_Method, function(value)
+    _G.SST.Select_Method = value
+    UpdateMethodFarm()
     SS()
 end)
 
-    Distance_Mob = _G.SST.Distance_Mob or 7
+-- สมมติว่ามี dropdown หรือ slider เปลี่ยนค่า Distance_Mob ด้วย:
+MAIN:AddSliderR("Distance Mob", 1, 50, _G.SST.Distance_Mob, function(value)
+    _G.SST.Distance_Mob = value
+    UpdateMethodFarm()
+    SS()
+end)
+
+-- เรียกอัพเดตตอนเริ่มต้นด้วย
+UpdateMethodFarm()
+
+
+    _G.SST.Distance_Mob = Distance_Mob or 7
     MAIN:AddSliderR("Distance",1,100,_G.SST.Distance_Mob,function(value)
 	    Distance_Mob = value
 	    _G.SST.Distance_Mob = Distance_Mob
