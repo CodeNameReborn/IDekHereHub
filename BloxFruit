@@ -1,7 +1,7 @@
 
 local folderName = "IDekHere Hub Data"
 local playerName = game.Players.LocalPlayer.Name:gsub("[^%w_ ]", "")
-local fileName = folderName .. "/All Map [ " .. playerName .. " ].json"
+local fileName = folderName .. "/Blox Fruit [ " .. playerName .. " ].json"
 
 local defaultSettings = {
 
