@@ -3349,57 +3349,44 @@ end
     end)
 
     spawn(function()
-        while task.wait(0.2) do -- เว้นระยะ 0.2 วิ เพื่อลดการโหลด
-            pcall(function()
-                if _G.SST.Bring_Mob and StartMagnet then
-                    QuestFunction()
-                    local player = game:GetService("Players").LocalPlayer
-                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                    if not hrp then return end
+    while task.wait() do
+        pcall(function()
+            if _G.SST.Bring_Mob and StartMagnet then
+                QuestFunction()
+                local player = game:GetService("Players").LocalPlayer
+                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
 
-                    for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                        if v.Name == NameMon
-                        and v:FindFirstChild("Humanoid") 
-                        and v:FindFirstChild("HumanoidRootPart") 
-                        and v.Humanoid.Health > 0 then
-                            
-                            local mobHRP = v.HumanoidRootPart
-                            local distance = (mobHRP.Position - hrp.Position).Magnitude
+                for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                    if v.Name == NameMon 
+                    and v:FindFirstChild("Humanoid") 
+                    and v:FindFirstChild("HumanoidRootPart") 
+                    and v.Humanoid.Health > 0 
+                    and (v.HumanoidRootPart.Position - hrp.Position).Magnitude <= 220 then
+                        
+                        -- ปิดการชน
+                        v.HumanoidRootPart.CanCollide = false
+                        v.Head.CanCollide = false
 
-                            if distance <= 220 then
-                                -- ปิดการชน (ทำแค่ครั้งเดียว)
-                                if mobHRP.CanCollide then
-                                    mobHRP.CanCollide = false
-                                end
-                                local head = v:FindFirstChild("Head")
-                                if head and head.CanCollide then
-                                    head.CanCollide = false
-                                end
+                        -- ย้ายมอนมาใกล้ PosMon แต่ไม่สูงเกินไป
+                        local targetPos = PosMon * CFrame.new(0, 0, 0)
+                        v.HumanoidRootPart.CFrame = targetPos
 
-                                -- ย้ายมอนมาใกล้ PosMon เฉพาะถ้าอยู่ห่างเกินไป
-                                local targetPos = PosMon.Position
-                                if (mobHRP.Position - targetPos).Magnitude > 5 then
-                                    mobHRP.CFrame = CFrame.new(targetPos)
-                                end
+                        -- เปลี่ยน state ให้หยุดเดิน
+                        v.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 
-                                -- เปลี่ยน state ให้หยุดเดิน
-                                if v.Humanoid:GetState() ~= Enum.HumanoidStateType.Physics then
-                                    v.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-                                end
+                        -- ลบ Animator เพื่อหยุด animation
+                        local animator = v.Humanoid:FindFirstChild("Animator")
+                        if animator then animator:Destroy() end
 
-                                -- ลบ Animator แค่ครั้งเดียว
-                                local animator = v.Humanoid:FindFirstChild("Animator")
-                                if animator then
-                                    animator:Destroy()
-                                end
-                            end
-                        end
+                        -- ขยาย Simulation Radius
+                        sethiddenproperty(player, "SimulationRadius", math.huge)
                     end
                 end
-            end)
-        end
-    end)
-
+            end
+        end)
+    end
+end)
 
 
     MS:AddSeperatorR("Tween Setting")
