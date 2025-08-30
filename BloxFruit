@@ -1546,7 +1546,6 @@ end
 function main:AddToggleR(text, config, callback)
     self:AddToggle(text, config, callback, MainFramePage2)
 end
-
 local function createDropdown(params)
     local parent    = params.parent or error("Parent is required")
     local title     = params.title or "Dropdown"
@@ -1727,6 +1726,7 @@ function main:AddDropdownR(droptitle, list, config, callback)
         style = "R"
     })
 end
+
 
 local function createMultiDropdown(params)
 	local parent = params.parent or error("Parent is required")
@@ -2364,55 +2364,73 @@ end
         end
     end
 
-    function Tween(Pos)
-        local player = game.Players.LocalPlayer
-        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
-        if not hrp or not humanoid then return end
+   local currentTween = nil
+local StopTweenFlag = false
 
-        local distance = (Pos.Position - hrp.Position).Magnitude
+function Tween(Pos)
+    local player = game.Players.LocalPlayer
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+    if not hrp or not humanoid then return end
 
-        -- ถ้านั่งอยู่ให้ยกเลิกการนั่ง
-        if humanoid.Sit then
-            humanoid.Sit = false
-        end
+    local distance = (Pos.Position - hrp.Position).Magnitude
 
-        -- คำนวณเวลา Tween (ขั้นต่ำ 0.1 วินาที)
-        local tweenTime = math.max(distance / _G.SST.Tween_Speed)
-
-        local tween
-        local success, err = pcall(function()
-            tween = game:GetService("TweenService"):Create(
-                hrp,
-                TweenInfo.new(tweenTime, Enum.EasingStyle.Linear),
-                {CFrame = Pos}
-            )
-        end)
-
-        if success and tween then
-            tween:Play()
-        else
-            warn("Tween creation failed:", err)
-            return
-        end
-
-        -- ถ้าใกล้มากให้เทเลพอร์ตแทน
-        if distance <= 250 then
-            tween:Cancel()
-            hrp.CFrame = Pos
-        end
-
-        -- หยุด Tween ถ้า StopTween เป็น true
-        if StopTween then
-            tween:Cancel()
-            Clip = false
-        end
+    -- ถ้านั่งอยู่ให้ยกเลิกการนั่ง
+    if humanoid.Sit then
+        humanoid.Sit = false
     end
-    
+
+    -- คำนวณเวลา Tween (ขั้นต่ำ 0.1 วินาที)
+    local tweenTime = math.max(distance / _G.SST.Tween_Speed, 0.1)
+
+    local success, err = pcall(function()
+        currentTween = game:GetService("TweenService"):Create(
+            hrp,
+            TweenInfo.new(tweenTime, Enum.EasingStyle.Linear),
+            {CFrame = Pos}
+        )
+    end)
+
+    if success and currentTween then
+        currentTween:Play()
+    else
+        warn("Tween creation failed:", err)
+        return
+    end
+
+    -- ถ้าใกล้มากให้เทเลพอร์ตแทน
+    if distance <= 200 then
+        currentTween:Cancel()
+        hrp.CFrame = Pos
+    end
+
+    -- หยุด Tween ถ้า flag เป็น true
+    if StopTweenFlag then
+        currentTween:Cancel()
+        Clip = false
+    end
+end
+
+function StopTween(target)
+    if not target then
+        StopTweenFlag = true
+        if currentTween then
+            currentTween:Cancel()
+        end
+        -- ลบ BodyClip ถ้ามี
+        local hrp = game:GetService("Players").LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp and hrp:FindFirstChild("BodyClip") then
+            hrp.BodyClip:Destroy()
+        end
+        StopTweenFlag = false
+        Clip = false
+    end
+end
+
     spawn(function()
         pcall(function()
             while task.wait() do
-                if _G.SST.Auto_Farm_Level then
+                if _G.SST.Auto_Farm_Level or _G.SST.Auto_Farm_Boss then
                     local character = game:GetService("Players").LocalPlayer.Character
                     local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
                     if humanoidRootPart and not humanoidRootPart:FindFirstChild("BodyClip") then
@@ -2439,7 +2457,7 @@ end
     spawn(function()
         pcall(function()
             game:GetService("RunService").Stepped:Connect(function()
-                if _G.SST.Auto_Farm_Level then
+                if _G.SST.Auto_Farm_Level or _G.SST.Auto_Farm_Boss then
                     for _, v in pairs(game:GetService("Players").LocalPlayer.Character:GetDescendants()) do
                         if v:IsA("BasePart") then
                             v.CanCollide = false    
@@ -2452,7 +2470,7 @@ end
 
     spawn(function()
         while wait() do
-            if _G.SST.Auto_Farm_Level then
+            if _G.SST.Auto_Farm_Level or _G.SST.Auto_Farm_Boss then
                 pcall(function()
                     game:GetService("ReplicatedStorage").Remotes.CommE:FireServer("Ken",true)
                 end)
@@ -2490,6 +2508,7 @@ end
         Auto_Farm_Level = vu
         _G.SST.Auto_Farm_Level = Auto_Farm_Level
         SS()
+        
     end)
     
     spawn(function()
@@ -3210,13 +3229,13 @@ end
             end
     -------------------------------------------------- Next World Quest
     MS:AddSeperatorL("Next World Quest")
-    if World2 then
+    if World1 then
         MS:AddToggleL("Auto Second Sea",_G.SST.Auto_Second_Sea,function(vu)
             Auto_Second_Sea = vu
             _G.SST.Auto_Second_Sea = Auto_Second_Sea
             SS()
         end)
-    elseif World3 then
+    elseif World2 then
         MS:AddToggleL("Auto Third Sea",_G.SST.Auto_Third_Sea,function(vu)
             Auto_Third_Sea = vu
             _G.SST.Auto_Third_Sea = Auto_Third_Sea
@@ -3268,6 +3287,52 @@ end
         SS()
     end)
 
+    MS:AddSeperatorL("Boss")
+    local BossList = {}
+    for i, v in pairs(game.ReplicatedStorage:GetChildren()) do
+        if v.Name == "Cyborg" or v.Name == "The Gorilla King" or v.Name == "Wysper" or v.Name == "Thunder God" or v.Name == "Mob Leader" or v.Name == "Bobby" or v.Name == "Saber Expert" or v.Name == "Warden" or v.Name == "Chief Warden" or v.Name == "Swan" or v.Name == "Magma Admiral"  or v.Name == "Fishman Lord" or v.Name == "Wysper" or v.Name == "Ice Admiral" or v.Name == "Diamond" or v.Name == "Jeremy" or v.Name == "Fajita" or v.Name == "Don Swan" or v.Name == "Smoke Admiral" or v.Name == "Awakened Ice Admiral" or v.Name == "Tide Keeper" or v.Name == "Darkbeard" or v.Name == "Stone" or v.Name == "Island Empress" or v.Name == "Kilo Admiral" or v.Name == "Captain Elephant" or v.Name == "Beautiful Pirate" or v.Name == "Longma" or v.Name == "Cake Queen" or v.Name == "Greybeard" or v.Name == "Order" or v.Name == "Cursed Captain" or v.Name == "Soul Reaper" or v.Name == "Rip indra" or v.Name == "Mihawk Boss" or v.Name == "Cake Prince" or v.Name == "Dough King" or v.Name == "Cursed Skeleton Boss" or v.Name == "Factory" then
+            table.insert(BossList, v.Name)
+        end
+    end
+    MS:AddDropdownL("Select Boss",BossList,_G.SST.Select_Boss,function(vu)
+        Select_Boss = vu
+        _G.SST.Select_Boss =Select_Boss
+        SS()
+    end)
+    MS:AddToggleL("Auto Farm Boss",_G.SST.Auto_Farm_Boss,function(vu)
+        Auto_Farm_Boss = vu
+        _G.SST.Auto_Farm_Boss = Auto_Farm_Boss
+        SS()
+        
+    end)
+    spawn(function()
+        while task.wait() do
+            if _G.SST.Auto_Farm_Boss then
+                pcall(function()
+                    if game:GetService("Workspace").Enemies:FindFirstChild(_G.SST.Select_Boss) then
+                        for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                            if v.Name == _G.SST.Select_Boss then
+                                if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                                    repeat task.wait()
+                                        AutoHaki()
+                                        Equip(_G.ItemName)
+                                        v.HumanoidRootPart.CanCollide = false
+                                        v.Humanoid.WalkSpeed = 0
+                                        Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
+                                        sethiddenproperty(game:GetService("Players").LocalPlayer,"SimulationRadius",math.huge)
+                                    until not _G.SST.Auto_Farm_Boss or not v.Parent or v.Humanoid.Health <= 0
+                                end
+                            end
+                        end
+                    else
+                        if game:GetService("ReplicatedStorage"):FindFirstChild(_G.SST.Select_Boss) then
+                            Tween(game:GetService("ReplicatedStorage"):FindFirstChild(_G.SST.Select_Boss).HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
+                        end
+                    end
+                end)
+            end
+        end
+    end)
     ------------------------------------------------  MS R
     MS:AddSeperatorR("Setting Farm")
     MS:AddDropdownR("Select Item type",{"Melee","Sword","Gun","Fruit"},_G.SST.Select_Item_Type,function(vu)
@@ -3348,8 +3413,8 @@ end
         _G.SST.Bring_Mob = Bring_Mob
     end)
 
-    spawn(function()
-    while task.wait() do
+spawn(function()
+    while task.wait(0) do
         pcall(function()
             if _G.SST.Bring_Mob and StartMagnet then
                 QuestFunction()
@@ -3362,7 +3427,7 @@ end
                     and v:FindFirstChild("Humanoid") 
                     and v:FindFirstChild("HumanoidRootPart") 
                     and v.Humanoid.Health > 0 
-                    and (v.HumanoidRootPart.Position - hrp.Position).Magnitude <= 220 then
+                    and (v.HumanoidRootPart.Position - hrp.Position).Magnitude <= 150 then
                         
                         -- ปิดการชน
                         v.HumanoidRootPart.CanCollide = false
