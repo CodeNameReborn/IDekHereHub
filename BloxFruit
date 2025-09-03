@@ -3453,7 +3453,7 @@ spawn(function()
     while wait() do
         pcall(function()
             if _G.SST.Bring_Mob  then
-                if _G.Auto_Farm_Level and StartMagnet then
+                if _G.SST.Auto_Farm_Level and StartMagnet then
                 QuestFunction()
                 local player = game:GetService("Players").LocalPlayer
                 local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
