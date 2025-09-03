@@ -2547,77 +2547,89 @@ end
     end)
     
     spawn(function()
-        while task.wait() do
-            if not _G.SST.Auto_Farm_Level then
+    while task.wait(0.1) do -- เว้น 0.1 วิ เพื่อลดโหลดเครื่อง
+        if not _G.SST.Auto_Farm_Level then
+            StartMagnet = false
+            continue
+        end
+
+        pcall(function()
+            local player = game.Players.LocalPlayer
+            local char = player.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            local questGui = player.PlayerGui.Main.Quest
+            local questTitle = questGui.Container.QuestTitle.Title.Text
+
+            -- ไม่มีเควส
+            if not questGui.Visible then
                 StartMagnet = false
-                continue
+                QuestFunction()
+
+                repeat
+                    task.wait()
+                    Tween(CFrameQuest)
+                until not _G.SST.Auto_Farm_Level 
+                      or (CFrameQuest.Position - hrp.Position).Magnitude <= 3
+
+                if (CFrameQuest.Position - hrp.Position).Magnitude <= 3 then
+                    task.wait(1)
+                    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
+                    task.wait(0.5)
+                end
+                return
             end
 
-            pcall(function()
-                local player = game:GetService("Players").LocalPlayer
-                local questGui = player.PlayerGui.Main.Quest
-                local questTitle = questGui.Container.QuestTitle.Title.Text
+            -- มีเควสแล้ว
+            QuestFunction()
+            local enemies = game.Workspace.Enemies
 
-                -- ถ้าไม่มีเควส
-                if not questGui.Visible then
-                    StartMagnet = false
-                    QuestFunction()
-
-                    repeat
-                        task.wait()
-                        Tween(CFrameQuest)
-                    until (CFrameQuest.Position - player.Character.HumanoidRootPart.Position).Magnitude <= 3 
-                        or not _G.SST.Auto_Farm_Level
-
-                    if (CFrameQuest.Position - player.Character.HumanoidRootPart.Position).Magnitude <= 3 then
-                        task.wait(1)
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
+            local foundEnemy = false
+            for _, v in pairs(enemies:GetChildren()) do
+                if v.Name == Mon 
+                and v:FindFirstChild("HumanoidRootPart") 
+                and v:FindFirstChild("Humanoid") 
+                and v.Humanoid.Health > 0 then
+                    
+                    foundEnemy = true
+                    if string.find(questTitle, NameMon) then
+                        repeat
+                            task.wait()
+                            Equip(_G.ItemName)
+                            AutoHaki()
+                            PosMon = v.HumanoidRootPart.CFrame
+                            Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
+                            v.Head.CanCollide = false
+                            v.Humanoid.WalkSpeed = 0
+                            StartMagnet = true
+                        until not _G.SST.Auto_Farm_Level 
+                              or v.Humanoid.Health <= 0 
+                              or not v.Parent 
+                              or not questGui.Visible
+                    else
+                        StartMagnet = false
+                        game.ReplicatedStorage.Remotes.CommF_:InvokeServer("AbandonQuest")
                         task.wait(0.5)
                     end
-                    return
                 end
+            end
 
-                -- ถ้ามีเควสแล้ว
-                QuestFunction()
-                local enemies = game:GetService("Workspace").Enemies
-
-                if enemies:FindFirstChild(Mon) then
-                    for _, v in pairs(enemies:GetChildren()) do
-                        if v.Name == Mon and v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                            if string.find(questTitle, NameMon) then
-                                repeat
-                                    task.wait()
-                                    Equip(_G.ItemName)
-                                    AutoHaki()
-                                    PosMon = v.HumanoidRootPart.CFrame
-                                    Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
-                                    v.Head.CanCollide = false
-                                    v.Humanoid.WalkSpeed = 0
-                                    StartMagnet = true
-                                until not _G.SST.Auto_Farm_Level or v.Humanoid.Health <= 0 or not v.Parent or not questGui.Visible
-                            else
-                                StartMagnet = false
-                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
-                            end
-                        end
-                    end
-                else
-                    StartMagnet = false
-                    local repMon = game:GetService("ReplicatedStorage"):FindFirstChild(Mon)
-                    if repMon then
-                        Tween(repMon.HumanoidRootPart.CFrame * CFrame.new(0,0,0))
-                        if PUK then
-                            Tween(PUK)
-                        elseif OldPos then
-                            Tween(OldPos.Position)
-                        end
-                    elseif PUK then
-                        Tween(PUK)
-                    end
+            -- ไม่เจอมอนใน Workspace
+            if not foundEnemy then
+                StartMagnet = false
+                if PUK then
+                    Tween(PUK)
+                elseif OldPos then
+                    Tween(OldPos.Position)
+                elseif PosMon then
+                    Tween(PosMon)
                 end
-            end)
-        end
-    end)
+            end
+        end)
+    end
+end)
+
 
 
     function QuestFunction() 
@@ -3458,7 +3470,7 @@ end
 
     -- 🌟 Auto Bring & Freeze Mob (ทีละ 2 ตัว) 🌟
 spawn(function()
-    while task.wait(0) do
+    while task.wait(0.1) do -- เว้นระยะนิดหน่อยเพื่อไม่ให้กิน CPU
         pcall(function()
             if _G.SST 
             and _G.SST.Bring_Mob 
@@ -3468,33 +3480,43 @@ spawn(function()
                 
                 QuestFunction()
 
-                local count = 0 -- ตัวนับจำนวนมอนที่ดึงในรอบนี้
+                local player = game.Players.LocalPlayer
+                local char = player.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
 
+                local count = 0
                 for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
                     if v.Name == NameMon 
                     and v:FindFirstChild("Humanoid") 
                     and v:FindFirstChild("HumanoidRootPart") 
                     and v.Humanoid.Health > 0 
-                    and (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 100 then
+                    and (v.HumanoidRootPart.Position - hrp.Position).Magnitude <= 100 then
+                        
+                        -- ย้ายมอนมาที่ตำแหน่งเป้าหมาย
                         v.HumanoidRootPart.CFrame = PosMon
-                        v.Humanoid:ChangeState(11)                        
+                        v.Humanoid:ChangeState(11)
+
                         -- ปิดการชน
                         v.HumanoidRootPart.CanCollide = false
                         if v:FindFirstChild("Head") then
                             v.Head.CanCollide = false
                         end
-                        
-                        -- ลบ Animator
+
+                        -- ลบ Animator กัน ghost
                         if v.Humanoid:FindFirstChild("Animator") then
                             v.Humanoid.Animator:Destroy()
                         end
-                        
-                        -- ขยาย Simulation Radius
-                            sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
-                        -- เพิ่มตัวนับ
+
+                        -- ขยาย Simulation Radius (กันมอนหาย)
+                        pcall(function()
+                            sethiddenproperty(player, "SimulationRadius", math.huge)
+                        end)
+
+                        -- นับจำนวนมอน
                         count = count + 1
-                        if count >= 1 then
-                            break -- ดึงแค่ 2 ตัวแล้วหยุด
+                        if count >= 2 then
+                            break -- ดึงแค่ 2 ตัว
                         end
                     end
                 end
@@ -3502,6 +3524,7 @@ spawn(function()
         end)
     end
 end)
+
 
 
     MS:AddSeperatorR("Tween Setting")
