@@ -3351,10 +3351,13 @@ end
                                     repeat task.wait()
                                         AutoHaki()
                                         Equip(_G.ItemName)
+                                        NameMon = v.Name
+                                        PosMon = v.HumanoidRootPart.CFrame
                                         v.HumanoidRootPart.CanCollide = false
                                         v.Humanoid.WalkSpeed = 0
                                         Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
                                         sethiddenproperty(game:GetService("Players").LocalPlayer,"SimulationRadius",math.huge)
+                                        StartMagnet = true
                                     until not _G.SST.Auto_Farm_Boss or not v.Parent or v.Humanoid.Health <= 0
                                 end
                             end
@@ -3362,9 +3365,13 @@ end
                     else
                         if game:GetService("ReplicatedStorage"):FindFirstChild(_G.SST.Select_Boss) then
                             Tween(game:GetService("ReplicatedStorage"):FindFirstChild(_G.SST.Select_Boss).HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
+                            StartMagnet = false
                         end
                     end
                 end)
+            else
+                 Tween(game:Getservers("Players").localPlayer.character.CFarme)
+                 StartMagnet = false
             end
         end
     end)
@@ -3455,7 +3462,6 @@ spawn(function()
         pcall(function()
             if _G.SST 
             and _G.SST.Bring_Mob 
-            and _G.SST.Auto_Farm_Level 
             and StartMagnet 
             and NameMon 
             and PosMon then
