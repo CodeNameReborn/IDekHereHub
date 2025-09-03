@@ -3490,13 +3490,10 @@ spawn(function()
                         end
                         
                         -- ขยาย Simulation Radius
-                        if sethiddenproperty then
                             sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
-                        end
-
                         -- เพิ่มตัวนับ
                         count = count + 1
-                        if count >= 2 then
+                        if count >= 1 then
                             break -- ดึงแค่ 2 ตัวแล้วหยุด
                         end
                     end
