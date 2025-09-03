@@ -3449,11 +3449,22 @@ end
         SS()
     end)
 
-    spawn(function()
-    while task.wait(0.1) do
+    -- 🌟 Auto Bring & Freeze Mob Script 🌟
+spawn(function()
+    while task.wait(0) do
         pcall(function()
-            if _G.SST and _G.SST.Bring_Mob and _G.SST.Auto_Farm_Level and StartMagnet and NameMon and PosMon then
+            -- เช็กว่าตัวแปรสำคัญถูกกำหนดแล้ว
+            if _G.SST 
+            and _G.SST.Bring_Mob 
+            and _G.SST.Auto_Farm_Level 
+            and StartMagnet 
+            and NameMon 
+            and PosMon then
+                
+                -- เรียกฟังก์ชันทำเควส (ต้องมีประกาศไว้ก่อน)
                 QuestFunction()
+
+                -- วนลูปหามอนใน Workspace
                 for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
                     if v.Name == NameMon 
                     and v:FindFirstChild("Humanoid") 
@@ -3461,16 +3472,26 @@ end
                     and v.Humanoid.Health > 0 
                     and (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 100 then
                         
-                        v.Humanoid:ChangeState(11)
+                        -- ย้ายมอนมาตำแหน่งที่ต้องการ
+                        v.HumanoidRootPart.CFrame = PosMon
+                        
+                        -- ทำให้มอนหยุดนิ่ง
+                        v.Humanoid:ChangeState(11) -- หยุดเคลื่อนไหว
+                        v.Humanoid.PlatformStand = true -- ปิดการเคลื่อนไหวร่างกาย
+                        v.HumanoidRootPart.Anchored = true -- ล็อกตำแหน่ง
+                        
+                        -- ปิดการชน
                         v.HumanoidRootPart.CanCollide = false
                         if v:FindFirstChild("Head") then
                             v.Head.CanCollide = false
                         end
-                        v.HumanoidRootPart.CFrame = PosMon
+                        
+                        -- ลบ Animator เพื่อหยุดอนิเมชัน
                         if v.Humanoid:FindFirstChild("Animator") then
                             v.Humanoid.Animator:Destroy()
                         end
                         
+                        -- ขยาย Simulation Radius (ต้องใช้ exploit API)
                         if sethiddenproperty then
                             sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
                         end
@@ -3480,8 +3501,6 @@ end
         end)
     end
 end)
-
-
 
 
     MS:AddSeperatorR("Tween Setting")
