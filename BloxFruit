@@ -3446,12 +3446,14 @@ end
     MS:AddToggleR("Bring Mob",_G.SST.Bring_Mob,function(vu)
         Bring_Mob = vu
         _G.SST.Bring_Mob = Bring_Mob
+        SS()
     end)
 
 spawn(function()
-    while task.wait(0) do
+    while wait() do
         pcall(function()
-            if _G.SST.Bring_Mob and StartMagnet then
+            if _G.SST.Bring_Mob  then
+                if _G.Auto_Farm_Level and StartMagnet then
                 QuestFunction()
                 local player = game:GetService("Players").LocalPlayer
                 local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
@@ -3463,24 +3465,15 @@ spawn(function()
                     and v:FindFirstChild("HumanoidRootPart") 
                     and v.Humanoid.Health > 0 
                     and (v.HumanoidRootPart.Position - hrp.Position).Magnitude <= 150 then
-                        
-                        -- ปิดการชน
                         v.HumanoidRootPart.CanCollide = false
                         v.Head.CanCollide = false
-
-                        -- ย้ายมอนมาใกล้ PosMon แต่ไม่สูงเกินไป
-                        local targetPos = PosMon * CFrame.new(0, 0, 0)
+                        local targetPos = PosMon
                         v.HumanoidRootPart.CFrame = targetPos
-
-                        -- เปลี่ยน state ให้หยุดเดิน
                         v.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-
-                        -- ลบ Animator เพื่อหยุด animation
                         local animator = v.Humanoid:FindFirstChild("Animator")
                         if animator then animator:Destroy() end
-
-                        -- ขยาย Simulation Radius
                         sethiddenproperty(player, "SimulationRadius", math.huge)
+                    end
                     end
                 end
             end
