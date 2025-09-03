@@ -3449,10 +3449,42 @@ end
         SS()
     end)
 
+    spawn(function()
+        while task.wait() do
+            pcall(function()
+                if _G.SST.Bring_Mob then
+                    QuestFunction()
+                    for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                        if _G.SST.Auto_Farm_Level and StartMagnet and v.Name == NameMon and (NameMon == "Factory Staff" or NameMon == "Monkey" or NameMon == "Dragon Crew Warrior" or NameMon == "Dragon Crew Archer") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 and (v.HumanoidRootPart.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 100 then
+                            v.Humanoid:ChangeState(11)
+                            v.HumanoidRootPart.CanCollide = false
+                            v.Head.CanCollide = false
+                            v.HumanoidRootPart.CFrame = PosMon
+                            if v.Humanoid:FindFirstChild("Animator") then
+                                v.Humanoid.Animator:Destroy()
+                            end
+                            sethiddenproperty(game:GetService("Players").LocalPlayer,"SimulationRadius",math.huge)
+                        elseif _G.SST.Auto_Farm_Level and StartMagnet and v.Name == NameMon and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 and (v.HumanoidRootPart.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 100 then
+                            v.HumanoidRootPart.CFrame = PosMon
+                            v.Humanoid:ChangeState(11)
+                            v.HumanoidRootPart.CanCollide = false
+                            v.Head.CanCollide = false
+                            if v.Humanoid:FindFirstChild("Animator") then
+                                v.Humanoid.Animator:Destroy()
+                            end
+                            sethiddenproperty(game:GetService("Players").LocalPlayer,"SimulationRadius",math.huge)
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+
+
 spawn(function()
     while task.wait(0.2) do -- เพิ่มเวลาเป็น 0.2 เพื่อลดการประมวลผล
         pcall(function()
-            if _G.SST.Bring_Mob and StartMagnet then
+            if _G.SST.1212121w and qsqqsq then
                 QuestFunction()
                 local player = game:GetService("Players").LocalPlayer
                 local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
