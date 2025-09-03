@@ -3450,85 +3450,38 @@ end
     end)
 
     spawn(function()
-        while task.wait() do
-            pcall(function()
-                if _G.SST.Bring_Mob then
-                    QuestFunction()
-                    for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                        if _G.SST.Auto_Farm_Level and StartMagnet and v.Name == NameMon and (NameMon == "Factory Staff" or NameMon == "Monkey" or NameMon == "Dragon Crew Warrior" or NameMon == "Dragon Crew Archer") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 and (v.HumanoidRootPart.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 100 then
-                            v.Humanoid:ChangeState(11)
-                            v.HumanoidRootPart.CanCollide = false
-                            v.Head.CanCollide = false
-                            v.HumanoidRootPart.CFrame = PosMon
-                            if v.Humanoid:FindFirstChild("Animator") then
-                                v.Humanoid.Animator:Destroy()
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer,"SimulationRadius",math.huge)
-                        elseif _G.SST.Auto_Farm_Level and StartMagnet and v.Name == NameMon and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 and (v.HumanoidRootPart.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 100 then
-                            v.HumanoidRootPart.CFrame = PosMon
-                            v.Humanoid:ChangeState(11)
-                            v.HumanoidRootPart.CanCollide = false
-                            v.Head.CanCollide = false
-                            if v.Humanoid:FindFirstChild("Animator") then
-                                v.Humanoid.Animator:Destroy()
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer,"SimulationRadius",math.huge)
-                        end
-                    end
-                end
-            end)
-        end
-    end)
-
-
-spawn(function()
-    while task.wait(0.2) do -- เพิ่มเวลาเป็น 0.2 เพื่อลดการประมวลผล
+    while task.wait(0.1) do
         pcall(function()
-            if _G.SST.1212121w and qsqqsq then
+            if _G.SST and _G.SST.Bring_Mob and _G.SST.Auto_Farm_Level and StartMagnet and NameMon and PosMon then
                 QuestFunction()
-                local player = game:GetService("Players").LocalPlayer
-                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                if not hrp then return end
-
                 for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
                     if v.Name == NameMon 
                     and v:FindFirstChild("Humanoid") 
                     and v:FindFirstChild("HumanoidRootPart") 
-                    and v.Humanoid.Health > 0 then
+                    and v.Humanoid.Health > 0 
+                    and (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 100 then
                         
-                        local dist = (v.HumanoidRootPart.Position - hrp.Position).Magnitude
-                        if dist <= 150 then
-                            -- ปิดการชนเพื่อลดการกระตุก
-                            if v.HumanoidRootPart.CanCollide then
-                                v.HumanoidRootPart.CanCollide = false
-                            end
-                            if v:FindFirstChild("Head") and v.Head.CanCollide then
-                                v.Head.CanCollide = false
-                            end
-
-                            -- ย้ายตำแหน่งเฉพาะถ้าไม่ตรงอยู่แล้ว
-                            if (v.HumanoidRootPart.Position - PosMon.Position).Magnitude > 1 then
-                                v.HumanoidRootPart.CFrame = PosMon
-                            end
-
-                            -- หยุดการเคลื่อนไหว
-                            v.Humanoid:ChangeState(11)
-
-                            -- ลบ Animator แค่ครั้งเดียว
-                            local animator = v.Humanoid:FindFirstChild("Animator")
-                            if animator then
-                                animator:Destroy()
-                            end
+                        v.Humanoid:ChangeState(11)
+                        v.HumanoidRootPart.CanCollide = false
+                        if v:FindFirstChild("Head") then
+                            v.Head.CanCollide = false
+                        end
+                        v.HumanoidRootPart.CFrame = PosMon
+                        if v.Humanoid:FindFirstChild("Animator") then
+                            v.Humanoid.Animator:Destroy()
+                        end
+                        
+                        if sethiddenproperty then
+                            sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
                         end
                     end
                 end
-
-                -- ตั้ง SimulationRadius แค่ครั้งเดียวต่อรอบ
-                sethiddenproperty(player, "SimulationRadius", math.huge)
             end
         end)
     end
 end)
+
+
 
 
     MS:AddSeperatorR("Tween Setting")
