@@ -2547,7 +2547,7 @@ end
     end)
     
     spawn(function()
-    while task.wait(0.1) do -- เว้น 0.1 วิ เพื่อลดโหลดเครื่อง
+    while task.wait(0.01) do -- เว้น 0.1 วิ เพื่อลดโหลดเครื่อง
         if not _G.SST.Auto_Farm_Level then
             StartMagnet = false
             continue
@@ -3453,7 +3453,7 @@ end)
     end
 
     spawn(function()
-        while task.wait() do
+        while task.wait(0.01) do
             if _G.SST.Auto_Attack then
                 Click()
             else
@@ -3461,7 +3461,13 @@ end)
             end
         end
     end)
-
+    MS:AddSeperatorR("Bring Setting")
+    _G.SST.Select_Bring_Distance =  _G.SST.Select_Bring_Distance or Select_Bring_Distance or 150
+    MS:AddSliderR("Select Bring Distance",1,400,_G.SST.Select_Bring_Distance,function(vu)
+        Select_Bring_Distance = vu
+        _G.SST.Select_Bring_Distance =  Select_Bring_Distance
+        SS()
+    end)
     MS:AddToggleR("Bring Mob",_G.SST.Bring_Mob,function(vu)
         Bring_Mob = vu
         _G.SST.Bring_Mob = Bring_Mob
@@ -3470,7 +3476,7 @@ end)
 
     -- 🌟 Auto Bring & Freeze Mob (ทีละ 2 ตัว) 🌟
 spawn(function()
-    while task.wait(0.1) do -- เว้นระยะนิดหน่อยเพื่อไม่ให้กิน CPU
+    while task.wait(0.01) do -- เว้นระยะนิดหน่อยเพื่อไม่ให้กิน CPU
         pcall(function()
             if _G.SST 
             and _G.SST.Bring_Mob 
@@ -3491,7 +3497,7 @@ spawn(function()
                     and v:FindFirstChild("Humanoid") 
                     and v:FindFirstChild("HumanoidRootPart") 
                     and v.Humanoid.Health > 0 
-                    and (v.HumanoidRootPart.Position - hrp.Position).Magnitude <= 100 then
+                    and (v.HumanoidRootPart.Position - hrp.Position).Magnitude <= _G.SST.Select_Bring_Distance then
                         
                         -- ย้ายมอนมาที่ตำแหน่งเป้าหมาย
                         v.HumanoidRootPart.CFrame = PosMon
