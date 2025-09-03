@@ -3450,10 +3450,9 @@ end
     end)
 
 spawn(function()
-    while wait() do
+    while task.wait(0.2) do -- เพิ่มเวลาเป็น 0.2 เพื่อลดการประมวลผล
         pcall(function()
-            if _G.SST.Bring_Mob  then
-                if _G.SST.Auto_Farm_Level and StartMagnet then
+            if _G.SST.Bring_Mob and StartMagnet then
                 QuestFunction()
                 local player = game:GetService("Players").LocalPlayer
                 local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
@@ -3463,19 +3462,37 @@ spawn(function()
                     if v.Name == NameMon 
                     and v:FindFirstChild("Humanoid") 
                     and v:FindFirstChild("HumanoidRootPart") 
-                    and v.Humanoid.Health > 0 
-                    and (v.HumanoidRootPart.Position - hrp.Position).Magnitude <= 150 then
-                        v.HumanoidRootPart.CanCollide = false
-                        v.Head.CanCollide = false
-                        local targetPos = PosMon
-                        v.HumanoidRootPart.CFrame = targetPos
-                        v.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-                        local animator = v.Humanoid:FindFirstChild("Animator")
-                        if animator then animator:Destroy() end
-                        sethiddenproperty(player, "SimulationRadius", math.huge)
-                    end
+                    and v.Humanoid.Health > 0 then
+                        
+                        local dist = (v.HumanoidRootPart.Position - hrp.Position).Magnitude
+                        if dist <= 150 then
+                            -- ปิดการชนเพื่อลดการกระตุก
+                            if v.HumanoidRootPart.CanCollide then
+                                v.HumanoidRootPart.CanCollide = false
+                            end
+                            if v:FindFirstChild("Head") and v.Head.CanCollide then
+                                v.Head.CanCollide = false
+                            end
+
+                            -- ย้ายตำแหน่งเฉพาะถ้าไม่ตรงอยู่แล้ว
+                            if (v.HumanoidRootPart.Position - PosMon.Position).Magnitude > 1 then
+                                v.HumanoidRootPart.CFrame = PosMon
+                            end
+
+                            -- หยุดการเคลื่อนไหว
+                            v.Humanoid:ChangeState(11)
+
+                            -- ลบ Animator แค่ครั้งเดียว
+                            local animator = v.Humanoid:FindFirstChild("Animator")
+                            if animator then
+                                animator:Destroy()
+                            end
+                        end
                     end
                 end
+
+                -- ตั้ง SimulationRadius แค่ครั้งเดียวต่อรอบ
+                sethiddenproperty(player, "SimulationRadius", math.huge)
             end
         end)
     end
