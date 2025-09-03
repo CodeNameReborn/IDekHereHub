@@ -3275,7 +3275,9 @@ end)
                 end
             end
     -------------------------------------------------- Next World Quest
+    if World1 or World2 then
     MS:AddSeperatorL("Next World Quest")
+    end
     if World1 then
         MS:AddToggleL("Auto Second Sea",_G.SST.Auto_Second_Sea,function(vu)
             Auto_Second_Sea = vu
@@ -3406,6 +3408,20 @@ end)
 		    end)
 	    end
     end)
+    MS:AddSeperatorR("Attack Setting")
+    _G.SST.Select_Mode_Attack = _G.SST.Select_Mode_Attack or Select_Mode_Attack or "Normal"
+    MS:AddDropdownR("Select Mode Attack",{"Fast","Normal","Slow"},_G.SST.Select_Mode_Attack,function(vu)
+        Select_Mode_Attack = vu
+        _G.SST.Select_Mode_Attack = Select_Mode_Attack
+        SS()
+        if _G.SST.Select_Mode_Attack == "Fast" then
+            _G.SpeedAttack = 0 
+        elseif _G.SST.Select_Mode_Attack == "Normal" then
+            _G.SpeedAttack = 0.01
+        elseif _G.SST.Select_Mode_Attack == "Slow" then
+            _G.SpeedAttack = 0.1
+        end  
+    end)
 
     MS:AddToggleR("Auto Attack",_G.SST.Auto_Attack,function(vu)
         Auto_Attack = vu
@@ -3453,7 +3469,7 @@ end)
     end
 
     spawn(function()
-        while task.wait(0.01) do
+        while task.wait( _G.SpeedAttack) do
             if _G.SST.Auto_Attack then
                 Click()
             else
@@ -3462,12 +3478,26 @@ end)
         end
     end)
     MS:AddSeperatorR("Bring Setting")
-    _G.SST.Select_Bring_Distance =  _G.SST.Select_Bring_Distance or Select_Bring_Distance or 150
+    _G.SST.Select_Bring_Distance =  _G.SST.Select_Bring_Distance or Select_Bring_Distance or 85
     MS:AddSliderR("Select Bring Distance",1,400,_G.SST.Select_Bring_Distance,function(vu)
         Select_Bring_Distance = vu
         _G.SST.Select_Bring_Distance =  Select_Bring_Distance
         SS()
     end)
+    _G.SST.Select_Mode_Bring = _G.SST.Select_Mode_Bring or Select_Mode_Bring or "Normal"
+    MS:AddDropdownR("Select Mode Bring",{"Fast","Normal","Slow"},_G.SST.Select_Mode_Bring,function(vu)
+        Select_Mode_Bring = vu
+        _G.SST.Select_Mode_Bring = Select_Mode_Bring
+        SS()
+        if _G.SST.Select_Mode_Bring == "Fast" then
+            _G.timebring = 0 
+        elseif _G.SST.Select_Mode_Bring == "Normal" then
+            _G.timebring = 0.01
+        elseif _G.SST.Select_Mode_Bring == "Slow" then
+            _G.timebring = 0.1
+        end  
+    end)
+
     MS:AddToggleR("Bring Mob",_G.SST.Bring_Mob,function(vu)
         Bring_Mob = vu
         _G.SST.Bring_Mob = Bring_Mob
@@ -3476,7 +3506,7 @@ end)
 
     -- 🌟 Auto Bring & Freeze Mob (ทีละ 2 ตัว) 🌟
 spawn(function()
-    while task.wait(0.01) do -- เว้นระยะนิดหน่อยเพื่อไม่ให้กิน CPU
+    while task.wait(_G.timebring) do -- เว้นระยะนิดหน่อยเพื่อไม่ให้กิน CPU
         pcall(function()
             if _G.SST 
             and _G.SST.Bring_Mob 
@@ -3540,6 +3570,13 @@ end)
         _G.SST.Tween_Speed = Tween_Speed
         SS()
     end)
+    _G.SST.Distance_For_Tp = _G.SST.Distance_For_Tp or Distance_For_Tp or 200
+    MS:AddSliderR("Distance For Tp",0,400,_G.SST.Distance_For_Tp,function(value)
+        Distance_For_Tp = value
+        _G.SST.Distance_For_Tp = Distance_For_Tp
+        SS()
+    end)
+    MS:AddSeperatorR("Position Tween Setting")
     _G.SST.Pos_X = _G.SST.Pos_X or Pos_X or 0
     MS:AddSliderR("Pos X",0,100,_G.SST.Pos_X,function(value)
         Pos_X = value
