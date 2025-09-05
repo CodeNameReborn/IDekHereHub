@@ -2389,7 +2389,17 @@ end
         World3 = true
     end
 
-
+    
+    function UnEquip(Weapon)
+        if game.Players.LocalPlayer.Character:FindFirstChild(Weapon) then
+            NotAutoEquip = true
+            wait(.5)
+            game.Players.LocalPlayer.Character:FindFirstChild(Weapon).Parent = game.Players.LocalPlayer.Backpack
+            wait(.1)
+            NotAutoEquip = false
+        end
+    end
+    
     
     function Equip(ToolSe)
         if not NotAutoEquip then
@@ -2524,7 +2534,7 @@ end
     local ReBornXerUi = Update:AddWindow("  IDekhere Hub","",Enum.KeyCode.RightControl)
 
     local MS = ReBornXerUi:AddTab("Main - Setting","6026568198")
-    local IM = ReBornXerUi:AddTab("Item - Event","")
+    local IE = ReBornXerUi:AddTab("Item - Event","")
     local RS = ReBornXerUi:AddTab("Race - Sea","6035190846")
     local SI = ReBornXerUi:AddTab("Shop - Island","6031265976")
     local PM = ReBornXerUi:AddTab("Player - Misc","6034509993")
@@ -3750,6 +3760,149 @@ spawn(function()
     end
 end)
 
+IE:AddSeperatorL("Melee")
+IE:AddToggleL("Auto Super Human",_G.SST.Auto_Super_Human,function(vu)
+    Auto_Super_Human = vu
+    _G.SST.Auto_Super_Human = Auto_Super_Human
+    SS()
+end)
+
+spawn(function()
+    while task.wait() do
+        pcall(function()
+            if _G.SST.Auto_Super_Human then
+                local player = game.Players.LocalPlayer
+                local beli = player.Data.Beli.Value
+                local frag = player.Data.Fragments.Value
+
+                -- Combat -> Black Leg
+                local combat = player.Backpack:FindFirstChild("Combat") or player.Character:FindFirstChild("Combat")
+                if combat and beli >= 150000 then
+                    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("BuyBlackLeg")
+
+                -- Black Leg -> Electro
+                else
+                    local blackleg = player.Backpack:FindFirstChild("Black Leg") or player.Character:FindFirstChild("Black Leg")
+                    if blackleg and blackleg:FindFirstChild("Level") and blackleg.Level.Value >= 399 and beli >= 500000 then
+                        game.ReplicatedStorage.Remotes.CommF_:InvokeServer("BuyElectro")
+
+                    -- Electro -> Fishman Karate
+                    else
+                        local electro = player.Backpack:FindFirstChild("Electro") or player.Character:FindFirstChild("Electro")
+                        if electro and electro:FindFirstChild("Level") and electro.Level.Value >= 399 and beli >= 750000 then
+                            game.ReplicatedStorage.Remotes.CommF_:InvokeServer("BuyFishmanKarate")
+
+                        -- Fishman Karate -> Dragon Claw
+                        else
+                            local fishman = player.Backpack:FindFirstChild("Fishman Karate") or player.Character:FindFirstChild("Fishman Karate")
+                            if fishman and fishman:FindFirstChild("Level") and fishman.Level.Value >= 399 and frag >= 1500 then
+                                game.ReplicatedStorage.Remotes.CommF_:InvokeServer("BlackbeardReward","DragonClaw","1")
+                                game.ReplicatedStorage.Remotes.CommF_:InvokeServer("BlackbeardReward","DragonClaw","2")
+
+                            -- Dragon Claw -> Superhuman
+                            else
+                                local dragon = player.Backpack:FindFirstChild("Dragon Claw") or player.Character:FindFirstChild("Dragon Claw")
+                                if dragon and dragon:FindFirstChild("Level") and dragon.Level.Value >= 399 and beli >= 2000000 then
+                                    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("BuySuperhuman")
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+
+IE:AddToggleL("Auto Death Step",_G.SST.Auto_Death_Step,function(vu)
+    Auto_Death_Step = vu
+    _G.SST.Auto_Death_Step = Auto_Death_Step
+    SS()
+end)
+
+spawn(function()
+    while wait() do
+        pcall(function()
+            if _G.SST.Auto_Death_Step then
+                if game.Players.LocalPlayer.Backpack:FindFirstChild("Combat") or game.Players.LocalPlayer.Character:FindFirstChild("Combat") and game:GetService("Players")["LocalPlayer"].Data.Beli.Value >= 150000 then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyBlackLeg")
+                elseif game.Players.LocalPlayer.Backpack:FindFirstChild("Black Leg") or game.Players.LocalPlayer.Character:FindFirstChild("Black Leg") and game.Players.LocalPlayer.Character:FindFirstChild("Black Leg").Level.Value >= 399 and game:GetService("Players")["LocalPlayer"].Data.Beli.Value >= 3000000 then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDeathStep")
+                end
+            end
+        end)
+    end
+end)
+
+IE:AddToggleL("Auto Shark Man",_G.SST.Auto_Shark_Man,function(vu)
+    Auto_Shark_Man = vu
+    _G.SST.Auto_Shark_Man = Auto_Shark_Man
+    SS()
+end)
+
+spawn(function()
+    while task.wait() do
+        pcall(function()
+            if _G.SST.Auto_Shark_Man then
+                local player = game:GetService("Players").LocalPlayer
+                local beli = player.Data.Beli.Value
+
+                if not game.Players.LocalPlayer.Backpack:FindFirstChild("Fishman Karate") and not game.Players.LocalPlayer.Character:FindFirstChild("Fishman Karate") then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyFishmanKarate")
+
+                else
+                    local result = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate")
+                    if type(result) == "string" and string.find(result, "keys") then
+                        if player.Character:FindFirstChild("Water Key") or player.Backpack:FindFirstChild("Water Key") then
+                            Equip("Water Key")
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate")
+                        end
+                    elseif player.Character:FindFirstChild("Fishman Karate") and player.Character["Fishman Karate"].Level.Value >= 400 then
+                        local Ms = "Tide Keeper"
+                        local enemies = game:GetService("Workspace").Enemies
+                        if enemies:FindFirstChild(Ms) then
+                            for _, v in pairs(enemies:GetChildren()) do
+                                if v.Name == Ms and v:FindFirstChild("HumanoidRootPart") then
+                                    repeat task.wait()
+                                        AutoHaki()
+                                        Equip(_G.ItemName)
+                                        v.Head.CanCollide = false
+                                        v.Humanoid.WalkSpeed = 0
+                                        v.HumanoidRootPart.CanCollide = false
+                                        v.HumanoidRootPart.CFrame = OldCFrameShark
+                                        Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
+                                        sethiddenproperty(player,"SimulationRadius",math.huge)
+                                    until not v.Parent or v.Humanoid.Health <= 0 or not _G.SST.Auto_Shark_Man or player.Character:FindFirstChild("Water Key") or player.Backpack:FindFirstChild("Water Key")
+                                end
+                            end
+                        elseif game:GetService("ReplicatedStorage"):FindFirstChild(Ms) and game:GetService("ReplicatedStorage")[Ms]:FindFirstChild("HumanoidRootPart") then
+                            Tween(game:GetService("ReplicatedStorage")[Ms].HumanoidRootPart.CFrame)
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+
+IE:AddToggleL("Auto Electric Claw",_G.SST.Auto_Electric_Claw,function(vu)
+    Auto_Electric_Claw = vu
+    _G.SST.Auto_Electric_Claw = Auto_Electric_Claw
+    SS()
+end)
+IE:AddToggleL("Auto Dragon Talon",_G.SST.Auto_Dragon_Talon,function(vu)
+    Auto_Dragon_Talon = vu
+    _G.SST.Auto_Dragon_Talon = Auto_Dragon_Talon
+    SS()
+end)
+IE:AddToggleL("Auto God Human",_G.SST.Auto_God_Human,function(vu)
+    Auto_God_Human = vu
+    _G.SST.Auto_God_Human = Auto_God_Human
+    SS()
+end)
+
 ------------------------------------------------------------ PM R
 PM:AddSeperatorR("FPS Boost")
 local originalSettings = {
@@ -3928,4 +4081,45 @@ PM:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
         game:GetService("RunService"):Set3dRenderingEnabled(true)
         toggleBlackScreen(false)
     end
+end)
+
+PM:AddSeperatorR("Misc")
+PM:AddToggleR("Anti AFK",_G.SST.Anti_AFK,function(value)
+Anti_AFK = value
+_G.SST.Anti_AFK = Anti_AFK
+SS()
+end)
+
+-- ✅ Anti-AFK
+spawn(function()
+	local connected = false
+	while task.wait(1) do
+		if _G.SST and _G.SST.Anti_AFK and not connected then
+			connected = true
+			Players.LocalPlayer.Idled:Connect(function()
+				VirtualUser:Button2Down(Vector2.new(9999,9999), workspace.CurrentCamera.CFrame)
+				task.wait(1)
+				VirtualUser:Button2Up(Vector2.new(9999,9999), workspace.CurrentCamera.CFrame)
+			end)
+		end
+	end
+end)
+
+
+PM:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin,function(value)
+Auto_Kick_Rejoin = value
+_G.SST.Auto_Kick_Rejoin = Auto_Kick_Rejoin
+SS()
+end)
+
+spawn(function()
+	while wait() do
+		if _G.SST.Auto_Kick_Rejoin then
+			Auto_Kick_Rejoin = game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+				if child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
+					game:GetService("TeleportService"):Teleport(72829404259339)
+				end
+			end)
+		end
+	end
 end)
