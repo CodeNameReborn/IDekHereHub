@@ -4068,6 +4068,37 @@ PM:AddToggleR("Boost FPS",_G.SST.Boost_FPS,function(value)
         ResetGraphics()
     end
 end)
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local blackScreenUI = nil
+
+local function toggleBlackScreen(enable)
+    if not enable then
+        if blackScreenUI then
+            blackScreenUI.Enabled = false
+        end
+        return
+    end
+
+    if blackScreenUI then
+        blackScreenUI.Enabled = true
+        return
+    end
+
+    blackScreenUI = Instance.new("ScreenGui")
+    blackScreenUI.Name = "Blackscreen"
+    blackScreenUI.DisplayOrder = 1 
+    blackScreenUI.ResetOnSpawn = false 
+    blackScreenUI.IgnoreGuiInset = true 
+    blackScreenUI.Parent = playerGui
+
+    local uiFrame = Instance.new("Frame")
+    uiFrame.BackgroundColor3 = Color3.new(0, 0, 0) 
+    uiFrame.Size = UDim2.new(1, 0, 1, 0) 
+    uiFrame.Position = UDim2.new(0, 0, 0, 0) 
+    uiFrame.BorderSizePixel = 0 
+    uiFrame.Parent = blackScreenUI
+end
 
 PM:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
     Black_Screen = value
@@ -4081,6 +4112,24 @@ PM:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
         toggleBlackScreen(false)
     end
 end)
+ _G.SST.Select_Farme_Rate =  _G.SST.Select_Farme_Rate or Select_Farme_Rate or 60
+PM:AddSliderR("Select Frame Rate For LockFpf", 0, 500, _G.SST.Select_Farme_Rate, function(a)
+    Select_Farme_Rate = a -- ใช้ตัวแปร a แทนค่า Select_Farme_Rate
+	_G.SST.Select_Farme_Rate = Select_Farme_Rate
+    SS() -- ฟังก์ชันเพิ่มเติม
+end)
+
+-- เริ่มฟังก์ชัน spawn สำหรับการตั้งค่า FPS
+spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            if type(_G.SST.Select_Farme_Rate) == "number" and _G.SST.Select_Farme_Rate > 0 then
+                setfpscap(_G.SST.Select_Farme_Rate) -- ตั้งค่าความเร็วเฟรมตามค่า
+            end
+        end)
+    end
+end)
+
 
 PM:AddSeperatorR("Misc")
 PM:AddToggleR("Anti AFK",_G.SST.Anti_AFK,function(value)
