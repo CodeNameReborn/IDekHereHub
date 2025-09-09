@@ -3639,7 +3639,6 @@ spawn(function()
         pcall(function()
             if _G.SST 
             and _G.SST.Bring_Mob 
-            and StartMagnet 
             and NameMon 
             and PosMon then
                 
