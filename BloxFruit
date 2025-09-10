@@ -455,20 +455,20 @@ createMacButton("MinimizeBtn", Color3.fromRGB(255, 204, 0), 22, function()
 
         restoreBtn.MouseButton1Click:Connect(restore)
 
-        -- Keybind Restore (LeftControl)
+        -- Keybind Restore (RightControl)
         UserInputService.InputBegan:Connect(function(input, gp)
             if gp then return end
-            if input.KeyCode == Enum.KeyCode.LeftControl then
+            if input.KeyCode == Enum.KeyCode.RightControl then
                 restore()
             end
         end)
     end)
 end)
 
--- Keybind Minimize/Restore Toggle (LeftControl)
+-- Keybind Minimize/Restore Toggle (RightControl)
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
-    if input.KeyCode == Enum.KeyCode.LeftControl then
+    if input.KeyCode == Enum.KeyCode.RightControl then
         local gui = game.CoreGui:FindFirstChild("IDekhere Hub")
         if not gui then return end
 
@@ -3736,7 +3736,44 @@ MS:AddMultiDropdownR("Select Stats", {"Melee","Defense","Sword","Gun","Devil Fru
     _G.SST.Select_Stats = Select_Stats
     SS()
 end)
+MS:AddSeperatorR("Add-on")
+MS:AddToggleR("Disible Notifications",_G.SST.Disible_Notifications,function(vu)
+    Disible_Notifications = vu
+    _G.SST.Disible_Notifications = Disible_Notifications
+    SS()
+    if vu then
+        game:GetService("Players").LocalPlayer.PlayerGui.Notifications.Enabled = false
+    else
+        game:GetService("Players").LocalPlayer.PlayerGui.Notifications.Enabled = true
+    end
+end)
 
+
+MS:AddToggleR("Auto Activate Race Ability",_G.SST.Auto_Activate_Race_Ability,function(vu)
+    Auto_Activate_Race_Ability = vu
+    _G.SST.Auto_Activate_Race_Ability = Auto_Activate_Race_Ability
+    SS()
+end)
+
+MS:AddToggleR("Auto Activate Race V4 Ability",_G.SST.Auto_Activate_RaceV4_Ability,function(vu)
+    Auto_Activate_RaceV4_Ability = vu
+    _G.SST.Auto_Activate_RaceV4_Ability = Auto_Activate_RaceV4_Ability
+    SS()
+end)
+
+    spawn(function()
+        pcall(function()
+            while wait(1) do
+                if _G.SST.Auto_Activate_Race_Ability then
+                    game:GetService("ReplicatedStorage").Remotes.CommE:FireServer("ActivateAbility")
+                end
+                if Auto_Activate_RaceV4_Ability then
+                    game:GetService("Players").LocalPlayer.Backpack.Awakening.RemoteFunction:InvokeServer(true)
+                end
+            end
+        end)
+    end)
+MS:AddSeperatorR("Stats")
 _G.SST.Select_Point_Stats = _G.SST.Select_Point_Stats or Select_Point_Stats or 1
 MS:AddSliderR("Select Point Stats", 1, 2750, _G.SST.Select_Point_Stats, function(vu)
     Select_Point_Stats = vu
@@ -4467,9 +4504,9 @@ spawn(function()
         end)
     end
 end)
------------------------------------------------------------- PM L
-PM:AddSeperatorL("Sever")
-PM:AddButtonL("Rejoin Server",function()
+------------------------------------------------------------ PM R
+PM:AddSeperatorR("Sever")
+PM:AddButtonR("Rejoin Server",function()
 	game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
 end)
 function Hop()
@@ -4533,11 +4570,11 @@ function Hop()
 	end
 	Teleport()
 end
-PM:AddButtonL("Server Hop",function()
+PM:AddButtonR("Server Hop",function()
 	Hop()
 end)
 
-PM:AddButtonL("Hop To Lower Player",function()
+PM:AddButtonR("Hop To Lower Player",function()
 	getgenv().AutoTeleport = true
 	getgenv().DontTeleportTheSameNumber = true 
 	getgenv().CopytoClipboard = false
@@ -4584,8 +4621,8 @@ PM:AddButtonL("Hop To Lower Player",function()
 	end
 end)
 
-PM:AddSeperatorL("Code")
-PM:AddToggleL("Auto Redeem Code",_G.SST.Auto_Redeem_Code,function(vu)
+PM:AddSeperatorR("Code")
+PM:AddToggleR("Auto Redeem Code",_G.SST.Auto_Redeem_Code,function(vu)
     Auto_Redeem_Code = vu
     _G.SST.Auto_Redeem_Code = Auto_Redeem_Code
     SS()
@@ -4626,7 +4663,6 @@ spawn(function()
     end
 end)
 
------------------------------------------------------------- PM R
 PM:AddSeperatorR("FPS Boost")
 local originalSettings = {
 	saved = false,
