@@ -3730,12 +3730,7 @@ end)
         SS()
     end)
 
-    MS:AddSeperatorR("Stats")
-MS:AddMultiDropdownR("Select Stats", {"Melee","Defense","Sword","Gun","Devil Fruit"}, _G.SST.Select_Stats or {}, function(vu)
-    Select_Stats = vu
-    _G.SST.Select_Stats = Select_Stats
-    SS()
-end)
+
 MS:AddSeperatorR("Add-on")
 MS:AddToggleR("Disible Notifications",_G.SST.Disible_Notifications,function(vu)
     Disible_Notifications = vu
@@ -3774,6 +3769,11 @@ end)
         end)
     end)
 MS:AddSeperatorR("Stats")
+MS:AddMultiDropdownR("Select Stats", {"Melee","Defense","Sword","Gun","Devil Fruit"}, _G.SST.Select_Stats or {}, function(vu)
+    Select_Stats = vu
+    _G.SST.Select_Stats = Select_Stats
+    SS()
+end)
 _G.SST.Select_Point_Stats = _G.SST.Select_Point_Stats or Select_Point_Stats or 1
 MS:AddSliderR("Select Point Stats", 1, 2750, _G.SST.Select_Point_Stats, function(vu)
     Select_Point_Stats = vu
