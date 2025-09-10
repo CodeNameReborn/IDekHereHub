@@ -2839,6 +2839,9 @@ end)
                 NameMon = "Galley Pirate"
                 PUK = CFrame.new(5566.14453125, 71.22917175292969, 3964.4443359375)
                 CFrameQuest = CFrame.new(5259.81982, 37.3500175, 4050.0293, 0.087131381, 0, 0.996196866, 0, 1, 0, -0.996196866, 0, 0.087131381)
+                if _G.SST.Auto_Farm_Level and (CFrameQuest.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
+               game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance",Vector3.new(-4607.82275, 872.54248, -1667.55688))
+               end
             elseif MyLevel >= 650 then
                 Mon = "Galley Captain"
                 LevelQuest = 2
@@ -2846,6 +2849,9 @@ end)
                 NameMon = "Galley Captain"
                 PUK = CFrame.new(5344.2529296875, 104.73433685302734, 4821.6533203125)
                 CFrameQuest = CFrame.new(5259.81982, 37.3500175, 4050.0293, 0.087131381, 0, 0.996196866, 0, 1, 0, -0.996196866, 0, 0.087131381)
+                if _G.SST.Auto_Farm_Level and (CFrameQuest.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
+               game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance",Vector3.new(-4607.82275, 872.54248, -1667.55688))
+               end
             end
             elseif World2 then
                 if MyLevel == 700 or MyLevel <= 724 then
@@ -4577,6 +4583,49 @@ PM:AddButtonL("Hop To Lower Player",function()
 		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, goodserver)
 	end
 end)
+
+PM:AddSeperatorL("Code")
+PM:AddToggleL("Auto Redeem Code",_G.SST.Auto_Redeem_Code,function(vu)
+    Auto_Redeem_Code = vu
+    _G.SST.Auto_Redeem_Code = Auto_Redeem_Code
+    SS()
+end)
+
+spawn(function()
+    if _G.SST.Auto_Redeem_Code then
+        local Codes = {
+            -- EXP Boost
+            "EXP_5B",
+            "kittgaming",
+            "Sub2Fer999",
+            "Enyu_is_Pro",
+            "Magicbus",
+            "JCWK",
+            "Starcodeheo",
+            "Bluxxy",
+            "fudd10_v2",
+            "FUDD10",
+            "BIGNEWS",
+            "THEGREATACE",
+            "Sub2OfficialNoobie",
+            "StrawHatMaine",
+            "SUB2GAMERROBOT_EXP1",
+            "Sub2NoobMaster123",
+            "Sub2UncleKizaru",
+            "Sub2Daigrock",
+            "Axiore",
+            "TantaiGaming",
+        }
+
+        for _, code in ipairs(Codes) do
+            pcall(function()
+                game:GetService("ReplicatedStorage").Remotes.Redeem:InvokeServer(code)
+                wait(0.5) -- กัน Spam Server
+            end)
+        end
+    end
+end)
+
 ------------------------------------------------------------ PM R
 PM:AddSeperatorR("FPS Boost")
 local originalSettings = {
