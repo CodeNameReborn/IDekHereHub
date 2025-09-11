@@ -1,4 +1,12 @@
 repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
+if not game:IsLoaded() then
+	local GameLoadGui = Instance.new("Message",workspace);
+	GameLoadGui.Text = 'Wait Game Loading';
+	game.Loaded:Wait();
+	GameLoadGui:Destroy();
+	task.wait(1);
+end;
+
 spawn(function()
 local player = game.Players.LocalPlayer
 local gui = player:WaitForChild("PlayerGui")
@@ -3330,50 +3338,32 @@ end)
             _G.SST.Auto_Second_Sea = Auto_Second_Sea
             SS()
         end)
-
-        spawn(function()
-    while task.wait() do 
-        if _G.SST.Auto_Second_Sea then
+    -- ใหม่
+    spawn(function()
+        while wait() do
             pcall(function()
-                local MyLevel = game:GetService("Players").LocalPlayer.Data.Level.Value
-                if MyLevel >= 700 and World1 then
+                if _G.SST.Auto_Second_Sea and game:GetService("Players").LocalPlayer.Data.Level.Value >= 699 then
                     local IceDoor = game:GetService("Workspace").Map.Ice.Door
-
-                    -- เข้าไปเอากุญแจ
-                    if IceDoor.CanCollide == true and IceDoor.Transparency == 0 then
-                        local CFrame1 = CFrame.new(4849.29883, 5.65138149, 719.611877)
-                        repeat 
-                            Tween(CFrame1) 
-                            task.wait()
-                        until (CFrame1.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 3 or not _G.SST.Auto_Second_Sea
-                        
-                        task.wait(1.1)
+                    local boss = game:GetService("Workspace").Enemies:FindFirstChild("Ice Admiral")
+                    if IceDoor.CanCollide == true and IceDoor.Transparency == 0 and not game.Players.localPlayer.Backpack:FindFirstChild("Key") or not game.Players.localPlayer.Character:FindFirstChild("Key") then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("DressrosaQuestProgress","Detective")
-                        task.wait(0.5)
+                    elseif IceDoor.CanCollide == true and IceDoor.Transparency == 0 and game.Players.localPlayer.Backpack:FindFirstChild("Key") or game.Players.localPlayer.Character:FindFirstChild("Key") then
                         Equip("Key")
-                        repeat 
-                            Tween(CFrame.new(1347.7124, 37.3751602, -1325.6488)) 
-                            task.wait()
-                        until (Vector3.new(1347.7124, 37.3751602, -1325.6488) - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 3 or not _G.SST.Auto_Second_Sea
-                        task.wait(0.5)
-
-                    -- สู้ Ice Admiral
+                        Tween(CFrame.new(1347.7124, 37.3751602, -1325.6488)) 
                     elseif IceDoor.CanCollide == false and IceDoor.Transparency == 1 then
-                        local boss = game:GetService("Workspace").Enemies:FindFirstChild("Ice Admiral")
-                        if boss and boss:FindFirstChild("Humanoid") and boss:FindFirstChild("HumanoidRootPart") then
+                        if boss and boss:FindFirstChild("Humanoid") and boss:FindFirstChild("HumanoidRootPart") then 
                             if boss.Humanoid.Health > 0 then
-                                local OldCFrameSecond = boss.HumanoidRootPart.CFrame
                                 repeat task.wait()
                                     AutoHaki()
                                     Equip(_G.ItemName)
-
                                     boss.Humanoid.WalkSpeed = 0
                                     boss.HumanoidRootPart.CanCollide = false
                                     if boss:FindFirstChild("Head") then
                                         boss.Head.CanCollide = false
                                     end
-                                     StartMagnet = true
-                                    boss.HumanoidRootPart.CFrame = OldCFrameSecond
+                                    StartMagnet = true
+                                    boss.HumanoidRootPart.CFrame = PosMon
+                                    PosMon = boss.HumanoidRootPart.CFrame 
                                     Tween(boss.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
                                     sethiddenproperty(game.Players.LocalPlayer,"SimulationRadius",math.huge)
                                 until not _G.SST.Auto_Second_Sea or not boss.Parent or boss.Humanoid.Health <= 0
@@ -3382,14 +3372,13 @@ end)
                             end
                         elseif game:GetService("ReplicatedStorage"):FindFirstChild("Ice Admiral") then 
                             Tween(game:GetService("ReplicatedStorage"):FindFirstChild("Ice Admiral").HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
-                            StartMagnet = false
+                        StartMagnet = false
                         end
                     end
                 end
             end)
         end
-    end
-end)
+    end)
 
     elseif World2 then
         MS:AddToggleL("Auto Third Sea",_G.SST.Auto_Third_Sea,function(vu)
@@ -3398,6 +3387,41 @@ end)
             SS()
         end)   
     end 
+
+    spawn(function()
+        while wait() do
+            pcall(function()
+                if G.SST.Auto_Third_Sea and game:GetService("Players").LocalPlayer.Data.Level.Value >= 1500 then
+                    if game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("ZQuestProgress","Check") == 0 then
+                        Tween(CFrame.new(-1926.3221435547, 12.819851875305, 1738.3092041016))
+                        if (CFrame.new(-1926.3221435547, 12.819851875305, 1738.3092041016).Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 10 then
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("ZQuestProgress","Begin")
+                        end
+                        if game:GetService("Workspace").Enemies:FindFirstChild("rip_indra") then
+                            for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                                if v.Name == "rip_indra" then
+                                    PosMon = v.HumanoidRootPart.CFrame
+                                    repeat task.wait()
+                                        AutoHaki()
+                                        Equip(_G.ItemName)
+                                        Tween(v.HumanoidRootPart.CFrame * CFrame.new(5,10,7))
+                                        v.HumanoidRootPart.CFrame = OldCFrameThird
+                                        v.HumanoidRootPart.CanCollide = false
+                                        v.Humanoid.WalkSpeed = 0
+                                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou")
+                                        sethiddenproperty(game:GetService("Players").LocalPlayer,"SimulationRadius",math.huge)
+                                    until _G.SST.Auto_Third_Sea == false or v.Humanoid.Health <= 0 or not v.Parent
+                                end
+                            end
+                        elseif not game:GetService("Workspace").Enemies:FindFirstChild("rip_indra") and (CFrame.new(-26880.93359375, 22.848554611206, 473.18951416016).Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 1000 then
+                            Tween(CFrame.new(-26880.93359375, 22.848554611206, 473.18951416016))
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+
 
     MS:AddSeperatorL("Find Materials")
         local Materials = {
