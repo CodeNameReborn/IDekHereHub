@@ -1,3 +1,31 @@
+repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
+
+local player = game.Players.LocalPlayer
+local gui = player:WaitForChild("PlayerGui")
+local mainMinimal = gui:WaitForChild("Main (minimal)")
+local chooseTeam = mainMinimal:WaitForChild("ChooseTeam")
+local vim = game:GetService("VirtualInputManager")
+local function ForceClick(btn)
+	if not btn then return end
+	local pos = btn.AbsolutePosition + (btn.AbsoluteSize / 2)
+	vim:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 1)
+	vim:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 1)
+end
+if chooseTeam then
+	repeat task.wait()
+		if chooseTeam.Visible then
+			if Team == "Pirate" then
+				ForceClick(chooseTeam.Container.Pirates.Frame.TextButton)
+			elseif Team == "Marine" then
+				ForceClick(chooseTeam.Container.Marines.Frame.TextButton)
+			else
+				ForceClick(chooseTeam.Container.Pirates.Frame.TextButton)
+			end
+		end
+	until player.Team ~= nil
+end
+
+
 local folderName = "IDekHere Hub Data"
 local playerName = game.Players.LocalPlayer.Name:gsub("[^%w_ ]", "")
 local fileName = folderName .. "/Blox Fruit [ " .. playerName .. " ].json"
@@ -4938,7 +4966,7 @@ spawn(function()
 		if _G.SST.Auto_Kick_Rejoin then
 			Auto_Kick_Rejoin = game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
 				if child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
-					game:GetService("TeleportService"):Teleport(game.PlaceId)
+						game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
 				end
 			end)
 		end
