@@ -1,4 +1,5 @@
 repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
+
 if not game:IsLoaded() then
 	local GameLoadGui = Instance.new("Message",workspace);
 	GameLoadGui.Text = 'Wait Game Loading';
@@ -2446,6 +2447,9 @@ end
             end
         end
     end
+function TP(Pos)
+    game.Players.localPlayer.character.HumanoidRootPart.CFrame = Pos
+end
 
    local currentTween = nil
 local StopTweenFlag = false
@@ -2572,7 +2576,8 @@ end
     local MS = ReBornXerUi:AddTab("Main - Setting","6026568198")
     local IE = ReBornXerUi:AddTab("Item - Event","")
     local RS = ReBornXerUi:AddTab("Race - Sea","6035190846")
-    local SI = ReBornXerUi:AddTab("Shop - Island","6031265976")
+    local RI = ReBornXerUi:AddTab("Raid - Island","6031265976")
+    local FS = ReBornXerUi:AddTab("Fruit - Shop","6031265976")
     local PM = ReBornXerUi:AddTab("Player - Misc","6034509993")
     local Setting = ReBornXerUi:AddTab("","")
 
@@ -3372,7 +3377,7 @@ end)
                             end
                         elseif game:GetService("ReplicatedStorage"):FindFirstChild("Ice Admiral") then 
                             Tween(game:GetService("ReplicatedStorage"):FindFirstChild("Ice Admiral").HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
-                        StartMagnet = false
+                            StartMagnet = false
                         end
                     end
                 end
@@ -3391,7 +3396,7 @@ end)
     spawn(function()
         while wait() do
             pcall(function()
-                if G.SST.Auto_Third_Sea and game:GetService("Players").LocalPlayer.Data.Level.Value >= 1500 then
+                if _G.SST.Auto_Third_Sea and game:GetService("Players").LocalPlayer.Data.Level.Value >= 1500 then
                     if game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("ZQuestProgress","Check") == 0 then
                         Tween(CFrame.new(-1926.3221435547, 12.819851875305, 1738.3092041016))
                         if (CFrame.new(-1926.3221435547, 12.819851875305, 1738.3092041016).Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 10 then
@@ -3466,6 +3471,8 @@ end)
         _SST.Auto_Farm_Material = Auto_Farm_Material
         SS()
     end)
+
+    
 
     MS:AddSeperatorL("Boss")
     local BossList = {}
@@ -4040,7 +4047,7 @@ SwordList = {
     "Holiday Scythe",
     "Bones Scythe",
 }
-
+ 
 IE:AddDropdownL("Select Sword",SwordList,_G.SST.Select_Sword,function(vu)
     Select_Sword = vu
     _G.SST.Select_Sword = Select_Sword
@@ -4549,6 +4556,39 @@ spawn(function()
         end)
     end
 end)
+
+RS:AddToggleL("Auto Ancient One",_G.SST.Auto_Ancient_One,function(vu)
+    Auto_Ancient_One = vu
+    _G.SST.Auto_Ancient_One = Auto_Ancient_One
+    SS()
+end)
+
+RS:AddButtonL("TP To Door Race V4", function()
+    StopTween()
+
+    -- เทเลพอร์ตไปที่ประตู Race V4
+    Tween(CFrame.new(28286.3555, 14896.5342, 102.624695, 0, 0, -1, 0, 1, 0, 1, 0, 0))
+    task.wait(0.1)
+
+    local race = game.Players.LocalPlayer.Data.Race.Value
+
+    if race == "Mink" then
+        Tween(CFrame.new(29013.1074, 14890.668, -380.353577, -0.0909729972, 0, -0.995853364, 0, 1, 0, 0.995853364, 0, -0.0909729972))
+    elseif race == "Human" then
+        Tween(CFrame.new(29227.4531, 14890.668, -207.82518, -0.0596670099, 0, -0.998218358, 0, 1, 0, 0.998218358, 0, -0.0596670099))
+    elseif race == "Skypian" or race == "Skypiea" then -- เผื่อใช้ชื่อไม่ตรง
+        Tween(CFrame.new(28962.5059, 14919.3164, 233.624634, 0.00990177877, 0, -0.999951005, 0, 1, 0, 0.999951005, 0, 0.00990177877))
+    elseif race == "Ghoul" then
+        Tween(CFrame.new(28672.502, 14890.3711, 445.8992, -0.998591304, 0, -0.0530602336, 0, 1, 0, 0.0530602336, 0, -0.998591304))
+    elseif race == "Cyborg" then
+        Tween(CFrame.new(28497.998, 14895.668, -419.940063, 0.0159061812, 0, 0.999873459, 0, 1, 0, -0.999873459, 0, 0.0159061812))
+    elseif race == "Fishman" then
+        Tween(CFrame.new(28235.9121, 14890.668, -211.285461, -0.0216744486, 0, 0.999765098, 0, 1, 0, -0.999765098, 0, -0.0216744486))
+    end
+end)
+------------------------------------------------------------ RS R
+RS:AddSeperatorR("Sea")
+
 ------------------------------------------------------------ PM R
 PM:AddSeperatorR("Sever")
 PM:AddButtonR("Rejoin Server",function()
