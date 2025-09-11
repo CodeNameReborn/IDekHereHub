@@ -1,5 +1,5 @@
 repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
-
+spawn(function()
 local player = game.Players.LocalPlayer
 local gui = player:WaitForChild("PlayerGui")
 local mainMinimal = gui:WaitForChild("Main (minimal)")
@@ -24,7 +24,7 @@ if chooseTeam then
 		end
 	until player.Team ~= nil
 end
-
+end)
 
 local folderName = "IDekHere Hub Data"
 local playerName = game.Players.LocalPlayer.Name:gsub("[^%w_ ]", "")
@@ -2867,9 +2867,6 @@ end)
                 NameMon = "Galley Pirate"
                 PUK = CFrame.new(5566.14453125, 71.22917175292969, 3964.4443359375)
                 CFrameQuest = CFrame.new(5259.81982, 37.3500175, 4050.0293, 0.087131381, 0, 0.996196866, 0, 1, 0, -0.996196866, 0, 0.087131381)
-                if _G.SST.Auto_Farm_Level and (CFrameQuest.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
-               game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance",Vector3.new(-4607.82275, 872.54248, -1667.55688))
-               end
             elseif MyLevel >= 650 then
                 Mon = "Galley Captain"
                 LevelQuest = 2
@@ -2877,9 +2874,6 @@ end)
                 NameMon = "Galley Captain"
                 PUK = CFrame.new(5344.2529296875, 104.73433685302734, 4821.6533203125)
                 CFrameQuest = CFrame.new(5259.81982, 37.3500175, 4050.0293, 0.087131381, 0, 0.996196866, 0, 1, 0, -0.996196866, 0, 0.087131381)
-                if _G.SST.Auto_Farm_Level and (CFrameQuest.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
-               game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance",Vector3.new(-4607.82275, 872.54248, -1667.55688))
-               end
             end
             elseif World2 then
                 if MyLevel == 700 or MyLevel <= 724 then
@@ -4336,7 +4330,6 @@ end)
 spawn(function()
     pcall(function()
         while task.wait(0.1) do
-            if not _G.SST then _G.SST = {} end
             if _G.SST.Auto_Evo_Race_V2 and World2 and game.Players.LocalPlayer.Data.Level.Value >= 850 then
                 local player = game.Players.LocalPlayer
                 local character = player.Character
