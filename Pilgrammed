@@ -2397,26 +2397,25 @@ local player = Players.LocalPlayer
 
 local MobFolder = workspace:WaitForChild("Mobs")
 
-
 local Moblist = {
     ["Scarecrow"] = {
         Folders = {
-            MobFolder:WaitForChild("Scarecrow1", 10), -- เพิ่ม timeout กัน error
+            MobFolder:WaitForChild("Scarecrow1", 10),
             MobFolder:WaitForChild("Scarecrow2", 10)
         },
         SpawnCFrame = CFrame.new(-2228.66919, -9.00000668, 1148.6814)
     },
     ["Thief"] = {
         Folders = {
-            MobFolder:WaitForChild("Prairie1", 10), -- เพิ่ม timeout กัน error
+            MobFolder:WaitForChild("Prairie1", 10),
             MobFolder:WaitForChild("Prairie2", 10),
             MobFolder:WaitForChild("Prairie3", 10)
         },
         SpawnCFrame = CFrame.new(639.615356, 13.2621193, -496.744934, 0.999795556, 3.55214738e-08, 0.0202191304, -3.5886675e-08, 1, 1.76993602e-08, -0.0202191304, -1.84213391e-08, 0.999795556)
     },
-        ["Green Slime"] = {
+    ["Green Slime"] = {
         Folders = {
-            MobFolder:WaitForChild("Prairie1", 10), -- เพิ่ม timeout กัน error
+            MobFolder:WaitForChild("Prairie1", 10),
             MobFolder:WaitForChild("Prairie2", 10),
             MobFolder:WaitForChild("Prairie3", 10)
         },
@@ -2429,157 +2428,137 @@ local MobNames = {}
 for name,_ in pairs(Moblist) do table.insert(MobNames, name) end
 
 _G.SST = _G.SST or {}
-_G.SST.Select_Mob = _G.SST.Select_Mob or nil -- ค่าเริ่มต้น
+_G.SST.Select_Mob = _G.SST.Select_Mob or nil
 _G.SST.Farm_Mob = _G.SST.Farm_Mob or false
+_G.SST.Pos_X = _G.SST.Pos_X or 0
+_G.SST.Pos_Y = _G.SST.Pos_Y or 5 -- ปรับความสูงนิดหน่อยกันจมดิน
+_G.SST.Pos_Z = _G.SST.Pos_Z or 0
+_G.SST.Select_Weapon = _G.SST.Select_Weapon or "Sword" -- ใส่ชื่ออาวุธเริ่มต้นกัน error
 
-Main:AddDropdownL("Select Mob", MobNames, _G.SST.Select_Mob, function(v) _G.SST.Select_Mob = v end)
-Main:AddToggleL("Farm Mob", _G.SST.Farm_Mob, function(a) _G.SST.Farm_Mob = a end)
+-- สมมติว่ามี Library Main อยู่แล้ว ถ้าไม่มีให้ระวัง error บรรทัดนี้
+if Main then
+    Main:AddDropdownL("Select Mob", MobNames, _G.SST.Select_Mob, function(v) _G.SST.Select_Mob = v end)
+    Main:AddToggleL("Farm Mob", _G.SST.Farm_Mob, function(a) _G.SST.Farm_Mob = a end)
+end
 
--- ====== ฟังก์ชันช่วย (หา root part ของ model) [แก้ใหม่ให้เก่งขึ้น] ======
+-- ====== ฟังก์ชันช่วย ======
 local function GetRootPartOfModel(model)
     if not model then return nil end
     if model.PrimaryPart then return model.PrimaryPart end
-
-    -- เพิ่มชื่อมาตรฐานที่มอนสเตอร์ส่วนใหญ่ใช้
-    local candidates = {
-        "HumanoidRootPart",
-        "Head",
-    }
-    
+    local candidates = {"HumanoidRootPart", "Head", "Torso", "UpperTorso"}
     for _, name in ipairs(candidates) do
         local p = model:FindFirstChild(name)
         if p and p:IsA("BasePart") then return p end
     end
-    
-    -- ถ้าหาชื่อไม่เจอเลย ให้เอา Part อะไรก็ได้อันแรกมาใช้แทน
     for _, desc in ipairs(model:GetDescendants()) do
         if desc:IsA("BasePart") then return desc end
     end
     return nil
 end
 
--- ====== ฟังก์ชันค้นหา mob [แก้ใหม่: หาจาก Humanoid โดยตรง] ======
 local function GetAliveMobInInfo(info)
     if not info or not info.Folders then return nil, nil end
-
     for _, folder in ipairs(info.Folders) do
         if folder then
-            -- ค้นหา Humanoid ทั้งหมดใน folder นี้เลย (แม่นยำกว่าหา Model)
             local descendants = folder:GetDescendants()
             for _, child in ipairs(descendants) do
                 if child:IsA("Humanoid") and child.Health > 0 then
                     local char = child.Parent
                     if char then
                         local root = GetRootPartOfModel(char)
-                        if root then
-                            return char, root
-                        end
+                        if root then return char, root end
                     end
                 end
             end
         end
     end
-
     return nil, nil
 end
 
-    function EquipWeapon(ToolSe)
-            if game.Players.LocalPlayer.Backpack:FindFirstChild(ToolSe) then
-                Tool = game.Players.LocalPlayer.Backpack:FindFirstChild(ToolSe)
-                wait(.1)
-                game.Players.LocalPlayer.Character.Humanoid:EquipTool(Tool)
-        end
+function EquipWeapon(ToolSe)
+    if not ToolSe then return end
+    local backpack = game.Players.LocalPlayer:FindFirstChild("Backpack")
+    local character = game.Players.LocalPlayer.Character
+    
+    if backpack and backpack:FindFirstChild(ToolSe) then
+        local Tool = backpack:FindFirstChild(ToolSe)
+        character.Humanoid:EquipTool(Tool)
     end
-
--- ====== ฟังก์ชันโจมตี ======
-local function Attack()
-    game:GetService("Players").LocalPlayer.Character:WaitForChild(_G.SST.Select_Weapon):WaitForChild("Slash"):FireServer(1)
-        game:GetService("Players").LocalPlayer.Character:WaitForChild(_G.SST.Select_Weapon):WaitForChild("Slash"):FireServer(2)
-
 end
 
--- ====== Loop ฟาร์ม ======
-spawn(function()
-    local function WaitForCharacter()
-        local c = player.Character or player.CharacterAdded:Wait()
-        return c, c:WaitForChild("HumanoidRootPart", 10)
+local function Attack()
+    local char = game.Players.LocalPlayer.Character
+    if not char then return end
+    
+    local weapon = char:FindFirstChild(_G.SST.Select_Weapon)
+    if weapon and weapon:FindFirstChild("Slash") then
+        pcall(function()
+            weapon.Slash:FireServer(1)
+            weapon.Slash:FireServer(2)
+        end)
     end
+end
 
-    local char, hrp = WaitForCharacter()
-
-    player.CharacterAdded:Connect(function(c)
-        char = c
-        hrp = c:WaitForChild("HumanoidRootPart", 10)
-    end)
-
+-- ====== Loop ฟาร์ม (แก้ไข Logic การตาย) ======
+spawn(function()
     while true do
-        task.wait() -- Loop ความเร็วปกติ
+        task.wait() -- รอจังหวะ frame
 
         if not _G.SST.Farm_Mob then continue end
-        
-        -- เช็คว่าเลือกมอนหรือยัง
-        if not _G.SST.Select_Mob then 
-            -- warn("ยังไม่ได้เลือก Mob ใน Dropdown") -- เปิดบรรทัดนี้ถ้าอยากเช็ค
-            task.wait(1)
+        if not _G.SST.Select_Mob then task.wait(0.5); continue end
+
+        -- [จุดที่แก้]: ดึงค่าตัวละครใหม่ทุกครั้งในลูป เพื่อความชัวร์
+        local char = player.Character
+        if not char or not char.Parent then 
+            task.wait(0.5) -- รอเกิด
             continue 
         end
 
-        -- เช็คตัวละคร
-        if not char or not hrp or not char.Parent then
-            char, hrp = WaitForCharacter()
-            task.wait(1)
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChild("Humanoid")
+
+        -- [จุดที่แก้]: เช็คว่าเราตายหรือยัง? ถ้าเลือด 0 หรือไม่มี Humanoid ให้ข้ามไป
+        if not hrp or not hum or hum.Health <= 0 then
+            task.wait(0.5)
             continue
         end
-        hrp = char:FindFirstChild("HumanoidRootPart") or hrp
 
+        -- เริ่มLogic ฟาร์ม
         local info = Moblist[_G.SST.Select_Mob]
         if not info then continue end
 
-        -- ค้นหามอนสเตอร์
         local mobModel, mobRoot = GetAliveMobInInfo(info)
 
         if mobModel and mobRoot then
             -- >> เจอตัวแล้ว <<
-            
-            -- วาร์ปไป (ใช้ CFrame เพื่อความชัวร์)
             pcall(function()
-                hrp.CFrame = mobRoot.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z) -- อยู่ห่างออกมา 4 หน่วย
+                -- ใช้อาวุธ
+                EquipWeapon(_G.SST.Select_Weapon)
+                
+                -- วาร์ปไปหามอน
+                hrp.CFrame = mobRoot.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z)
+                
+                -- หันหน้าไปหามอน
+                hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(mobRoot.Position.X, hrp.Position.Y, mobRoot.Position.Z))
             end)
-            Attack()
-            EquipWeapon(_G.SST.Select_Weapon)
-            -- ตีรัวๆ
-            for i = 1, 5 do
-                if mobModel:FindFirstChild("Humanoid") and mobModel.Humanoid.Health > 0 then
-                    
-                    
-                    -- Lock เป้าหมาย (ให้หน้าหันไปหามอน)
-                    if mobRoot then
-                        hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(mobRoot.Position.X, hrp.Position.Y, mobRoot.Position.Z))
-                    end
-                    task.wait() 
-                else
-                    break -- มอนตายแล้วหยุดตี
-                end
-            end
 
-        else
-            -- >> ไม่เจอมอน <<
+            Attack()
             
-            -- วาร์ปไปจุดเกิดมอน เพื่อให้มอนโหลด (Spawn Point)
+            -- รอสักนิดเพื่อไม่ให้ Loop ทำงานหนักเกินไปจน crash
+            task.wait(0.1) 
+        else
+            -- >> ไม่เจอมอน (วาร์ปไปจุดเกิด) <<
             if info.SpawnCFrame then
                 pcall(function()
-                    -- เช็คระยะห่าง ถ้าไกลเกินไปค่อยวาร์ป (กันวาร์ปกระตุกถี่ๆ)
-                    if (hrp.Position - info.SpawnCFrame.Position).Magnitude > 10 then
+                    if (hrp.Position - info.SpawnCFrame.Position).Magnitude > 15 then
                         hrp.CFrame = info.SpawnCFrame
                     end
                 end)
             end
-            
-            task.wait(0.5) -- รอนิดนึงให้มอนโหลด
+            task.wait(0.5)
         end
     end
 end)
-
 Main:AddSeperatorR("Setting")
 local WeaponList = {}
 for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do 
