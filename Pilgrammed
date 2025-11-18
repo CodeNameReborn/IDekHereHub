@@ -2494,6 +2494,8 @@ end
 -- ====== ฟังก์ชันโจมตี ======
 local function Attack()
     game:GetService("Players").LocalPlayer.Character:WaitForChild(_G.SST.Select_Weapon):WaitForChild("Slash"):FireServer(1)
+        game:GetService("Players").LocalPlayer.Character:WaitForChild(_G.SST.Select_Weapon):WaitForChild("Slash"):FireServer(2)
+
 end
 
 -- ====== Loop ฟาร์ม ======
