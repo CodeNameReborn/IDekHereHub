@@ -4817,28 +4817,54 @@ local Moblist = {
     }
 }
 
--- ====== UI / Globals ======
+
+
+
+-- ====== 0. UI / Globals (ตัวแปรควบคุมจาก UI) ======
 local MobNames = {}
 for name,_ in pairs(Moblist) do table.insert(MobNames, name) end
 
 _G.SST = _G.SST or {}
-_G.SST.Select_Mob = _G.SST.Select_Mob or nil
+_G.SST.Select_Mob = _G.SST.Select_Mob or "Scarecrow" -- ค่าเริ่มต้น
 _G.SST.Farm_Mob = _G.SST.Farm_Mob or false
-_G.SST.Select_Weapon = _G.SST.Select_Weapon or "Sword"
-_G.SST.Pos_X = _G.SST.Pos_X or 0
-_G.SST.Pos_Y = _G.SST.Pos_Y or 6 -- ลอยสูงขึ้นนิดนึง
+_G.SST.Select_Weapon = _G.SST.Select_Weapon or "Sword" -- ชื่ออาวุธ
+-- ค่าตำแหน่งวาร์ป (สำคัญมาก: ควรตั้งค่า Pos_Y เป็นบวกเพื่อลอยเหนือหัว)
+_G.SST.Pos_X = _G.SST.Pos_X or 0  
+_G.SST.Pos_Y = _G.SST.Pos_Y or 6  
 _G.SST.Pos_Z = _G.SST.Pos_Z or 0
 
-if Main then
-    Main:AddDropdownL("Select Mob", MobNames, _G.SST.Select_Mob, function(v) _G.SST.Select_Mob = v end)
-    Main:AddToggleL("Farm Mob", _G.SST.Farm_Mob, function(a) _G.SST.Farm_Mob = a end)
+ Main:AddDropdownL("Select Mob", MobNames, _G.SST.Select_Mob, function(v) _G.SST.Select_Mob = v end)
+ Main:AddToggleL("Farm Mob", _G.SST.Farm_Mob, function(a) _G.SST.Farm_Mob = a end)
+
+-- ====== 1. สร้างพื้นปลอม (Platform) สำหรับ Anti-Cheat Bypass ======
+local PlatformPart = workspace:FindFirstChild("FarmPlatform")
+if not PlatformPart then
+    PlatformPart = Instance.new("Part")
+    PlatformPart.Name = "FarmPlatform"
+    PlatformPart.Size = Vector3.new(5, 1, 5) 
+    PlatformPart.Anchored = true             
+    PlatformPart.CanCollide = true           
+    PlatformPart.Transparency = 1            
+    PlatformPart.Parent = workspace
 end
 
--- ====== ฟังก์ชันช่วย ======
+-- ====== 2. ฟังก์ชัน Noclip (เดินทะลุสิ่งกีดขวาง/มอนสเตอร์) ======
+RunService.Stepped:Connect(function()
+    if _G.SST.Farm_Mob and player.Character then
+        for _, part in ipairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- ====== 3. ฟังก์ชันช่วย (หา root part ที่แม่นยำ) ======
 local function GetRootPartOfModel(model)
     if not model then return nil end
     if model.PrimaryPart then return model.PrimaryPart end
-    local candidates = {"HumanoidRootPart", "Head", "Torso", "UpperTorso"}
+
+    local candidates = {"HumanoidRootPart", "Torso", "Head"}
     for _, name in ipairs(candidates) do
         local p = model:FindFirstChild(name)
         if p and p:IsA("BasePart") then return p end
@@ -4849,18 +4875,16 @@ local function GetRootPartOfModel(model)
     return nil
 end
 
+-- ====== 4. ฟังก์ชันค้นหา mob ที่มีชีวิต (Health>0) ======
 local function GetAliveMobInInfo(info)
     if not info or not info.Folders then return nil, nil end
     for _, folder in ipairs(info.Folders) do
         if folder then
-            local descendants = folder:GetDescendants()
-            for _, child in ipairs(descendants) do
+            for _, child in ipairs(folder:GetDescendants()) do
                 if child:IsA("Humanoid") and child.Health > 0 then
                     local char = child.Parent
-                    if char then
-                        local root = GetRootPartOfModel(char)
-                        if root then return char, root end
-                    end
+                    local root = GetRootPartOfModel(char)
+                    if char and root then return char, root end
                 end
             end
         end
@@ -4868,8 +4892,9 @@ local function GetAliveMobInInfo(info)
     return nil, nil
 end
 
-function EquipWeapon(ToolSe)
-    if not ToolSe then return end
+-- ====== 5. ฟังก์ชันโจมตี / สวมใส่ (Placeholders) ======
+local function EquipWeapon(weaponName)
+     if not ToolSe then return end
     local backpack = game.Players.LocalPlayer:FindFirstChild("Backpack")
     local character = game.Players.LocalPlayer.Character
     if backpack and backpack:FindFirstChild(ToolSe) then
@@ -4879,79 +4904,33 @@ function EquipWeapon(ToolSe)
 end
 
 local function Attack()
-    local char = game.Players.LocalPlayer.Character
-    if not char then return end
-    local weapon = char:FindFirstChild(_G.SST.Select_Weapon)
-    if weapon and weapon:FindFirstChild("Slash") then
-        pcall(function()
-            weapon.Slash:FireServer(1)
-            weapon.Slash:FireServer(2)
-        end)
-    end
-end
-
--- ====== ระบบจัดการการลอยตัวและ Noclip (แก้ Kick) ======
-spawn(function()
-    RunService.Stepped:Connect(function()
-        if _G.SST.Farm_Mob then
-            local char = player.Character
-            if char then
-                -- 1. Noclip (เดินทะลุสิ่งกีดขวาง)
-                for _, v in pairs(char:GetDescendants()) do
-                    if v:IsA("BasePart") and v.CanCollide then
-                        v.CanCollide = false
-                    end
-                end
-                
-                -- 2. ระบบ Float (กันร่วง/กันโดนเตะ)
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                local hum = char:FindFirstChild("Humanoid")
-                
-                if hrp and hum then
-                    -- สร้างแรงต้านแรงโน้มถ่วง
-                    local bv = hrp:FindFirstChild("AnticheatBypassVelocity") or Instance.new("BodyVelocity")
-                    bv.Name = "AnticheatBypassVelocity"
-                    bv.Parent = hrp
-                    bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-                    bv.Velocity = Vector3.zero -- ล็อคความเร็วเป็น 0 เพื่อให้ลอยนิ่งๆ
-                    
-                    -- สำคัญ: ใช้ PlatformStand เพื่อหยุดระบบ Physics ของขา (ช่วยกันโดนเตะ)
-                    hum.PlatformStand = true 
-                end
-            end
-        else
-            -- เมื่อปิดฟาร์ม ให้เคลียร์ค่าต่างๆ
-            local char = player.Character
-            if char then
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                local hum = char:FindFirstChild("Humanoid")
-                if hrp then
-                    local bv = hrp:FindFirstChild("AnticheatBypassVelocity")
-                    if bv then bv:Destroy() end
-                end
-                if hum then
-                    hum.PlatformStand = false -- กลับมายืนปกติ
-                end
-            end
+    pcall(function()
+        local tool = player.Character:FindFirstChildOfClass("Tool")
+        if tool then
+            if tool.Activate then tool:Activate() end
+            local re = tool:FindFirstChildWhichIsA("RemoteEvent")
+            if re then re:FireServer() end
         end
     end)
-end)
+end
 
--- ====== Loop ฟาร์มหลัก ======
+-- ====== 6. Loop ฟาร์ม หลัก (Anti-Cheat Safe) ======
 spawn(function()
     while true do
-        task.wait() -- Loop ความเร็วปกติ
+        task.wait() -- Loop ความเร็วสูง (ให้การควบคุมแม่นยำ)
         
-        if not _G.SST.Farm_Mob then continue end
+        -- Check Toggles
+        if not _G.SST.Farm_Mob then 
+            PlatformPart.CFrame = CFrame.new(0, -500, 0) -- ซ่อนพื้น
+            continue 
+        end
         if not _G.SST.Select_Mob then task.wait(0.5); continue end
 
         local char = player.Character
-        if not char or not char.Parent then task.wait(0.5); continue end
-
         local hrp = char:FindFirstChild("HumanoidRootPart")
         local hum = char:FindFirstChild("Humanoid")
 
-        if not hrp or not hum or hum.Health <= 0 then
+        if not char or not hrp or not hum or hum.Health <= 0 then
             task.wait(0.5)
             continue
         end
@@ -4962,66 +4941,43 @@ spawn(function()
         local mobModel, mobRoot = GetAliveMobInInfo(info)
 
         if mobModel and mobRoot then
-            -- >> เจอตัวแล้ว <<
+            -- >> เจอตัวแล้ว: ใช้พื้นปลอมในการวาร์ป <<
             pcall(function()
                 EquipWeapon(_G.SST.Select_Weapon)
                 
-                -- วาร์ปไปตำแหน่งมอนสเตอร์
-                local targetPos = mobRoot.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z)
-                hrp.CFrame = targetPos
+                -- 1. คำนวณตำแหน่งเป้าหมาย
+                local targetCFrame = mobRoot.CFrame * CFrame.new(_G.SST.Pos_X or 0, _G.SST.Pos_Y or 6, _G.SST.Pos_Z or 0)
                 
-                -- หันหน้าไปหามอน
-                hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(mobRoot.Position.X, hrp.Position.Y, mobRoot.Position.Z))
+                -- 2. ขยับพื้นปลอมไปที่ตำแหน่งนั้น
+                PlatformPart.CFrame = targetCFrame
+                
+                -- 3. วาร์ปตัวเราไปยืนบนพื้นปลอม (3.5 หน่วยจากศูนย์กลาง Part)
+                hrp.CFrame = PlatformPart.CFrame * CFrame.new(0, 0, 0)
+                
+                -- 4. ลบ Velocity และแรงอื่นๆ (Anti-Gravity/Anti-Knockback)
+                hrp.Velocity = Vector3.new(0, 0, 0)
+                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                
+                -- 5. หันหน้าไปหามอน
+                local lookAt = CFrame.lookAt(hrp.Position, mobRoot.Position)
+                hrp.CFrame = CFrame.new(hrp.Position) * lookAt.Rotation
             end)
             
             Attack()
-            task.wait(0.05) -- ตีเร็วขึ้นนิดนึง
         else
-            -- >> ไม่เจอมอน (วาร์ปกลับจุดเกิด) <<
+            -- >> ไม่เจอมอน (วาร์ปกลับจุดเกิด/รอเกิด) <<
+            PlatformPart.CFrame = CFrame.new(0, -500, 0) -- ซ่อนพื้น
             if info.SpawnCFrame then
                 pcall(function()
                     if (hrp.Position - info.SpawnCFrame.Position).Magnitude > 20 then
-                        hrp.CFrame = info.SpawnCFrame
+                        -- วาร์ปตัวละครไปที่ Spawn Point โดยให้อยู่สูงจากพื้นเล็กน้อย
+                        hrp.CFrame = info.SpawnCFrame * CFrame.new(0, 5, 0)
                     end
                 end)
             end
-            task.wait(0.5)
+            task.wait(1)
         end
     end
-end)
-Main:AddSeperatorR("Setting")
-local WeaponList = {}
-for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do 
-    if v:FindFirstChildOfClass("Script") then
-    table.insert(WeaponList, v.Name) end
-    end
-Main:AddDropdownR("Select Weapon",WeaponList,_G.SST.Select_Weapon,function(value)
-Select_Weapon = value
-_G.SST.Select_Weapon = Select_Weapon
-SS()
-end)
-
-Main:AddSeperatorR("Setting Pos")
-_G.SST.Pos_X = _G.SST.Pos_X or Pos_X or 0
-_G.SST.Pos_Y = _G.SST.Pos_Y or Pos_Y or 0
-_G.SST.Pos_Z = _G.SST.Pos_Z or Pos_X or 6
-
-Main:AddSliderR("Select Pos X",0,1000,_G.SST.Pos_X,function(a)
-    Pos_X = a
-    _G.SST.Pos_X = Pos_X
-    SS()
-end)
-
-Main:AddSliderR("Select Pos Y",0,1000,_G.SST.Pos_Y,function(a)
-    Pos_Y = a
-    _G.SST.Pos_Y = Pos_Y
-    SS()
-end)
-
-Main:AddSliderR("Select Pos Z",0,1000,_G.SST.Pos_Z,function(a)
-    Pos_Z = a
-    _G.SST.Pos_Z = Pos_Z
-    SS()
 end)
 Main:AddSeperatorR("Setting")
 local WeaponList = {}
