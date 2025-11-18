@@ -4989,7 +4989,6 @@ spawn(function()
         end
     end
 end)
-end)
 Main:AddSeperatorR("Setting")
 local WeaponList = {}
 for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do 
