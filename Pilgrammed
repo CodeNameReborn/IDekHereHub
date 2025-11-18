@@ -2430,9 +2430,6 @@ for name,_ in pairs(Moblist) do table.insert(MobNames, name) end
 _G.SST = _G.SST or {}
 _G.SST.Select_Mob = _G.SST.Select_Mob or nil
 _G.SST.Farm_Mob = _G.SST.Farm_Mob or false
-_G.SST.Pos_X = _G.SST.Pos_X or 0
-_G.SST.Pos_Y = _G.SST.Pos_Y or 5 -- ปรับความสูงนิดหน่อยกันจมดิน
-_G.SST.Pos_Z = _G.SST.Pos_Z or 0
 _G.SST.Select_Weapon = _G.SST.Select_Weapon or "Sword" -- ใส่ชื่ออาวุธเริ่มต้นกัน error
 
 -- สมมติว่ามี Library Main อยู่แล้ว ถ้าไม่มีให้ระวัง error บรรทัดนี้
@@ -2498,6 +2495,47 @@ local function Attack()
         end)
     end
 end
+
+    spawn(function()
+        pcall(function()
+            game:GetService("RunService").Stepped:Connect(function()
+                if _G.SST.Farm_Mob then
+                    for _, v in pairs(game:GetService("Players").LocalPlayer.Character:GetDescendants()) do
+                        if v:IsA("BasePart") then
+                            v.CanCollide = false    
+                        end
+                    end
+                end
+            end)
+        end)
+    end)
+
+ spawn(function()
+        pcall(function()
+            while task.wait() do
+                if _G.SST.Farm_Mob then
+                    					local character = game:GetService("Players").LocalPlayer.Character
+					local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+					if humanoidRootPart and not humanoidRootPart:FindFirstChild("BodyClip") then
+						local Noclip = Instance.new("BodyVelocity")
+						Noclip.Name = "BodyClip"
+						Noclip.Parent = humanoidRootPart
+						Noclip.MaxForce = Vector3.new(100000, 100000, 100000)
+						Noclip.Velocity = Vector3.new(0, 0, 0)
+					end
+				else
+					local character = game:GetService("Players").LocalPlayer.Character
+					local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+					if humanoidRootPart then
+						local bodyClip = humanoidRootPart:FindFirstChild("BodyClip")
+						if bodyClip then
+							bodyClip:Destroy()
+						end
+					end
+				end
+			end
+		end)
+	end)
 
 -- ====== Loop ฟาร์ม (แก้ไข Logic การตาย) ======
 spawn(function()
