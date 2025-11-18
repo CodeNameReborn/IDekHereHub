@@ -2545,7 +2545,6 @@ spawn(function()
             Attack()
             
             -- รอสักนิดเพื่อไม่ให้ Loop ทำงานหนักเกินไปจน crash
-            task.wait(0.1) 
         else
             -- >> ไม่เจอมอน (วาร์ปไปจุดเกิด) <<
             if info.SpawnCFrame then
@@ -2555,7 +2554,7 @@ spawn(function()
                     end
                 end)
             end
-            task.wait(0.5)
+            task.wait(0)
         end
     end
 end)
@@ -2576,19 +2575,19 @@ _G.SST.Pos_X = _G.SST.Pos_X or Pos_X or 0
 _G.SST.Pos_Y = _G.SST.Pos_Y or Pos_Y or 0
 _G.SST.Pos_Z = _G.SST.Pos_Z or Pos_X or 6
 
-Main:AddSliderR("Select Pos X",1,1000,_G.SST.Pos_X,function(a)
+Main:AddSliderR("Select Pos X",0,1000,_G.SST.Pos_X,function(a)
     Pos_X = a
     _G.SST.Pos_X = Pos_X
     SS()
 end)
 
-Main:AddSliderR("Select Pos Y",1,1000,_G.SST.Pos_Y,function(a)
+Main:AddSliderR("Select Pos Y",0,1000,_G.SST.Pos_Y,function(a)
     Pos_Y = a
     _G.SST.Pos_Y = Pos_Y
     SS()
 end)
 
-Main:AddSliderR("Select Pos Z",1,1000,_G.SST.Pos_Z,function(a)
+Main:AddSliderR("Select Pos Z",0,1000,_G.SST.Pos_Z,function(a)
     Pos_Z = a
     _G.SST.Pos_Z = Pos_Z
     SS()
