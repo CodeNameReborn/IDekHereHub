@@ -4786,6 +4786,7 @@ Main:AddLineL("")
 Main:AddSeperatorL("Auto Farm Mob")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 
 local MobFolder = workspace:WaitForChild("Mobs")
@@ -4824,17 +4825,16 @@ _G.SST = _G.SST or {}
 _G.SST.Select_Mob = _G.SST.Select_Mob or "Scarecrow"
 _G.SST.Farm_Mob = _G.SST.Farm_Mob or false
 _G.SST.Select_Weapon = _G.SST.Select_Weapon or "Sword"
-_G.SST.Pos_X = _G.SST.Pos_X or 0  
-_G.SST.Pos_Y = _G.SST.Pos_Y or 6  
+_G.SST.Pos_X = _G.SST.Pos_X or 0
+_G.SST.Pos_Y = _G.SST.Pos_Y or 6
 _G.SST.Pos_Z = _G.SST.Pos_Z or 0
 
 -- UI (ตรงนี้ตามเมนูคุณ)
 Main:AddDropdownL("Select Mob", MobNames, _G.SST.Select_Mob, function(v) _G.SST.Select_Mob = v end)
 Main:AddToggleL("Farm Mob", _G.SST.Farm_Mob, function(a) _G.SST.Farm_Mob = a end)
 
-
 -- ======================================================
---  ANTI FLY KICK — พื้นปลอมติดใต้เท้า (สำคัญที่สุด)
+--  ANTI FLY KICK — พื้นปลอมติดใต้เท้า
 -- ======================================================
 local FakeFloor = Instance.new("Part")
 FakeFloor.Name = "FakeFloor_AntiFly"
@@ -4843,30 +4843,11 @@ FakeFloor.Anchored = true
 FakeFloor.CanCollide = false
 FakeFloor.Massless = true
 FakeFloor.Transparency = 1
-FakeFloor.Material = Enum.Material.Grass -- ทำให้ Humanoid.FloorMaterial ไม่เคยเป็น Air
+FakeFloor.Material = Enum.Material.Grass
 FakeFloor.Parent = workspace
 
-RunService.Heartbeat:Connect(function()
-    if not _G.SST.Farm_Mob then
-        FakeFloor.CFrame = CFrame.new(0, -999, 0)
-        return
-    end
-
-    local char = player.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    FakeFloor.CFrame = CFrame.new(
-        hrp.Position.X,
-        hrp.Position.Y - 3.5,
-        hrp.Position.Z
-    )
-end)
-
-
 -- ======================================================
--- Platform ใช้ฟาร์ม (เพื่อให้วาร์ปไปยืนบนตำแหน่งเดิม)
+-- Platform ใช้ฟาร์ม
 -- ======================================================
 local PlatformPart = workspace:FindFirstChild("FarmPlatform")
 if not PlatformPart then
@@ -4880,20 +4861,8 @@ if not PlatformPart then
 end
 
 -- ======================================================
--- NoClip
+-- ฟังก์ชัน Utility
 -- ======================================================
-RunService.Stepped:Connect(function()
-    if _G.SST.Farm_Mob and player.Character then
-        for _, part in ipairs(player.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-    end
-end)
-
-
--- utility
 local function GetRootPart(model)
     if not model then return nil end
     if model.PrimaryPart then return model.PrimaryPart end
@@ -4917,16 +4886,16 @@ local function EquipWeapon(weaponName)
     local char = player.Character
     if not char then return end
 
-    local tool = bp:FindFirstChild(weaponName)
-    if tool then
-        char.Humanoid:EquipTool(tool)
+    local tool = bp:FindFirstChild(weaponName)  
+    if tool then  
+        char.Humanoid:EquipTool(tool)  
     end
 end
 
 local function Attack()
     pcall(function()
         local tool = player.Character:FindFirstChildOfClass("Tool")
-        if tool then 
+        if tool then
             tool:Activate()
             local re = tool:FindFirstChildWhichIsA("RemoteEvent")
             if re then re:FireServer() end
@@ -4934,63 +4903,247 @@ local function Attack()
     end)
 end
 
+-- ======================================================
+-- ฟังก์ชันเคลื่อนที่แบบปลอดภัย
+-- ======================================================
+local function MoveToPosition(position, duration)
+    local char = player.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+    
+    local tweenInfo = TweenInfo.new(
+        math.max(0.3, duration), -- ระยะเวลาขั้นต่ำ 0.3 วินาที
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.Out,
+        0,
+        false,
+        0
+    )
+    
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = position})
+    tween:Play()
+    return tween
+end
+
+-- ======================================================
+-- จำลองการเคลื่อนไหวของมนุษย์
+-- ======================================================
+local function HumanLikeMovement()
+    if not _G.SST.Farm_Mob then return end
+    
+    local char = player.Character
+    local hum = char and char:FindFirstChild("Humanoid")
+    if not hum then return end
+    
+    -- สุ่มกระโดดบ้างบางครั้ง (โอกาส 1%)
+    if math.random(1, 100) == 1 then
+        hum.Jump = true
+    end
+    
+    -- สุ่มเคลื่อนที่เล็กน้อย (โอกาส 2%)
+    if math.random(1, 50) == 1 then
+        hum:Move(Vector3.new(
+            math.random(-1, 1) * 0.5,
+            0,
+            math.random(-1, 1) * 0.5
+        ))
+    end
+end
+
+-- ======================================================
+-- ตรวจสอบว่ายืนอยู่บนพื้น
+-- ======================================================
+local function IsOnGround()
+    local char = player.Character
+    if not char then return false end
+    
+    local hum = char:FindFirstChild("Humanoid")
+    if hum and hum.FloorMaterial ~= Enum.Material.Air then
+        return true
+    end
+    
+    -- Raycast ตรวจสอบพื้น
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    
+    local ray = Ray.new(hrp.Position, Vector3.new(0, -5, 0))
+    local hit, position = workspace:FindPartOnRay(ray, char)
+    
+    return hit ~= nil
+end
+
+-- ======================================================
+-- NoClip
+-- ======================================================
+RunService.Stepped:Connect(function()
+    if _G.SST.Farm_Mob and player.Character then
+        for _, part in ipairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- ======================================================
+-- ANTI FLY และ Human Movement
+-- ======================================================
+local airTime = 0
+RunService.Heartbeat:Connect(function()
+    -- Human Like Movement
+    HumanLikeMovement()
+    
+    -- Anti Fly System
+    if not _G.SST.Farm_Mob then
+        FakeFloor.CFrame = CFrame.new(0, -999, 0)
+        airTime = 0
+        return
+    end
+
+    local char = player.Character  
+    if not char then return end  
+    local hrp = char:FindFirstChild("HumanoidRootPart")  
+    if not hrp then return end  
+
+    -- อัพเดทพื้นปลอม
+    FakeFloor.CFrame = CFrame.new(  
+        hrp.Position.X,  
+        hrp.Position.Y - 3.5,  
+        hrp.Position.Z  
+    )
+
+    -- ตรวจสอบการลอยกลางอากาศ
+    if not IsOnGround() then
+        airTime = airTime + task.wait()
+        if airTime > 3 then -- ถ้าลอยนานกว่า 3 วินาที
+            -- กลับไป spawn point แบบปลอดภัย
+            local info = Moblist[_G.SST.Select_Mob]  
+            if info and info.SpawnCFrame then
+                pcall(function()
+                    MoveToPosition(info.SpawnCFrame * CFrame.new(0, 5, 0), 1.5)
+                end)
+            end
+            airTime = 0
+        end
+    else
+        airTime = 0
+    end
+end)
 
 -- ======================================================
 --              MAIN FARM LOOP (ANTI-CHEAT SAFE)
 -- ======================================================
 spawn(function()
+    local lastActionTime = 0
+    local actionDelay = 0.2 -- ความล่าช้าระหว่างการกระทำ
+    
     while true do
-        task.wait()
-
-        if not _G.SST.Farm_Mob then
-            PlatformPart.CFrame = CFrame.new(0, -500, 0)
-            continue
+        local currentTime = tick()
+        
+        -- ตรวจสอบความล่าช้า
+        if currentTime - lastActionTime < actionDelay then
+            task.wait(actionDelay - (currentTime - lastActionTime))
         end
+        
+        lastActionTime = tick()
 
-        local char = player.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        local hum = char and char:FindFirstChild("Humanoid")
-
-        if not char or not hrp or not hum or hum.Health <= 0 then
+        if not _G.SST.Farm_Mob then  
+            PlatformPart.CFrame = CFrame.new(0, -500, 0)  
             task.wait(0.5)
-            continue
-        end
+            continue  
+        end  
 
-        local info = Moblist[_G.SST.Select_Mob]
-        if not info then continue end
+        local char = player.Character  
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")  
+        local hum = char and char:FindFirstChild("Humanoid")  
 
-        local mobModel, mobRoot = GetAliveMob(info)
+        if not char or not hrp or not hum or hum.Health <= 0 then  
+            task.wait(1)  
+            continue  
+        end  
 
-        if mobModel and mobRoot then
-            pcall(function()
-                EquipWeapon(_G.SST.Select_Weapon)
+        local info = Moblist[_G.SST.Select_Mob]  
+        if not info then 
+            task.wait(0.5)
+            continue 
+        end  
 
-                local target = mobRoot.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z)
+        local mobModel, mobRoot = GetAliveMob(info)  
+
+        if mobModel and mobRoot then  
+            -- ตรวจสอบระยะทางก่อนเคลื่อนที่
+            local distance = (hrp.Position - mobRoot.Position).Magnitude
+            if distance > 100 then -- ระยะทางสูงสุดที่อนุญาต
+                warn("Distance too far, possible teleport detection - Moving to spawn")
+                if info.SpawnCFrame then
+                    MoveToPosition(info.SpawnCFrame * CFrame.new(0, 5, 0), 2.0)
+                end
+                task.wait(2)
+                continue
+            end
+            
+            pcall(function()  
+                EquipWeapon(_G.SST.Select_Weapon)  
+
+                local target = mobRoot.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z)  
 
                 PlatformPart.CFrame = target
-                hrp.CFrame = target
+                
+                -- ใช้ Tween แทนการวาร์ป (ระยะเวลาสุ่ม)
+                local moveDuration = 0.2 + math.random() * 0.3 -- 0.2-0.5 วินาที
+                MoveToPosition(target, moveDuration)
+                
+                -- ลดความถี่ในการหมุนตัว (โอกาส 40%)
+                if math.random(1, 10) <= 4 then
+                    local lookAt = CFrame.lookAt(hrp.Position, mobRoot.Position)  
+                    hrp.CFrame = CFrame.new(hrp.Position) * lookAt.Rotation  
+                end
+                
+                -- รีเซ็ต velocity
+                hrp.Velocity = Vector3.new(0,0,0)  
+                hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)  
+            end)  
 
-                hrp.Velocity = Vector3.new(0,0,0)
-                hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
-
-                local lookAt = CFrame.lookAt(hrp.Position, mobRoot.Position)
-                hrp.CFrame = CFrame.new(hrp.Position) * lookAt.Rotation
-            end)
-
-            Attack()
-        else
-            PlatformPart.CFrame = CFrame.new(0, -500, 0)
-
-            if info.SpawnCFrame then
-                pcall(function()
-                    hrp.CFrame = info.SpawnCFrame * CFrame.new(0, 5, 0)
-                end)
+            -- โจมตีแบบสุ่มเพื่อให้ดูเป็นธรรมชาติ (โอกาส 60%)
+            if math.random(1, 10) <= 6 then
+                Attack()
+                -- สุ่ม delay การโจมตี
+                task.wait(0.1 + math.random() * 0.2)
             end
+            
+            -- สุ่มหยุดพักสั้นๆ (โอกาส 5%)
+            if math.random(1, 20) == 1 then
+                task.wait(0.5 + math.random() * 1.0)
+            end
+            
+        else  
+            PlatformPart.CFrame = CFrame.new(0, -500, 0)  
 
-            task.wait(1)
-        end
+            if info.SpawnCFrame then  
+                pcall(function()  
+                    -- ใช้ Tween ไปยัง spawn point
+                    local spawnPos = info.SpawnCFrame * CFrame.new(0, 5, 0)
+                    MoveToPosition(spawnPos, 1.5)
+                end)  
+            end  
+            
+            -- รอให้นานขึ้นเมื่อไม่มี mob
+            task.wait(2 + math.random() * 1.0) 
+        end  
     end
 end)
+
+-- ======================================================
+-- Safe Exit Handler
+-- ======================================================
+player.CharacterAdded:Connect(function()
+    if _G.SST.Farm_Mob then
+        task.wait(2) -- รอให้ character โหลดเสร็จ
+    end
+end)
+
+-- แจ้งเตือนเมื่อสคริปต์เริ่มทำงาน
+warn("Safe Mob Farm Script Activated - Anti-Cheat Measures Enabled")
 
 Main:AddSeperatorR("Setting")
 local WeaponList = {}
