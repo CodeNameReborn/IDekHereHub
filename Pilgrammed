@@ -1,4 +1,3 @@
----- ty
 local folderName = "IDekHere Hub Next Gen Data"
 local playerName = game.Players.LocalPlayer.Name:gsub("[^%w_ ]", "")
 local fileName = folderName .. "/Pilgrammed [ " .. playerName .. " ].json"
@@ -4999,11 +4998,6 @@ local function FindSafePosition(targetPosition)
     local bestScore = math.huge
     
     -- ค้นหาตำแหน่งที่ดีที่สุดในรัศมีรอบๆ มอนสเตอร์
-    for angle = 0, 360, 45 do
-        local rad = math.rad(angle)
-        local offset = Vector3.new(math.cos(rad) * searchRadius, 0, math.sin(rad) * searchRadius)
-        local testPosition = targetPosition + offset
-        
         -- Raycast หาพื้น
         local rayOrigin = testPosition + Vector3.new(0, 50, 0)
         local ray = Ray.new(rayOrigin, Vector3.new(0, -100, 0))
@@ -5081,7 +5075,7 @@ local function SmartMoveToMob(mobRoot)
     
     -- คำนวณตำแหน่งโจมตี (ด้านหลังมอนสเตอร์)
     local direction = (playerPos - mobPos).Unit
-    local attackDistance = math.min(_G.SST.Pos_Z, 8)
+    local attackDistance = math.min(_G.SST.Pos_Z)
     local attackPos = mobPos + (direction * -attackDistance)
     
     -- กำหนดความสูงที่ปลอดภัย
@@ -5125,27 +5119,14 @@ local function FastEquipWeapon(weaponName)
 end
 
 local function RapidAttack()
-    local successCount = 0
-    for i = 1, 4 do
-        pcall(function()
-            local char = player.Character
-            if not char then return end
-            
-            local tool = char:FindFirstChildOfClass("Tool")
-            if tool then
-                tool:Activate()
-                local re = tool:FindFirstChildWhichIsA("RemoteEvent")
-                if re then 
-                    re:FireServer()
-                    successCount = successCount + 1
-                end
-            end
-        end)
-        if i < 4 then
-            task.wait(0.05)
+pcall(function()
+        local tool = player.Character:FindFirstChildOfClass("Tool")
+        if tool then
+            if tool.Activate then tool:Activate() end
+            local re = tool:FindFirstChildWhichIsA("RemoteEvent")
+            if re then re:FireServer() end
         end
-    end
-    return successCount > 0
+    end)
 end
 
 -- ======================================================
