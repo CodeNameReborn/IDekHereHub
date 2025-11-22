@@ -4836,16 +4836,17 @@ Main:AddToggleL("Farm Mob", _G.SST.Farm_Mob, function(a) _G.SST.Farm_Mob = a end
 Main:AddSliderL("Search Distance", 100, 1000, _G.SST.Search_Distance, function(v) _G.SST.Search_Distance = v end)
 
 -- ======================================================
---  ANTI FLY KICK — พื้นปลอมติดใต้เท้า
+--  ANTI FLY KICK — พื้นปลอมติดใต้เท้า (แก้ไขใหม่)
 -- ======================================================
 local FakeFloor = Instance.new("Part")
 FakeFloor.Name = "FakeFloor_AntiFly"
-FakeFloor.Size = Vector3.new(10, 2, 10)
+FakeFloor.Size = Vector3.new(15, 3, 15) -- ขนาดใหญ่ขึ้น
 FakeFloor.Anchored = true
 FakeFloor.CanCollide = true
 FakeFloor.Massless = true
-FakeFloor.Transparency = 0.8
-FakeFloor.Material = Enum.Material.Grass
+FakeFloor.Transparency = 0.9 -- โปร่งใสมากขึ้น
+FakeFloor.Material = Enum.Material.Neon
+FakeFloor.BrickColor = BrickColor.new("Bright blue")
 FakeFloor.Parent = workspace
 
 -- ======================================================
@@ -4855,11 +4856,12 @@ local PlatformPart = workspace:FindFirstChild("FarmPlatform")
 if not PlatformPart then
     PlatformPart = Instance.new("Part")
     PlatformPart.Name = "FarmPlatform"
-    PlatformPart.Size = Vector3.new(8, 2, 8)
+    PlatformPart.Size = Vector3.new(10, 2, 10) -- ขนาดใหญ่ขึ้น
     PlatformPart.Anchored = true
     PlatformPart.CanCollide = true
-    PlatformPart.Transparency = 0.3
+    PlatformPart.Transparency = 0.4
     PlatformPart.BrickColor = BrickColor.new("Bright green")
+    PlatformPart.Material = Enum.Material.Plastic
     PlatformPart.Parent = workspace
 end
 
@@ -4926,17 +4928,6 @@ local function UpdateMobCache(info)
     return MobCache
 end
 
-local function FindNearestMob(info)
-    local cache = UpdateMobCache(info)
-    
-    if #cache > 0 then
-        local nearest = cache[1]
-        return nearest.Model, nearest.Root, nearest.Distance
-    end
-    
-    return nil, nil, math.huge
-end
-
 local function FindAnyMobInRange(info)
     local cache = UpdateMobCache(info)
     
@@ -4950,7 +4941,7 @@ local function FindAnyMobInRange(info)
 end
 
 -- ======================================================
--- ฟังก์ชันเคลื่อนที่แบบเร็วและปลอดภัย
+-- ฟังก์ชันเคลื่อนที่แบบเร็วและปลอดภัย (แก้ไขใหม่)
 -- ======================================================
 local function FastMoveToPosition(targetCFrame)
     local char = player.Character
@@ -4965,10 +4956,21 @@ local function FastMoveToPosition(targetCFrame)
     local safeY = hitPosition and hitPosition.Y + 3 or math.max(10, targetCFrame.Position.Y)
     local safePosition = Vector3.new(targetCFrame.Position.X, safeY, targetCFrame.Position.Z)
     
-    -- เคลื่อนที่ทันที
+    -- เคลื่อนที่ทันที + รีเซ็ตฟิสิกส์ทั้งหมด
     hrp.CFrame = CFrame.new(safePosition)
+    
+    -- รีเซ็ตความเร็วและแรงทั้งหมดอย่างสมบูรณ์
     hrp.Velocity = Vector3.new(0, 0, 0)
     hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    hrp.RotVelocity = Vector3.new(0, 0, 0)
+    
+    -- รีเซ็ตแรงที่กระทำ
+    for _, force in ipairs(hrp:GetChildren()) do
+        if force:IsA("BodyForce") or force:IsA("BodyVelocity") or force:IsA("BodyAngularVelocity") then
+            force:Destroy()
+        end
+    end
     
     return true
 end
@@ -5051,22 +5053,28 @@ local function RapidAttack()
 end
 
 -- ======================================================
--- NoClip
+-- NoClip (แก้ไขใหม่)
 -- ======================================================
 RunService.Stepped:Connect(function()
     if _G.SST.Farm_Mob and player.Character then
         for _, part in ipairs(player.Character:GetDescendants()) do
             if part:IsA("BasePart") then
                 part.CanCollide = false
+                -- รีเซ็ตความเร็วเป็นระยะๆ เพื่อป้องกันการลอย
+                if part:IsA("Part") and part.Name == "HumanoidRootPart" then
+                    part.Velocity = Vector3.new(part.Velocity.X * 0.9, math.min(part.Velocity.Y, 10), part.Velocity.Z * 0.9)
+                end
             end
         end
     end
 end)
 
 -- ======================================================
--- ANTI FALL DAMAGE SYSTEM
+-- ANTI FALL DAMAGE SYSTEM (แก้ไขใหม่)
 -- ======================================================
 local lastSafePosition = nil
+local lastGravityCheck = 0
+
 RunService.Heartbeat:Connect(function()
     local char = player.Character
     if not char or not _G.SST.Farm_Mob then 
@@ -5083,8 +5091,9 @@ RunService.Heartbeat:Connect(function()
         lastSafePosition = hrp.Position
     end
 
-    -- อัพเดทพื้นปลอม
-    FakeFloor.CFrame = CFrame.new(hrp.Position.X, hrp.Position.Y - 4, hrp.Position.Z)
+    -- อัพเดทพื้นปลอมให้อยู่ใต้เท้าพอดี
+    local currentTime = tick()
+    FakeFloor.CFrame = CFrame.new(hrp.Position.X, hrp.Position.Y - 4.5, hrp.Position.Z)
 
     -- ตรวจสอบการตกจากที่สูง
     if hrp.Position.Y < -100 then
@@ -5098,25 +5107,40 @@ RunService.Heartbeat:Connect(function()
         end
     end
 
-    -- ป้องกันความเร็วตก
-    if hrp.Velocity.Y < -50 then
-        hrp.Velocity = Vector3.new(hrp.Velocity.X, math.max(hrp.Velocity.Y, -30), hrp.Velocity.Z)
+    -- ระบบควบคุมแรงโน้มถ่วงและความเร็ว (แก้ไขการลอย)
+    if currentTime - lastGravityCheck > 0.5 then
+        lastGravityCheck = currentTime
+        
+        -- ตรวจสอบว่ากำลังลอยอยู่หรือไม่
+        local ray = Ray.new(hrp.Position, Vector3.new(0, -10, 0))
+        local hit, hitPosition = workspace:FindPartOnRayWithIgnoreList(ray, {char, PlatformPart, FakeFloor})
+        
+        if not hit and hrp.Velocity.Y > -5 then
+            -- ถ้ากำลังลอยและไม่ตก ให้ดึงลงพื้น
+            hrp.Velocity = Vector3.new(hrp.Velocity.X, -15, hrp.Velocity.Z)
+        elseif hrp.Velocity.Y < -50 then
+            -- จำกัดความเร็วตกสูงสุด
+            hrp.Velocity = Vector3.new(hrp.Velocity.X, math.max(hrp.Velocity.Y, -50), hrp.Velocity.Z)
+        end
+        
+        -- รีเซ็ตความเร็วแนวนอนเป็นระยะเพื่อป้องกันการเลื่อน
+        hrp.Velocity = Vector3.new(hrp.Velocity.X * 0.8, hrp.Velocity.Y, hrp.Velocity.Z * 0.8)
     end
 end)
 
 -- ======================================================
---              ULTRA FAST FARM LOOP
+--              ULTRA FAST FARM LOOP (แก้ไขใหม่)
 -- ======================================================
 spawn(function()
     local lastMobCheck = 0
-    local mobCheckInterval = 0.3 -- ตรวจสอบมอนสเตอร์บ่อยขึ้น
+    local mobCheckInterval = 0.3
     
     while true do
-        task.wait(0.05)  -- ลดความล่าช้าลงมาก
+        task.wait(0)
 
         if not _G.SST.Farm_Mob then  
             PlatformPart.CFrame = CFrame.new(0, -500, 0)  
-            task.wait(0.5)
+            task.wait(0.1)
             continue  
         end  
 
@@ -5125,7 +5149,7 @@ spawn(function()
         local hum = char and char:FindFirstChild("Humanoid")  
 
         if not char or not hrp or not hum or hum.Health <= 0 then  
-            task.wait(1)
+            task.wait(0.5)
             continue  
         end  
 
@@ -5135,7 +5159,7 @@ spawn(function()
             continue 
         end  
 
-        -- หามอนสเตอร์ใดๆ ในระยะ (ไม่ต้องใกล้ที่สุดก็ได้)
+        -- หามอนสเตอร์ใดๆ ในระยะ
         local currentTime = tick()
         local mobModel, mobRoot, distance = FindAnyMobInRange(info)
 
@@ -5148,11 +5172,11 @@ spawn(function()
             -- เคลื่อนที่ไปหามอนสเตอร์แบบเร็ว
             local moveSuccess = pcall(function()
                 SmartMoveToMob(mobRoot)
-                PlatformPart.CFrame = CFrame.new(hrp.Position) * CFrame.new(0, -3, 0)
+                -- วาง Platform ให้อยู่ใต้ตัวผู้เล่นพอดี
+                PlatformPart.CFrame = CFrame.new(hrp.Position.X, hrp.Position.Y - 4, hrp.Position.Z)
             end)
 
             -- โจมตีทันที
-            task.wait(0.05)
             RapidAttack()
 
             -- สุ่มตรวจสอบมอนสเตอร์ตัวอื่นบ้างบางครั้ง
@@ -5176,7 +5200,7 @@ spawn(function()
                 end)  
             end  
             
-            task.wait(1)  -- รอสั้นๆ แล้วค้นหาใหม่
+            task.wait(0)
         end  
     end
 end)
@@ -5201,9 +5225,9 @@ if player.Character then
     lastSafePosition = player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position
 end
 
-print("ULTRA FAST Mob Farm Activated!")
+print("ULTRA FAST Mob Farm Activated - Fixed Floating Issue!")
 print("Search Distance: " .. _G.SST.Search_Distance)
-print("Cache system enabled for performance")
+print("Anti-Float system enabled")
 Main:AddSeperatorR("Setting")
 local WeaponList = {}
 for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do 
