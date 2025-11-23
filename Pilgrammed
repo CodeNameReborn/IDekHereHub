@@ -4826,7 +4826,7 @@ _G.SST.Select_Mob = _G.SST.Select_Mob or "Scarecrow"
 _G.SST.Farm_Mob = _G.SST.Farm_Mob or false
 _G.SST.Select_Weapon = _G.SST.Select_Weapon or "Sword"
 _G.SST.Pos_X = _G.SST.Pos_X or 0
-_G.SST.Pos_Y = _G.SST.Pos_Y or 3  -- ลดจาก 6 เป็น 3 เพื่อไม่ให้สูงเกินไป
+_G.SST.Pos_Y = _G.SST.Pos_Y or 0  -- เปลี่ยนเป็น 0 เพื่อไม่ให้ลอย
 _G.SST.Pos_Z = _G.SST.Pos_Z or 4  -- ระยะห่างจากมอนสเตอร์
 
 -- UI (ตรงนี้ตามเมนูคุณ)
@@ -4838,26 +4838,25 @@ Main:AddToggleL("Farm Mob", _G.SST.Farm_Mob, function(a) _G.SST.Farm_Mob = a end
 -- ======================================================
 local FakeFloor = Instance.new("Part")
 FakeFloor.Name = "FakeFloor_AntiFly"
-FakeFloor.Size = Vector3.new(10, 4, 10)  -- ขนาดใหญ่ขึ้น
+FakeFloor.Size = Vector3.new(10, 4, 10)
 FakeFloor.Anchored = true
-FakeFloor.CanCollide = true  -- เปลี่ยนเป็น true เพื่อกันตก
+FakeFloor.CanCollide = true
 FakeFloor.Massless = true
-FakeFloor.Transparency = 0.1  -- ทำให้มองเห็นได้สำหรับ debugging
+FakeFloor.Transparency = 1  -- ซ่อนให้หมด
 FakeFloor.Material = Enum.Material.Grass
 FakeFloor.Parent = workspace
 
 -- ======================================================
--- Platform ใช้ฟาร์ม (ใหญ่ขึ้นและมองเห็นได้)
+-- Platform ใช้ฟาร์ม
 -- ======================================================
 local PlatformPart = workspace:FindFirstChild("FarmPlatform")
 if not PlatformPart then
     PlatformPart = Instance.new("Part")
     PlatformPart.Name = "FarmPlatform"
-    PlatformPart.Size = Vector3.new(8, 4, 8)  -- ขนาดใหญ่ขึ้น
+    PlatformPart.Size = Vector3.new(8, 4, 8)
     PlatformPart.Anchored = true
     PlatformPart.CanCollide = true
-    PlatformPart.Transparency = 0.1  -- มองเห็นได้
-    PlatformPart.BrickColor = BrickColor.new("Bright green")
+    PlatformPart.Transparency = 1  -- ซ่อน platform
     PlatformPart.Parent = workspace
 end
 
@@ -4924,17 +4923,26 @@ local function SafeMoveToPosition(targetCFrame)
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
     
-    -- ตรวจสอบว่าจุดหมายอยู่บนพื้นหรือไม่
-    local ray = Ray.new(targetCFrame.Position + Vector3.new(0, 10, 0), Vector3.new(0, -50, 0))
+    -- ใช้ Raycast หาพื้นที่แท้จริง
+    local rayOrigin = targetCFrame.Position + Vector3.new(0, 50, 0)
+    local ray = Ray.new(rayOrigin, Vector3.new(0, -100, 0))
     local hit, hitPosition = workspace:FindPartOnRayWithIgnoreList(ray, {char, PlatformPart, FakeFloor})
     
     local safePosition
     if hit then
-        -- พบพื้น ให้ยืนบนพื้น
-        safePosition = CFrame.new(hitPosition + Vector3.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
+        -- พบพื้น ให้ยืนบนพื้น + เล็กน้อย
+        safePosition = CFrame.new(
+            targetCFrame.Position.X,  -- ใช้ X,Z จาก target
+            hitPosition.Y + 2.5,      -- ยืนบนพื้น + 2.5 (ความสูงตัวละคร)
+            targetCFrame.Position.Z
+        )
     else
-        -- ไม่พบพื้น ใช้ตำแหน่งเดิมแต่ลดความสูง
-        safePosition = CFrame.new(targetCFrame.Position - Vector3.new(0, math.min(0, targetCFrame.Position.Y - 10), 0))
+        -- ไม่พบพื้น ใช้ความสูงเดิมแต่ไม่ให้ต่ำเกินไป
+        safePosition = CFrame.new(
+            targetCFrame.Position.X,
+            math.max(10, targetCFrame.Position.Y),  -- ไม่ต่ำกว่า 10
+            targetCFrame.Position.Z
+        )
     end
     
     -- เคลื่อนที่แบบทันทีแต่ปลอดภัย
@@ -5015,7 +5023,7 @@ RunService.Heartbeat:Connect(function()
     -- ตรวจสอบการตกจากที่สูง
     if hrp.Position.Y < -50 then  -- ตกจาก map
         if lastSafePosition then
-            hrp.CFrame = CFrame.new(lastSafePosition + Vector3.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
+            hrp.CFrame = CFrame.new(lastSafePosition)
         else
             local info = Moblist[_G.SST.Select_Mob]  
             if info and info.SpawnCFrame then
@@ -5035,7 +5043,7 @@ end)
 -- ======================================================
 spawn(function()
     while true do
-        task.wait(0)  -- ความล่าช้าพื้นฐาน
+        task.wait(0.1)  -- เพิ่ม delay นิดหน่อย
 
         if not _G.SST.Farm_Mob then  
             PlatformPart.CFrame = CFrame.new(0, -500, 0)  
@@ -5047,7 +5055,7 @@ spawn(function()
         local hum = char and char:FindFirstChild("Humanoid")  
 
         if not char or not hrp or not hum or hum.Health <= 0 then  
-            task.wait(0)  -- รอนานขึ้นถ้าตาย
+            task.wait(1)  -- รอนานขึ้นถ้าตาย
             continue  
         end  
 
@@ -5064,6 +5072,7 @@ spawn(function()
                 if info.SpawnCFrame then
                     SafeMoveToPosition(info.SpawnCFrame)
                 end
+                task.wait(1)
                 continue
             end
 
@@ -5072,25 +5081,39 @@ spawn(function()
                 EquipWeapon(_G.SST.Select_Weapon)
             end)
 
-            -- คำนวณตำแหน่งที่ปลอดภัยสำหรับโจมตี
+            -- คำนวณตำแหน่งที่ปลอดภัยสำหรับโจมตี (บนพื้น)
             local mobPosition = mobRoot.Position
             local direction = (hrp.Position - mobPosition).Unit
             local attackPosition = mobPosition + (direction * -_G.SST.Pos_Z)  -- อยู่ห่างจากมอนสเตอร์
-            attackPosition = Vector3.new(attackPosition.X, mobPosition.Y + _G.SST.Pos_Y, attackPosition.Z)
+            
+            -- ใช้ Raycast หาความสูงพื้นที่ attackPosition
+            local rayOrigin = attackPosition + Vector3.new(0, 50, 0)
+            local ray = Ray.new(rayOrigin, Vector3.new(0, -100, 0))
+            local hit, hitPosition = workspace:FindPartOnRayWithIgnoreList(ray, {char, PlatformPart, FakeFloor})
+            
+            if hit then
+                attackPosition = Vector3.new(attackPosition.X, hitPosition.Y + 2.5, attackPosition.Z)
+            else
+                attackPosition = Vector3.new(attackPosition.X, mobPosition.Y, attackPosition.Z)
+            end
 
             -- สร้าง CFrame สำหรับการโจมตี
-            local targetCFrame = CFrame.new(attackPosition)
-            local lookCFrame = CFrame.lookAt(attackPosition, mobPosition)
+            local lookCFrame = CFrame.lookAt(attackPosition, Vector3.new(mobPosition.X, attackPosition.Y, mobPosition.Z))
 
             -- ย้ายไปยังตำแหน่งโจมตี
             pcall(function()
                 SafeMoveToPosition(lookCFrame)
                 
-                -- อัพเดท platform
-                PlatformPart.CFrame = CFrame.new(attackPosition) * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y - 4, _G.SST.Pos_Z)
+                -- อัพเดท platform ให้อยู่ใต้เท้า
+                PlatformPart.CFrame = CFrame.new(attackPosition) * CFrame.new(0, -3, 0)
             end)
+            
             -- โจมตี
             Attack()
+            
+            -- รอสักครู่ก่อนหามอนตัวใหม่
+            task.wait(0.3)
+            
         else  
             -- ไม่พบมอนสเตอร์ กลับไป spawn
             PlatformPart.CFrame = CFrame.new(0, -500, 0)  
@@ -5102,6 +5125,7 @@ spawn(function()
                 end)  
             end  
             
+            task.wait(1)  -- รอสักครู่ก่อนค้นหาใหม่
         end  
     end
 end)
@@ -5111,7 +5135,7 @@ end)
 -- ======================================================
 local function onCharacterAdded(character)
     if _G.SST.Farm_Mob then
-        task.wait(1)  -- รอให้ character พร้อม
+        task.wait(2)  -- รอให้ character พร้อม
         print("Character respawned, continuing farm...")
     end
 end
@@ -5125,7 +5149,7 @@ end
 
 print("Safe Mob Farm Script Started!")
 print("Anti-Fall system activated")
-print("Platform visible for debugging")
+print("Fixed: No more flying up in the air")
 Main:AddSeperatorR("Setting")
 local WeaponList = {}
 for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do 
