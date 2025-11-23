@@ -4826,8 +4826,8 @@ _G.SST.Select_Mob = _G.SST.Select_Mob or "Scarecrow"
 _G.SST.Farm_Mob = _G.SST.Farm_Mob or false
 _G.SST.Select_Weapon = _G.SST.Select_Weapon or "Sword"
 _G.SST.Pos_X = _G.SST.Pos_X or 0
-_G.SST.Pos_Y = _G.SST.Pos_Y or 6
-_G.SST.Pos_Z = _G.SST.Pos_Z or 0
+_G.SST.Pos_Y = _G.SST.Pos_Y or 3  -- ลดจาก 6 เป็น 3 เพื่อไม่ให้สูงเกินไป
+_G.SST.Pos_Z = _G.SST.Pos_Z or 4  -- ระยะห่างจากมอนสเตอร์
 
 -- UI (ตรงนี้ตามเมนูคุณ)
 Main:AddDropdownL("Select Mob", MobNames, _G.SST.Select_Mob, function(v) _G.SST.Select_Mob = v end)
@@ -4838,25 +4838,26 @@ Main:AddToggleL("Farm Mob", _G.SST.Farm_Mob, function(a) _G.SST.Farm_Mob = a end
 -- ======================================================
 local FakeFloor = Instance.new("Part")
 FakeFloor.Name = "FakeFloor_AntiFly"
-FakeFloor.Size = Vector3.new(6, 1, 6)
+FakeFloor.Size = Vector3.new(10, 2, 10)  -- ขนาดใหญ่ขึ้น
 FakeFloor.Anchored = true
-FakeFloor.CanCollide = false
+FakeFloor.CanCollide = true  -- เปลี่ยนเป็น true เพื่อกันตก
 FakeFloor.Massless = true
-FakeFloor.Transparency = 1
+FakeFloor.Transparency = 0.5  -- ทำให้มองเห็นได้สำหรับ debugging
 FakeFloor.Material = Enum.Material.Grass
 FakeFloor.Parent = workspace
 
 -- ======================================================
--- Platform ใช้ฟาร์ม
+-- Platform ใช้ฟาร์ม (ใหญ่ขึ้นและมองเห็นได้)
 -- ======================================================
 local PlatformPart = workspace:FindFirstChild("FarmPlatform")
 if not PlatformPart then
     PlatformPart = Instance.new("Part")
     PlatformPart.Name = "FarmPlatform"
-    PlatformPart.Size = Vector3.new(5, 1, 5)
+    PlatformPart.Size = Vector3.new(8, 2, 8)  -- ขนาดใหญ่ขึ้น
     PlatformPart.Anchored = true
     PlatformPart.CanCollide = true
-    PlatformPart.Transparency = 1
+    PlatformPart.Transparency = 0.3  -- มองเห็นได้
+    PlatformPart.BrickColor = BrickColor.new("Bright green")
     PlatformPart.Parent = workspace
 end
 
@@ -4873,7 +4874,10 @@ local function GetAliveMob(info)
     for _, folder in ipairs(info.Folders) do
         for _, obj in ipairs(folder:GetDescendants()) do
             if obj:IsA("Humanoid") and obj.Health > 0 then
-                return obj.Parent, GetRootPart(obj.Parent)
+                local root = GetRootPart(obj.Parent)
+                if root then
+                    return obj.Parent, root
+                end
             end
         end
     end
@@ -4882,98 +4886,98 @@ end
 
 local function EquipWeapon(weaponName)
     local bp = player:FindFirstChild("Backpack")
-    if not bp then return end
+    if not bp then return false end
     local char = player.Character
-    if not char then return end
+    if not char then return false end
 
     local tool = bp:FindFirstChild(weaponName)  
     if tool then  
-        char.Humanoid:EquipTool(tool)  
+        char.Humanoid:EquipTool(tool)
+        return true
     end
+    return false
 end
 
 local function Attack()
     pcall(function()
-        local tool = player.Character:FindFirstChildOfClass("Tool")
+        local char = player.Character
+        if not char then return end
+        
+        local tool = char:FindFirstChildOfClass("Tool")
         if tool then
             tool:Activate()
             local re = tool:FindFirstChildWhichIsA("RemoteEvent")
-            if re then re:FireServer() end
+            if re then 
+                re:FireServer()
+                return true
+            end
         end
     end)
+    return false
 end
 
 -- ======================================================
--- ฟังก์ชันเคลื่อนที่แบบปลอดภัย
+-- ฟังก์ชันเคลื่อนที่แบบปลอดภัย (แก้ไขใหม่)
 -- ======================================================
-local function MoveToPosition(position, duration)
+local function SafeMoveToPosition(targetCFrame)
     local char = player.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
     
-    local tweenInfo = TweenInfo.new(
-        math.max(0.3, duration), -- ระยะเวลาขั้นต่ำ 0.3 วินาที
-        Enum.EasingStyle.Linear,
-        Enum.EasingDirection.Out,
-        0,
-        false,
-        0
-    )
+    -- ตรวจสอบว่าจุดหมายอยู่บนพื้นหรือไม่
+    local ray = Ray.new(targetCFrame.Position + Vector3.new(0, 10, 0), Vector3.new(0, -50, 0))
+    local hit, hitPosition = workspace:FindPartOnRayWithIgnoreList(ray, {char, PlatformPart, FakeFloor})
     
-    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = position})
-    tween:Play()
-    return tween
+    local safePosition
+    if hit then
+        -- พบพื้น ให้ยืนบนพื้น
+        safePosition = CFrame.new(hitPosition + Vector3.new(0, 3, 0))
+    else
+        -- ไม่พบพื้น ใช้ตำแหน่งเดิมแต่ลดความสูง
+        safePosition = CFrame.new(targetCFrame.Position - Vector3.new(0, math.min(0, targetCFrame.Position.Y - 10), 0))
+    end
+    
+    -- เคลื่อนที่แบบทันทีแต่ปลอดภัย
+    hrp.CFrame = safePosition
+    hrp.Velocity = Vector3.new(0, 0, 0)
+    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    
+    return true
 end
 
 -- ======================================================
--- จำลองการเคลื่อนไหวของมนุษย์
+-- ฟังก์ชันหามอนสเตอร์ที่ใกล้ที่สุด
 -- ======================================================
-local function HumanLikeMovement()
-    if not _G.SST.Farm_Mob then return end
-    
+local function FindNearestMob(info)
     local char = player.Character
-    local hum = char and char:FindFirstChild("Humanoid")
-    if not hum then return end
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil, nil end
     
-    -- สุ่มกระโดดบ้างบางครั้ง (โอกาส 1%)
-    if math.random(1, 100) == 1 then
-        hum.Jump = true
+    local nearestMob = nil
+    local nearestRoot = nil
+    local nearestDistance = math.huge
+    
+    for _, folder in ipairs(info.Folders) do
+        for _, mob in ipairs(folder:GetChildren()) do
+            local humanoid = mob:FindFirstChildOfClass("Humanoid")
+            local root = GetRootPart(mob)
+            
+            if humanoid and humanoid.Health > 0 and root then
+                local distance = (hrp.Position - root.Position).Magnitude
+                if distance < nearestDistance then
+                    nearestDistance = distance
+                    nearestMob = mob
+                    nearestRoot = root
+                end
+            end
+        end
     end
     
-    -- สุ่มเคลื่อนที่เล็กน้อย (โอกาส 2%)
-    if math.random(1, 50) == 1 then
-        hum:Move(Vector3.new(
-            math.random(-1, 1) * 0.5,
-            0,
-            math.random(-1, 1) * 0.5
-        ))
-    end
+    return nearestMob, nearestRoot, nearestDistance
 end
 
 -- ======================================================
--- ตรวจสอบว่ายืนอยู่บนพื้น
--- ======================================================
-local function IsOnGround()
-    local char = player.Character
-    if not char then return false end
-    
-    local hum = char:FindFirstChild("Humanoid")
-    if hum and hum.FloorMaterial ~= Enum.Material.Air then
-        return true
-    end
-    
-    -- Raycast ตรวจสอบพื้น
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return false end
-    
-    local ray = Ray.new(hrp.Position, Vector3.new(0, -5, 0))
-    local hit, position = workspace:FindPartOnRay(ray, char)
-    
-    return hit ~= nil
-end
-
--- ======================================================
--- NoClip
+-- NoClip (แก้ไข)
 -- ======================================================
 RunService.Stepped:Connect(function()
     if _G.SST.Farm_Mob and player.Character then
@@ -4986,70 +4990,55 @@ RunService.Stepped:Connect(function()
 end)
 
 -- ======================================================
--- ANTI FLY และ Human Movement
+-- ANTI FALL DAMAGE SYSTEM (ใหม่)
 -- ======================================================
-local airTime = 0
+local lastSafePosition = nil
 RunService.Heartbeat:Connect(function()
-    -- Human Like Movement
-    HumanLikeMovement()
-    
-    -- Anti Fly System
-    if not _G.SST.Farm_Mob then
+    local char = player.Character
+    if not char or not _G.SST.Farm_Mob then 
         FakeFloor.CFrame = CFrame.new(0, -999, 0)
-        airTime = 0
-        return
+        return 
+    end
+    
+    local hrp = char:FindFirstChild("HumanoidRootPart")  
+    local hum = char:FindFirstChild("Humanoid")
+    if not hrp or not hum then return end
+
+    -- บันทึกตำแหน่งปลอดภัย
+    if hum.FloorMaterial ~= Enum.Material.Air then
+        lastSafePosition = hrp.Position
     end
 
-    local char = player.Character  
-    if not char then return end  
-    local hrp = char:FindFirstChild("HumanoidRootPart")  
-    if not hrp then return end  
+    -- อัพเดทพื้นปลอมใต้ตัวผู้เล่น
+    FakeFloor.CFrame = CFrame.new(hrp.Position.X, hrp.Position.Y - 4, hrp.Position.Z)
 
-    -- อัพเดทพื้นปลอม
-    FakeFloor.CFrame = CFrame.new(  
-        hrp.Position.X,  
-        hrp.Position.Y - 3.5,  
-        hrp.Position.Z  
-    )
-
-    -- ตรวจสอบการลอยกลางอากาศ
-    if not IsOnGround() then
-        airTime = airTime + task.wait()
-        if airTime > 3 then -- ถ้าลอยนานกว่า 3 วินาที
-            -- กลับไป spawn point แบบปลอดภัย
+    -- ตรวจสอบการตกจากที่สูง
+    if hrp.Position.Y < -50 then  -- ตกจาก map
+        if lastSafePosition then
+            hrp.CFrame = CFrame.new(lastSafePosition + Vector3.new(0, 5, 0))
+        else
             local info = Moblist[_G.SST.Select_Mob]  
             if info and info.SpawnCFrame then
-                pcall(function()
-                    MoveToPosition(info.SpawnCFrame * CFrame.new(0, 5, 0), 1.5)
-                end)
+                hrp.CFrame = info.SpawnCFrame
             end
-            airTime = 0
         end
-    else
-        airTime = 0
+    end
+
+    -- ป้องกันความเร็วตก (Anti Fall Damage)
+    if hrp.Velocity.Y < -50 then
+        hrp.Velocity = Vector3.new(hrp.Velocity.X, -10, hrp.Velocity.Z)
     end
 end)
 
 -- ======================================================
---              MAIN FARM LOOP (ANTI-CHEAT SAFE)
+--              MAIN FARM LOOP (แก้ไขใหม่)
 -- ======================================================
 spawn(function()
-    local lastActionTime = 0
-    local actionDelay = 0.1 -- ความล่าช้าระหว่างการกระทำ
-    
     while true do
-        local currentTime = tick()
-        
-        -- ตรวจสอบความล่าช้า
-        if currentTime - lastActionTime < actionDelay then
-            task.wait(actionDelay - (currentTime - lastActionTime))
-        end
-        
-        lastActionTime = tick()
+        task.wait(0)  -- ความล่าช้าพื้นฐาน
 
         if not _G.SST.Farm_Mob then  
             PlatformPart.CFrame = CFrame.new(0, -500, 0)  
-            task.wait(0.5)
             continue  
         end  
 
@@ -5058,91 +5047,92 @@ spawn(function()
         local hum = char and char:FindFirstChild("Humanoid")  
 
         if not char or not hrp or not hum or hum.Health <= 0 then  
-            task.wait(1)  
+            task.wait(2)  -- รอนานขึ้นถ้าตาย
             continue  
         end  
 
         local info = Moblist[_G.SST.Select_Mob]  
-        if not info then 
-            task.wait(0.5)
-            continue 
-        end  
+        if not info then continue end  
 
-        local mobModel, mobRoot = GetAliveMob(info)  
+        -- หามอนสเตอร์ที่ใกล้ที่สุด
+        local mobModel, mobRoot, distance = FindNearestMob(info)
 
         if mobModel and mobRoot then  
-            -- ตรวจสอบระยะทางก่อนเคลื่อนที่
-            local distance = (hrp.Position - mobRoot.Position).Magnitude
-            if distance > 1000 then -- ระยะทางสูงสุดที่อนุญาต
-                warn("Distance too far, possible teleport detection - Moving to spawn")
+            -- ตรวจสอบระยะทาง
+            if distance > 1000 then
+                print("Mob too far, teleporting to spawn")
                 if info.SpawnCFrame then
-                    MoveToPosition(info.SpawnCFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
+                    SafeMoveToPosition(info.SpawnCFrame)
                 end
+                task.wait(1)
                 continue
             end
-            
-            pcall(function()  
-                EquipWeapon(_G.SST.Select_Weapon)  
 
-                local target = mobRoot.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z)  
+            -- เตรียมอาวุธ
+            pcall(function()
+                EquipWeapon(_G.SST.Select_Weapon)
+            end)
 
-                PlatformPart.CFrame = target
-                
-                -- ใช้ Tween แทนการวาร์ป (ระยะเวลาสุ่ม)
-                local moveDuration = 0.2 + math.random() * 0.3 -- 0.2-0.5 วินาที
-                MoveToPosition(target, moveDuration)
-                
-                -- ลดความถี่ในการหมุนตัว (โอกาส 40%)
-                if math.random(1, 10) <= 4 then
-                    local lookAt = CFrame.lookAt(hrp.Position, mobRoot.Position)  
-                    hrp.CFrame = CFrame.new(hrp.Position) * lookAt.Rotation  
-                end
-                
-                -- รีเซ็ต velocity
-                hrp.Velocity = Vector3.new(0,0,0)  
-                hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)  
-            end)  
+            -- คำนวณตำแหน่งที่ปลอดภัยสำหรับโจมตี
+            local mobPosition = mobRoot.Position
+            local direction = (hrp.Position - mobPosition).Unit
+            local attackPosition = mobPosition + (direction * -_G.SST.Pos_Z)  -- อยู่ห่างจากมอนสเตอร์
+            attackPosition = Vector3.new(attackPosition.X, mobPosition.Y + _G.SST.Pos_Y, attackPosition.Z)
 
-            -- โจมตีแบบสุ่มเพื่อให้ดูเป็นธรรมชาติ (โอกาส 60%)
-            if math.random(1, 10) <= 6 then
-                Attack()
-                -- สุ่ม delay การโจมตี
-                task.wait(0.1 + math.random() * 0.2)
+            -- สร้าง CFrame สำหรับการโจมตี
+            local targetCFrame = CFrame.new(attackPosition)
+            local lookCFrame = CFrame.lookAt(attackPosition, mobPosition)
+
+            -- ย้ายไปยังตำแหน่งโจมตี
+            pcall(function()
+                SafeMoveToPosition(lookCFrame)
+                
+                -- อัพเดท platform
+                PlatformPart.CFrame = CFrame.new(attackPosition) * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y - 3, _G.SST.Pos_Z)
+            end)
+            -- โจมตี
+            Attack()
+            -- สุ่มหยุดพัก
+            if math.random(1, 10) == 1 then
+                task.wait(0.5)
             end
-            
-            -- สุ่มหยุดพักสั้นๆ (โอกาส 5%)
-            if math.random(1, 20) == 1 then
-                task.wait(0.5 + math.random() * 1.0)
-            end
-            
+
         else  
+            -- ไม่พบมอนสเตอร์ กลับไป spawn
             PlatformPart.CFrame = CFrame.new(0, -500, 0)  
 
             if info.SpawnCFrame then  
                 pcall(function()  
-                    -- ใช้ Tween ไปยัง spawn point
-                    local spawnPos = info.SpawnCFrame * CFrame.new(0, 5, 0)
-                    MoveToPosition(spawnPos, 1.5)
+                    SafeMoveToPosition(info.SpawnCFrame)
+                    lastSafePosition = info.SpawnCFrame.Position
                 end)  
             end  
             
-            -- รอให้นานขึ้นเมื่อไม่มี mob
-            task.wait(2 + math.random() * 1.0) 
+            task.wait(0)  -- รอนานขึ้นเมื่อไม่มีมอนสเตอร์
         end  
     end
 end)
 
 -- ======================================================
--- Safe Exit Handler
+-- Auto Respawn System
 -- ======================================================
-player.CharacterAdded:Connect(function()
+local function onCharacterAdded(character)
     if _G.SST.Farm_Mob then
-        task.wait(0) -- รอให้ character โหลดเสร็จ
+        task.wait(1)  -- รอให้ character พร้อม
+        print("Character respawned, continuing farm...")
     end
-end)
+end
 
--- แจ้งเตือนเมื่อสคริปต์เริ่มทำงาน
-warn("Safe Mob Farm Script Activated - Anti-Cheat Measures Enabled")
+player.CharacterAdded:Connect(onCharacterAdded)
+
+-- ตั้งค่าเริ่มต้น
+if player.Character then
+    lastSafePosition = player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position
+end
+
+print("Safe Mob Farm Script Started!")
+print("Anti-Fall system activated")
+print("Platform visible for debugging")
 Main:AddSeperatorR("Setting")
 local WeaponList = {}
 for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do 
