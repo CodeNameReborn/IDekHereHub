@@ -4838,7 +4838,7 @@ Main:AddToggleL("Farm Mob", _G.SST.Farm_Mob, function(a) _G.SST.Farm_Mob = a end
 -- ======================================================
 local FakeFloor = Instance.new("Part")
 FakeFloor.Name = "FakeFloor_AntiFly"
-FakeFloor.Size = Vector3.new(10, 2, 10)  -- ขนาดใหญ่ขึ้น
+FakeFloor.Size = Vector3.new(10, 4, 10)  -- ขนาดใหญ่ขึ้น
 FakeFloor.Anchored = true
 FakeFloor.CanCollide = true  -- เปลี่ยนเป็น true เพื่อกันตก
 FakeFloor.Massless = true
@@ -4853,7 +4853,7 @@ local PlatformPart = workspace:FindFirstChild("FarmPlatform")
 if not PlatformPart then
     PlatformPart = Instance.new("Part")
     PlatformPart.Name = "FarmPlatform"
-    PlatformPart.Size = Vector3.new(8, 2, 8)  -- ขนาดใหญ่ขึ้น
+    PlatformPart.Size = Vector3.new(8, 4, 8)  -- ขนาดใหญ่ขึ้น
     PlatformPart.Anchored = true
     PlatformPart.CanCollide = true
     PlatformPart.Transparency = 0.3  -- มองเห็นได้
