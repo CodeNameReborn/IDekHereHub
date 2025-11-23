@@ -5091,11 +5091,6 @@ spawn(function()
             end)
             -- โจมตี
             Attack()
-            -- สุ่มหยุดพัก
-            if math.random(1, 10) == 1 then
-                task.wait(0.5)
-            end
-
         else  
             -- ไม่พบมอนสเตอร์ กลับไป spawn
             PlatformPart.CFrame = CFrame.new(0, -500, 0)  
