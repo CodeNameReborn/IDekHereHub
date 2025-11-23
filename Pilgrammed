@@ -5047,7 +5047,7 @@ spawn(function()
         local hum = char and char:FindFirstChild("Humanoid")  
 
         if not char or not hrp or not hum or hum.Health <= 0 then  
-            task.wait(2)  -- รอนานขึ้นถ้าตาย
+            task.wait(0)  -- รอนานขึ้นถ้าตาย
             continue  
         end  
 
@@ -5064,7 +5064,6 @@ spawn(function()
                 if info.SpawnCFrame then
                     SafeMoveToPosition(info.SpawnCFrame)
                 end
-                task.wait(1)
                 continue
             end
 
@@ -5108,7 +5107,6 @@ spawn(function()
                 end)  
             end  
             
-            task.wait(0)  -- รอนานขึ้นเมื่อไม่มีมอนสเตอร์
         end  
     end
 end)
