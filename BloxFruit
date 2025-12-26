@@ -3561,32 +3561,18 @@ end)
                             if table.find(data.Namemon, v.Name) then
                                 if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
                                     repeat task.wait()
-                                        AutoHaki()
-                                        EquipWeapon(SelectWeapon)
+                                        Equip(_G.ItemName)
                                         v.HumanoidRootPart.CanCollide = false
                                         v.Humanoid.WalkSpeed = 0
                                         v.Head.CanCollide = false 
                                         StartMagnet = true
                                         PosMon = v.HumanoidRootPart.CFrame
-                                        Tween(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                                        Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
                                     until not _SST.Auto_Farm_Material or not v.Parent or v.Humanoid.Health <= 0
                                 end
                             end
                         end
-
-                        -- ถ้าไม่มีมอนใน Workspace → ไปที่ตำแหน่ง Spawn หรือ Fallback
-                        local found = false
-                        for _,name in pairs(data.Namemon) do
-                            local spawnMon = rep:FindFirstChild(name)
-                            if spawnMon and spawnMon:FindFirstChild("HumanoidRootPart") then
-                                found = true
-                                break
-                            end
-                        end
-
-                        if not found then
                             Tween(data.CFrameMon) -- fallback ไปตำแหน่งที่ตั้งไว้
-                        end
                     end
                 end
             end)
