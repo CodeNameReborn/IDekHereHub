@@ -2517,7 +2517,7 @@ end
     spawn(function()
         pcall(function()
             while task.wait() do
-                if _G.SST.Auto_Farm_Level or _G.SST.Auto_Farm_Boss or _G.SST.Auto_Farm_All_Boss or _G.SST.Auto_Second_Sea then
+                if _G.SST.Auto_Farm_Level or _G.SST.Auto_Farm_Boss or _G.SST.Auto_Farm_All_Boss or _G.SST.Auto_Second_Sea or _SST.Auto_Farm_Material then
                     local character = game:GetService("Players").LocalPlayer.Character
                     local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
                     if humanoidRootPart and not humanoidRootPart:FindFirstChild("BodyClip") then
@@ -2544,7 +2544,7 @@ end
     spawn(function()
         pcall(function()
             game:GetService("RunService").Stepped:Connect(function()
-                if _G.SST.Auto_Farm_Level or _G.SST.Auto_Farm_Boss or _G.SST.Auto_Farm_All_Boss or _G.SST.Auto_Second_Sea then
+                if _G.SST.Auto_Farm_Level or _G.SST.Auto_Farm_Boss or _G.SST.Auto_Farm_All_Boss or _G.SST.Auto_Second_Sea or _SST.Auto_Farm_Material then
                     for _, v in pairs(game:GetService("Players").LocalPlayer.Character:GetDescendants()) do
                         if v:IsA("BasePart") then
                             v.CanCollide = false    
@@ -2557,7 +2557,7 @@ end
 
     spawn(function()
         while wait() do
-            if _G.SST.Auto_Farm_Level or _G.SST.Auto_Farm_Boss or _G.SST.Auto_Farm_All_Boss or _G.SST.Auto_Second_Sea then
+            if _G.SST.Auto_Farm_Level or _G.SST.Auto_Farm_Boss or _G.SST.Auto_Farm_All_Boss or _G.SST.Auto_Second_Sea or _SST.Auto_Farm_Material then
                 pcall(function()
                     game:GetService("ReplicatedStorage").Remotes.CommE:FireServer("Ken",true)
                 end)
@@ -3532,8 +3532,9 @@ end)
             CFrameMon = CFrame.new(0, 0, 0)
         }
     }
-
-    MS:AddDropdownL("Select Materials", Materials, _G.SST.Select_Materials, function(vu)
+    local MaterialNames = {} for name,_ in pairs(Materials) do table.insert(MaterialNames, name) end
+    _G.SST.Select_Materials = _G.SST.Select_Materials or Select_Materials or ""
+    MS:AddDropdownL("Select Materials", MaterialNames, _G.SST.Select_Materials, function(vu)
         Select_Materials = vu
         _G.SST.Select_Materials = Select_Materials
         SS()
