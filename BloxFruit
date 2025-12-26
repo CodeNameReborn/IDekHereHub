@@ -5148,6 +5148,6 @@ Setting:AddDropdownL("Select Team",{"Pirate","Marine"},_G.SST.Select_Team,functi
     SS()
 end)
 
-Setting:AddButton("Remove Seve Setting",function()
+Setting:AddButtonL("Remove Seve Setting",function()
 DeleteFile()
 end)
