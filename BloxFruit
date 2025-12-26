@@ -4763,27 +4763,15 @@ RS:AddToggleR("Auto Dirvve Bost",_G.SST.Auto_Dirvve_Bost,function(v)
     _G.SST.Auto_Dirvve_Bost = Auto_Dirvve_Bost
     SS()
 end)
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualInput = game:GetService("VirtualInputManager")
 
-local player = Players.LocalPlayer
-local boatsFolder = Workspace:WaitForChild("Boats")
-
--- จุดซื้อเรือ
-local destination = CFrame.new(
-    -9533.85938, 7.56481552, -8375.44531,
-    0.962026298, 5.02222548e-08, -0.272956669,
-    -7.66087567e-08, 1, -8.60114113e-08,
-    0.272956669, 1.03656113e-07, 0.962026298
-)
+local destination = CFrame.new(-9533.85938,7.56481552,-8375.44531)
 
 spawn(function()
     while task.wait() do
         pcall(function()
             if not _G.SST.Auto_Dirvve_Bost then return end
 
+            local player = game.Players.LocalPlayer
             local character = player.Character
             if not character then return end
 
@@ -4791,30 +4779,27 @@ spawn(function()
             local hrp = character:FindFirstChild("HumanoidRootPart")
             if not humanoid or not hrp then return end
 
+            local boatsFolder = workspace:FindFirstChild("Boats")
+            if not boatsFolder then return end
+
             -- หาเรือที่เป็นของผู้เล่น
             local ownedBoat
             for _, boat in pairs(boatsFolder:GetChildren()) do
                 if boat:FindFirstChild("Owner") and tostring(boat.Owner.Value) == player.Name then
                     ownedBoat = boat
+                    break
                 end
             end
 
             -- ถ้าไม่มีเรือ → ไปซื้อ
             if not ownedBoat then
-                print("ไม่มีเรือ → กำลังไปจุดซื้อ")
+                repeat task.wait()
                 Tween(destination)
+                until (hrp.Position - destination.Position).Magnitude > 6
 
-                -- รอจนถึงจุดซื้อ
-                repeat
-                    print("ระยะห่าง:", (hrp.Position - destination.Position).Magnitude)
-                    task.wait()
-                until (hrp.Position - destination.Position).Magnitude < 6
-
-                if _G.SST.Select_Boat then
-                    print("ถึงจุดซื้อแล้ว → ซื้อเรือ:", _G.SST.Select_Boat)
+                if (hrp.Position - destination.Position).Magnitude < 6 and _G.SST.Select_Boat then
+                    print("ซื้อเรือ:", _G.SST.Select_Boat)
                     ReplicatedStorage.Remotes.CommF_:FireServer("BuyBoat", _G.SST.Select_Boat)
-                else
-                    warn("_G.SST.Select_Boat ไม่มีค่า → ไม่สามารถซื้อเรือได้")
                 end
                 return
             end
@@ -4822,22 +4807,20 @@ spawn(function()
             -- ถ้ามีเรือ → ไปนั่ง
             if ownedBoat:FindFirstChild("VehicleSeat") then
                 TweenSit(ownedBoat.VehicleSeat.CFrame)
-                ownedBoat.VehicleSeat.MaxSpeed = 350
-
-                if Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("WaterBase-Plane") then
-                    Workspace.Map["WaterBase-Plane"].Size = Vector3.new(1000, 440, 1000)
-                end
+                ownedBoat.VehicleSeat.MaxSpeed = _G.SST.Select_Speed_Boat or 200
             end
 
             -- เช็คว่ากำลังนั่งเรือจริง → กด W
+            local VirtualInput = game:GetService("VirtualInputManager")
             if humanoid.SeatPart and humanoid.SeatPart:IsA("VehicleSeat") then
-                VirtualInput:SendKeyEvent(true, "W", false, game)
+                VirtualInput:SendKeyEvent(true,"W",false,game)
             else
-                VirtualInput:SendKeyEvent(false, "W", false, game)
+                VirtualInput:SendKeyEvent(false,"W",false,game)
             end
         end)
     end
 end)
+
 
 
 RS:AddToggleR("Farm Sea Event",_G.SST.Farm_Sea_Event,function(v)
