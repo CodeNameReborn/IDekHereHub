@@ -3547,22 +3547,12 @@ spawn(function()
                     repeat
                         task.wait()
                         Equip(_G.ItemName)
-
-                        v.HumanoidRootPart.CanCollide = false
-                        v.Humanoid.WalkSpeed = 0
-
-                        if v:FindFirstChild("Head") then
+                            AutoHaki()
+                            PosMon = v.HumanoidRootPart.CFrame
+                            Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
                             v.Head.CanCollide = false
-                        end
-
-                        _G.StartMagnet = true
-                        _G.PosMon = v.HumanoidRootPart.CFrame
-
-                        Tween(
-                            v.HumanoidRootPart.CFrame *
-                            CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z)
-                        )
-
+                            v.Humanoid.WalkSpeed = 0
+                            StartMagnet = true
                     until not _G.SST.Auto_Farm_Material
                     or _G.SST.Select_Materials ~= currentMaterial
                     or not v.Parent
