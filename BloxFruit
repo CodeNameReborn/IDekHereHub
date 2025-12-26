@@ -5133,6 +5133,7 @@ spawn(function()
 end)
 
 Setting:AddSeperatorL("Setup for Auto Run")
+_G.SST.Select_Team = _G.SST.Select_Team or Select_Team or ""
 Setting:AddDropdownL("Select Team",{"Pirate","Marine"},_G.SST.Select_Team,function(v)
     Select_Team = v
     _G.SST.Select_Team = Select_Team
