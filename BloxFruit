@@ -5139,14 +5139,28 @@ Setting:AddDropdownL("Select Team",{"Pirate","Marine"},_G.SST.Select_Team,functi
     _G.SST.Select_Team = Select_Team
     SS()
 end)
-Setting:AddButton("Add To Auto Execute",function()
-local path = "Delta/AutoExec/IDekHere.lua"
+Setting:AddButton("Add To Auto Execute", function()
 
-if isfile(path) then
+    local folder = "Delta/Autoexecute"
+    local path = folder .. "/IDekHere.lua"
+
+    -- สร้างโฟลเดอร์ถ้ายังไม่มี
+    if not isfolder(folder) then
+        makefolder(folder)
+    end
+
+    -- ถ้าไฟล์ยังไม่มี ให้สร้างก่อน
+    if not isfile(path) then
+        writefile(path, "-- AutoExecute File\n")
+    end
+
+    -- เพิ่มโค้ดเข้าไป
     appendfile(path, '\nprint("hello")\n')
-end
+
+    print("Added to AutoExecute ✔")
 
 end)
+
 Setting:AddButton("Remove Auto Execute",function()
 
 end)
