@@ -90,13 +90,21 @@ end
 loadcheck()
 LoadSetting()
 
+local player = game.Players.LocalPlayer
+local gui = player:WaitForChild("PlayerGui")
+local mainMinimal = gui:WaitForChild("Main (minimal)")
+local chooseTeam = mainMinimal:WaitForChild("ChooseTeam")
+
+chooseTeam.AncestryChanged:Wait()
+
+
 
 ----------------------------------------------------   Ui
   local OCui = game.CoreGui:FindFirstChild("RebormXerOC")
     if OCui then
         OCui:Destroy()
     end
-    
+
     local IDekhere = Instance.new("ScreenGui")
     local Open = Instance.new("TextButton")
     local fuckshit = Instance.new("UICorner")
