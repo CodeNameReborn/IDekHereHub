@@ -4769,7 +4769,7 @@ local destination = CFrame.new(-9533.85938,7.56481552,-8375.44531)
 spawn(function()
     while task.wait() do
         pcall(function()
-            if not _G.SST.Auto_Dirvve_Bost then return end
+            if _G.SST.Auto_Dirvve_Bost and _G.SST.Select_Boat then 
 
             local player = game.Players.LocalPlayer
             local character = player.Character
@@ -4797,6 +4797,7 @@ spawn(function()
                 while (hrp.Position - destination.Position).Magnitude > 6 do
                     wait()
                 end
+                StopTween()
                 if _G.SST.Select_Boat then
                     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("BuyBoat", _G.SST.Select_Boat)
                 end
@@ -4816,6 +4817,7 @@ spawn(function()
             else
                 VirtualInput:SendKeyEvent(false,"W",false,game)
             end
+        end
         end)
     end
 end)
