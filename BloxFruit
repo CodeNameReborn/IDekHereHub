@@ -4796,14 +4796,13 @@ spawn(function()
             for _, boat in pairs(boatsFolder:GetChildren()) do
                 if boat:FindFirstChild("Owner") and tostring(boat.Owner.Value) == player.Name then
                     ownedBoat = boat
-                    break
                 end
             end
 
             -- ถ้าไม่มีเรือ → ไปซื้อ
             if not ownedBoat then
                 print("ไม่มีเรือ → กำลังไปจุดซื้อ")
-                TweenSit(destination)
+                Tween(destination)
 
                 -- รอจนถึงจุดซื้อ
                 repeat
