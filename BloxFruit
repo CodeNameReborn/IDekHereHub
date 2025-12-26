@@ -3429,155 +3429,155 @@ end)
 
 
     MS:AddSeperatorL("Find Materials")
-    local Materials = {
-        -- 🟢 ทั่วไป
-        ["Leather"] = {
-            Namemon = {"Pirate","Brute"},
-            CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
-        },
-        ["Scrap Metal"] = {
-            Namemon = {"Pirate","Brute"},
-            CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
-        },
-        ["Angel Wings"] = {
-            Namemon = {"Pirate","Brute"},
-            CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
-        },
-        ["Fish Tail"] = {
-            Namemon = {"Pirate","Brute"},
-            CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
-        },
-        ["Magma Ore"] = {
-            Namemon = {"Magma Ninja","Lava Pirate"},
-            CFrameMon = CFrame.new(-5229.860, 20.766, -5297.646)
-        },
-        ["Radioactive Material"] = {
-            Namemon = {"Factory Staff"},
-            CFrameMon = CFrame.new(-500, 50, 1200)
-        },
-        ["Mystic Droplet"] = {
-            Namemon = {"Sea Beast"},
-            CFrameMon = CFrame.new(0, 0, 0) -- ต้องใส่พิกัดจริง
-        },
-        ["Gunpowder"] = {
-            Namemon = {"Pirate"},
-            CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
-        },
-        ["Vampire Fang"] = {
-            Namemon = {"Vampire"},
-            CFrameMon = CFrame.new(0, 0, 0) -- ต้องใส่พิกัดจริง
-        },
-        ["Demonic Wisp"] = {
-            Namemon = {"Demon"},
-            CFrameMon = CFrame.new(0, 0, 0) -- ต้องใส่พิกัดจริง
-        },
+    -- ================== MATERIAL DATA ==================
+local Materials = {
 
-        -- 🔴 หายาก / Boss Drop
-        ["Dragon Scale"] = {
-            Namemon = {"Dragon"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Mini Tusk"] = {
-            Namemon = {"Mammoth"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Conjured Cocoa"] = {
-            Namemon = {"Event NPC"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Bones"] = {
-            Namemon = {"Posessed Mummy","Demonic Soul","Living Zombie","Reborn Skeleton"},
-            CFrameMon = CFrame.new(-9515.3720703125, 164.00624084473, 5786.0610351562)
-        },
-        ["Dark Fragment"] = {
-            Namemon = {"Darkbeard"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Mirror Fractal"] = {
-            Namemon = {"Mirage Event"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Alucard Fragment"] = {
-            Namemon = {"Alucard"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Meteorite"] = {
-            Namemon = {"Meteor Event"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
+    -- 🟢 ทั่วไป
+    ["Leather"] = {
+        Namemon = {"Pirate","Brute"},
+        CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
+    },
 
-        -- 🟡 พิเศษ
-        ["God's Chalice"] = {
-            Namemon = {"Elite Boss"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Holy Torch"] = {
-            Namemon = {"Raid Boss"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Ectoplasm"] = {
-            Namemon = {"Ship NPC"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Blue Gear"] = {
-            Namemon = {"Factory Raid"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Red Gear"] = {
-            Namemon = {"Factory Raid"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        },
-        ["Green Gear"] = {
-            Namemon = {"Factory Raid"},
-            CFrameMon = CFrame.new(0, 0, 0)
-        }
-    }
-    local MaterialNames = {} for name,_ in pairs(Materials) do table.insert(MaterialNames, name) end
-    _G.SST.Select_Materials = _G.SST.Select_Materials or Select_Materials or ""
-    MS:AddDropdownL("Select Materials", MaterialNames, _G.SST.Select_Materials, function(vu)
-        Select_Materials = vu
-        _G.SST.Select_Materials = Select_Materials
-        SS()
-    end)
+    ["Scrap Metal"] = {
+        Namemon = {"Pirate","Brute"},
+        CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
+    },
 
-    MS:AddToggleL("Auto Farm Material", _G.SST.Auto_Farm_Material, function(vu)
-        Auto_Farm_Material = vu
-        _SST.Auto_Farm_Material = Auto_Farm_Material
-        SS()
-    end)
+    ["Angel Wings"] = {
+        Namemon = {"Pirate","Brute"},
+        CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
+    },
 
+    ["Fish Tail"] = {
+        Namemon = {"Pirate","Brute"},
+        CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
+    },
 
-    spawn(function()
-        while task.wait() do
-            pcall(function()
-                if _SST.Auto_Farm_Material and _G.SST.Select_Materials then
-                    local data = Materials[_G.SST.Select_Materials]
-                    if data then
-                        local enemies = game:GetService("Workspace").Enemies
-                        local rep = game:GetService("ReplicatedStorage")
+    ["Magma Ore"] = {
+        Namemon = {"Magma Ninja","Lava Pirate"},
+        CFrameMon = CFrame.new(-5229.860, 20.766, -5297.646)
+    },
 
-                        -- ถ้ามีมอนใน Workspace
-                        for _,v in pairs(enemies:GetChildren()) do
-                            if table.find(data.Namemon, v.Name) then
-                                if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-                                    repeat task.wait()
-                                        Equip(_G.ItemName)
-                                        v.HumanoidRootPart.CanCollide = false
-                                        v.Humanoid.WalkSpeed = 0
-                                        v.Head.CanCollide = false 
-                                        StartMagnet = true
-                                        PosMon = v.HumanoidRootPart.CFrame
-                                        Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
-                                    until not _SST.Auto_Farm_Material or not v.Parent or v.Humanoid.Health <= 0
-                                end
-                            end
+    ["Radioactive Material"] = {
+        Namemon = {"Factory Staff"},
+        CFrameMon = CFrame.new(-500, 50, 1200)
+    },
+
+    ["Mystic Droplet"] = {
+        Namemon = {"Sea Beast"},
+        CFrameMon = CFrame.new(0, 0, 0)
+    },
+
+    ["Gunpowder"] = {
+        Namemon = {"Pirate"},
+        CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
+    },
+
+    ["Vampire Fang"] = {
+        Namemon = {"Vampire"},
+        CFrameMon = CFrame.new(0, 0, 0)
+    },
+
+    ["Demonic Wisp"] = {
+        Namemon = {"Demon"},
+        CFrameMon = CFrame.new(0, 0, 0)
+    },
+
+    -- 🔴 หายาก / Boss
+    ["Dragon Scale"] = {
+        Namemon = {"Dragon"},
+        CFrameMon = CFrame.new(0, 0, 0)
+    },
+
+    ["Mini Tusk"] = {
+        Namemon = {"Mammoth"},
+        CFrameMon = CFrame.new(0, 0, 0)
+    },
+
+    ["Bones"] = {
+        Namemon = {"Posessed Mummy","Demonic Soul","Living Zombie","Reborn Skeleton"},
+        CFrameMon = CFrame.new(-9515.372, 164.006, 5786.061)
+    },
+}
+
+-- ================== DROPDOWN ==================
+_G.SST = _G.SST or {}
+_G.SST.Select_Materials = _G.SST.Select_Materials or ""
+_G.SST.Auto_Farm_Material = _G.SST.Auto_Farm_Material or false
+
+local MaterialNames = {}
+for name,_ in pairs(Materials) do
+    table.insert(MaterialNames, name)
+end
+
+MS:AddDropdownL("Select Materials", MaterialNames, _G.SST.Select_Materials, function(v)
+    _G.SST.Select_Materials = v
+    SS()
+end)
+
+MS:AddToggleL("Auto Farm Material", _G.SST.Auto_Farm_Material, function(v)
+    _G.SST.Auto_Farm_Material = v
+    SS()
+end)
+
+-- ================== AUTO FARM ==================
+spawn(function()
+    while task.wait() do
+        pcall(function()
+            if not _G.SST.Auto_Farm_Material then return end
+            if _G.SST.Select_Materials == "" then return end
+
+            local data = Materials[_G.SST.Select_Materials]
+            if not data then return end
+
+            local enemies = workspace:FindFirstChild("Enemies")
+            if not enemies then return end
+
+            local foundMob = false
+            local currentMaterial = _G.SST.Select_Materials
+
+            for _,v in pairs(enemies:GetChildren()) do
+                if table.find(data.Namemon, v.Name)
+                and v:FindFirstChild("Humanoid")
+                and v:FindFirstChild("HumanoidRootPart")
+                and v.Humanoid.Health > 0 then
+
+                    foundMob = true
+
+                    repeat
+                        task.wait()
+                        Equip(_G.ItemName)
+
+                        v.HumanoidRootPart.CanCollide = false
+                        v.Humanoid.WalkSpeed = 0
+
+                        if v:FindFirstChild("Head") then
+                            v.Head.CanCollide = false
                         end
-                            Tween(data.CFrameMon) -- fallback ไปตำแหน่งที่ตั้งไว้
-                    end
+
+                        _G.StartMagnet = true
+                        _G.PosMon = v.HumanoidRootPart.CFrame
+
+                        Tween(
+                            v.HumanoidRootPart.CFrame *
+                            CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z)
+                        )
+
+                    until not _G.SST.Auto_Farm_Material
+                    or _G.SST.Select_Materials ~= currentMaterial
+                    or not v.Parent
+                    or v.Humanoid.Health <= 0
                 end
-            end)
-        end
-    end)
+            end
+
+            -- ❗ ไม่เจอมอน → ไปจุดฟาร์ม
+            if not foundMob and data.CFrameMon then
+                Tween(data.CFrameMon)
+            end
+        end)
+    end
+end)
+
 
 
     MS:AddSeperatorL("Boss")
