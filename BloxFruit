@@ -4793,10 +4793,10 @@ spawn(function()
 
             -- ถ้าไม่มีเรือ → ไปซื้อ
             if not ownedBoat then
-                TweenSit(destination)
-                while (hrp.Position - destination.Position).Magnitude > 3 do
-                    wait()
-                end
+                repeat task.wait()
+                    TweenSit(destination)
+                until (hrp.Position - destination.Position).Magnitude > 3 or ownedBoat
+                   
                 if _G.SST.Select_Boat then
                     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("BuyBoat", _G.SST.Select_Boat)
                 end
@@ -4821,7 +4821,17 @@ spawn(function()
     end
 end)
 
-
+RS:AddSeperatorR("Misc Function")
+BoatsName = {}
+for i,v in pairs(game:GetService("Workspace").Boats:GetChildren()) do  
+  table.insert(BoatsName ,v.Name  "Owner" ..tostring(v.Owner.Value)
+end
+_G.SST.Select_Boats = _G.SST.Select_Boats or Select_Boats or ""
+RS:AddDropdownR("Select Boat",BoatsName,_G.SST.Select_Boat,function(v)
+    Select_Boats = v
+    _G.SST.Select_Boats = Select_Boats
+    SS()
+end)
 
 RS:AddToggleR("Farm Sea Event",_G.SST.Farm_Sea_Event,function(v)
     Farm_Sea_Event = v
