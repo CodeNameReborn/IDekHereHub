@@ -4709,7 +4709,7 @@ RS:AddSliderR("Select Speed Boat",0,500,_G.SST.Select_Speed_Boat,function(v)
     Select_Speed_Boat = v
     _G.SST.Select_Speed_Boat = Select_Speed_Boat
     SS()
-end()
+end)
 RS:AddtoggleR("Auto Dirvve Bost",_G.SST.Auto_Dirvve_Bost,function(v)
     Auto_Dirvve_Bost = v
     _G.SST.Auto_Dirvve_Bost = Auto_Dirvve_Bost
