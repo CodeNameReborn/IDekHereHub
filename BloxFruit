@@ -4810,11 +4810,11 @@ spawn(function()
                     task.wait()
                 until (hrp.Position - destination.Position).Magnitude < 6
 
-                if SelectBoat then
-                    print("ถึงจุดซื้อแล้ว → ซื้อเรือ:", SelectBoat)
-                    ReplicatedStorage.Remotes.CommF_:FireServer("BuyBoat", SelectBoat)
+                if _G.SST.Select_Boat then
+                    print("ถึงจุดซื้อแล้ว → ซื้อเรือ:", _G.SST.Select_Boat)
+                    ReplicatedStorage.Remotes.CommF_:FireServer("BuyBoat", _G.SST.Select_Boat)
                 else
-                    warn("SelectBoat ไม่มีค่า → ไม่สามารถซื้อเรือได้")
+                    warn("_G.SST.Select_Boat ไม่มีค่า → ไม่สามารถซื้อเรือได้")
                 end
                 return
             end
