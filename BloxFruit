@@ -21,7 +21,7 @@ local function ForceClick(btn)
 	vim:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 1)
 end
 Team = _G.SST.Select_Team
-if chooseTeam and not OCui then
+if chooseTeam then
 	repeat task.wait()
 		if chooseTeam.Visible then
 			if Team == "Pirate" then
@@ -32,7 +32,7 @@ if chooseTeam and not OCui then
 				ForceClick(chooseTeam.Container.Pirates.Frame.TextButton)
 			end
 		end
-	until player.Team ~= nil or OCui
+	until player.Team ~= nil 
 end
 end)
 
