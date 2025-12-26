@@ -4783,11 +4783,10 @@ spawn(function()
             if not boatsFolder then return end
 
             -- หาเรือที่เป็นของผู้เล่น
-            local ownedBoat
+            local ownedBoat = nil
             for _, boat in pairs(boatsFolder:GetChildren()) do
                 if boat:FindFirstChild("Owner") and tostring(boat.Owner.Value) == player.Name then
                     ownedBoat = boat
-                    break
                 end
             end
 
@@ -4795,11 +4794,10 @@ spawn(function()
             if not ownedBoat then
                 repeat task.wait()
                 Tween(destination)
-                until (hrp.Position - destination.Position).Magnitude > 6
-
+                until (hrp.Position - destination.Position).Magnitude > 6 or ownedBoat
+                StopTween()
                 if (hrp.Position - destination.Position).Magnitude < 6 and _G.SST.Select_Boat then
-                    print("ซื้อเรือ:", _G.SST.Select_Boat)
-                    ReplicatedStorage.Remotes.CommF_:FireServer("BuyBoat", _G.SST.Select_Boat)
+                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("BuyBoat", _G.SST.Select_Boat)
                 end
                 return
             end
@@ -4807,7 +4805,7 @@ spawn(function()
             -- ถ้ามีเรือ → ไปนั่ง
             if ownedBoat:FindFirstChild("VehicleSeat") then
                 TweenSit(ownedBoat.VehicleSeat.CFrame)
-                ownedBoat.VehicleSeat.MaxSpeed = _G.SST.Select_Speed_Boat or 200
+                ownedBoat.VehicleSeat.MaxSpeed = _G.SST.Select_Speed_Boat
             end
 
             -- เช็คว่ากำลังนั่งเรือจริง → กด W
