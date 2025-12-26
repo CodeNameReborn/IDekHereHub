@@ -2543,13 +2543,13 @@ function TweenSit(Pos)
 
     -- ถ้าใกล้มากให้เทเลพอร์ตแทน
     if distance <= 200 then
-        currentTween:Cancel()
+        currentTweenSit:Cancel()
         hrp.CFrame = Pos
     end
 
     -- หยุด Tween ถ้า flag เป็น true
     if StopTweenFlagSit then
-        currentTween:Cancel()
+        currentTweenSit:Cancel()
         ClipSit = false
     end
 end
