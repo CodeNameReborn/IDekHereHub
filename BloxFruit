@@ -1,3 +1,4 @@
+--- L
 repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
 
 if not game:IsLoaded() then
@@ -4710,7 +4711,7 @@ RS:AddSliderR("Select Speed Boat",0,500,_G.SST.Select_Speed_Boat,function(v)
     _G.SST.Select_Speed_Boat = Select_Speed_Boat
     SS()
 end)
-RS:AddtoggleR("Auto Dirvve Bost",_G.SST.Auto_Dirvve_Bost,function(v)
+RS:AddToggleR("Auto Dirvve Bost",_G.SST.Auto_Dirvve_Bost,function(v)
     Auto_Dirvve_Bost = v
     _G.SST.Auto_Dirvve_Bost = Auto_Dirvve_Bost
     SS()
@@ -4764,7 +4765,7 @@ spawn(function()
                 repeat task.wait()
                 until (hrp.Position - destination.Position).Magnitude < 6
 
-                if SelectBoat then
+                if _G.SST.Select_Boat then
                     ReplicatedStorage.Remotes.CommF_:InvokeServer("BuyBoat", _G.SST.Select_Boat)
                 end
                 return
