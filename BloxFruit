@@ -2512,8 +2512,8 @@ function Tween(Pos)
     end
 end
 
- local currentTween = nil
-local StopTweenFlag = false
+ local currentTweenSit = nil
+local StopTweenFlagSit = false
 
 function TweenSit(Pos)
     local player = game.Players.LocalPlayer
@@ -2548,17 +2548,21 @@ function TweenSit(Pos)
     end
 
     -- หยุด Tween ถ้า flag เป็น true
-    if StopTweenFlag then
+    if StopTweenFlagSit then
         currentTween:Cancel()
-        Clip = false
+        ClipSit = false
     end
 end
 
 function StopTween(target)
     if not target then
         StopTweenFlag = true
+        StopTweenFlagSit = true
         if currentTween then
             currentTween:Cancel()
+        end
+        if currentTweenSit then
+            currentTweenSit:Cancel()
         end
         -- ลบ BodyClip ถ้ามี
         local hrp = game:GetService("Players").LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -2566,7 +2570,9 @@ function StopTween(target)
             hrp.BodyClip:Destroy()
         end
         StopTweenFlag = false
+        StopTweenFlagSit = false
         Clip = false
+        ClipSit = false
     end
 end
 
