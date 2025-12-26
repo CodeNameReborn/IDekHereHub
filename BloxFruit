@@ -20,6 +20,7 @@ local function ForceClick(btn)
 	vim:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 1)
 	vim:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 1)
 end
+Team = _G.SST.Select_Team
 if chooseTeam then
 	repeat task.wait()
 		if chooseTeam.Visible then
@@ -81,6 +82,11 @@ function SS()
     end
 end
 
+function DeleteFile()
+    if isfile(fileName) then
+        delfile(fileName)
+    end
+end
 loadcheck()
 LoadSetting()
 
@@ -5124,4 +5130,25 @@ spawn(function()
 			end)
 		end
 	end
+end)
+
+Setting:AddSeperatorL("Setup for Auto Run")
+Setting:AddDropdownL("Select Team",{"Pirate","Marine"},_G.SST.Select_Team,function(v)
+    Select_Team = v
+    _G.SST.Select_Team = Select_Team
+    SS()
+end)
+Setting:AddButton("Add To Auto Execute",function()
+local path = "Delta/AutoExec/IDekHere.lua"
+
+if isfile(path) then
+    appendfile(path, '\nprint("hello")\n')
+end
+
+end)
+Setting:AddButton("Remove Auto Execute",function()
+
+end)
+Setting:AddButton("Remove Seve Setting",function()
+DeleteFile()
 end)
