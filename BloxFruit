@@ -21,7 +21,7 @@ local function ForceClick(btn)
 	vim:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 1)
 end
 Team = _G.SST.Select_Team
-if chooseTeam then
+if chooseTeam and not OCui then
 	repeat task.wait()
 		if chooseTeam.Visible then
 			if Team == "Pirate" then
@@ -32,7 +32,7 @@ if chooseTeam then
 				ForceClick(chooseTeam.Container.Pirates.Frame.TextButton)
 			end
 		end
-	until player.Team ~= nil
+	until player.Team ~= nil or OCui
 end
 end)
 
@@ -5139,31 +5139,7 @@ Setting:AddDropdownL("Select Team",{"Pirate","Marine"},_G.SST.Select_Team,functi
     _G.SST.Select_Team = Select_Team
     SS()
 end)
-Setting:AddButton("Add To Auto Execute", function()
 
-    local folder = "Delta/Autoexecute"
-    local path = folder .. "/IDekHere.lua"
-
-    -- สร้างโฟลเดอร์ถ้ายังไม่มี
-    if not isfolder(folder) then
-        makefolder(folder)
-    end
-
-    -- ถ้าไฟล์ยังไม่มี ให้สร้างก่อน
-    if not isfile(path) then
-        writefile(path, "-- AutoExecute File\n")
-    end
-
-    -- เพิ่มโค้ดเข้าไป
-    appendfile(path, '\nprint("hello")\n')
-
-    print("Added to AutoExecute ✔")
-
-end)
-
-Setting:AddButton("Remove Auto Execute",function()
-
-end)
 Setting:AddButton("Remove Seve Setting",function()
 DeleteFile()
 end)
