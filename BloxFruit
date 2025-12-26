@@ -3429,50 +3429,169 @@ end)
 
 
     MS:AddSeperatorL("Find Materials")
-        local Materials = {
-                -- 🟢 ทั่วไป
-            "Leather",
-            "Scrap Metal",
-            "Angel Wings",
-            "Fish Tail",
-            "Magma Ore",
-            "Radioactive Material",
-            "Mystic Droplet",
-            "Gunpowder",
-            "Vampire Fang",
-            "Demonic Wisp",
+    local Materials = {
+        -- 🟢 ทั่วไป
+        ["Leather"] = {
+            Namemon = {"Pirate","Brute"},
+            CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
+        },
+        ["Scrap Metal"] = {
+            Namemon = {"Pirate","Brute"},
+            CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
+        },
+        ["Angel Wings"] = {
+            Namemon = {"Pirate","Brute"},
+            CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
+        },
+        ["Fish Tail"] = {
+            Namemon = {"Pirate","Brute"},
+            CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
+        },
+        ["Magma Ore"] = {
+            Namemon = {"Magma Ninja","Lava Pirate"},
+            CFrameMon = CFrame.new(-5229.860, 20.766, -5297.646)
+        },
+        ["Radioactive Material"] = {
+            Namemon = {"Factory Staff"},
+            CFrameMon = CFrame.new(-500, 50, 1200)
+        },
+        ["Mystic Droplet"] = {
+            Namemon = {"Sea Beast"},
+            CFrameMon = CFrame.new(0, 0, 0) -- ต้องใส่พิกัดจริง
+        },
+        ["Gunpowder"] = {
+            Namemon = {"Pirate"},
+            CFrameMon = CFrame.new(-1136.079, 57.427, 4118.643)
+        },
+        ["Vampire Fang"] = {
+            Namemon = {"Vampire"},
+            CFrameMon = CFrame.new(0, 0, 0) -- ต้องใส่พิกัดจริง
+        },
+        ["Demonic Wisp"] = {
+            Namemon = {"Demon"},
+            CFrameMon = CFrame.new(0, 0, 0) -- ต้องใส่พิกัดจริง
+        },
 
-                -- 🔴 หายาก / Boss Drop
-            "Dragon Scale",
-            "Mini Tusk",
-            "Conjured Cocoa",
-            "Bones",
-            "Dark Fragment",
-            "Mirror Fractal",
-            "Alucard Fragment",
-            "Meteorite",
+        -- 🔴 หายาก / Boss Drop
+        ["Dragon Scale"] = {
+            Namemon = {"Dragon"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Mini Tusk"] = {
+            Namemon = {"Mammoth"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Conjured Cocoa"] = {
+            Namemon = {"Event NPC"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Bones"] = {
+            Namemon = {"Skeleton"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Dark Fragment"] = {
+            Namemon = {"Darkbeard"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Mirror Fractal"] = {
+            Namemon = {"Mirage Event"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Alucard Fragment"] = {
+            Namemon = {"Alucard"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Meteorite"] = {
+            Namemon = {"Meteor Event"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
 
-                -- 🟡 พิเศษ
-            "God's Chalice",
-            "Holy Torch",
-            "Ectoplasm",
-            "Blue Gear",
-            "Red Gear",
-            "Green Gear"
+        -- 🟡 พิเศษ
+        ["God's Chalice"] = {
+            Namemon = {"Elite Boss"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Holy Torch"] = {
+            Namemon = {"Raid Boss"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Ectoplasm"] = {
+            Namemon = {"Ship NPC"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Blue Gear"] = {
+            Namemon = {"Factory Raid"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Red Gear"] = {
+            Namemon = {"Factory Raid"},
+            CFrameMon = CFrame.new(0, 0, 0)
+        },
+        ["Green Gear"] = {
+            Namemon = {"Factory Raid"},
+            CFrameMon = CFrame.new(0, 0, 0)
         }
+    }
 
-    MS:AddDropdownL("Select Materials",Materials,_G.SST.Select_Materials,function(vu)
+    MS:AddDropdownL("Select Materials", Materials, _G.SST.Select_Materials, function(vu)
         Select_Materials = vu
         _G.SST.Select_Materials = Select_Materials
         SS()
     end)
-    MS:AddToggleL("Auto Farm Material",_G.SST.Auto_Farm_Material,function(vu)
+
+    MS:AddToggleL("Auto Farm Material", _G.SST.Auto_Farm_Material, function(vu)
         Auto_Farm_Material = vu
         _SST.Auto_Farm_Material = Auto_Farm_Material
         SS()
     end)
 
-    
+
+    spawn(function()
+        while task.wait() do
+            pcall(function()
+                if _SST.Auto_Farm_Material and _G.SST.Select_Materials then
+                    local data = Materials[_G.SST.Select_Materials]
+                    if data then
+                        local enemies = game:GetService("Workspace").Enemies
+                        local rep = game:GetService("ReplicatedStorage")
+
+                        -- ถ้ามีมอนใน Workspace
+                        for _,v in pairs(enemies:GetChildren()) do
+                            if table.find(data.Namemon, v.Name) then
+                                if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                                    repeat task.wait()
+                                        AutoHaki()
+                                        EquipWeapon(SelectWeapon)
+                                        v.HumanoidRootPart.CanCollide = false
+                                        v.Humanoid.WalkSpeed = 0
+                                        v.Head.CanCollide = false 
+                                        StartMagnet = true
+                                        PosMon = v.HumanoidRootPart.CFrame
+                                        Tween(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                                    until not _SST.Auto_Farm_Material or not v.Parent or v.Humanoid.Health <= 0
+                                end
+                            end
+                        end
+
+                        -- ถ้าไม่มีมอนใน Workspace → ไปที่ตำแหน่ง Spawn หรือ Fallback
+                        local found = false
+                        for _,name in pairs(data.Namemon) do
+                            local spawnMon = rep:FindFirstChild(name)
+                            if spawnMon and spawnMon:FindFirstChild("HumanoidRootPart") then
+                                found = true
+                                break
+                            end
+                        end
+
+                        if not found then
+                            Tween(data.CFrameMon) -- fallback ไปตำแหน่งที่ตั้งไว้
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+
 
     MS:AddSeperatorL("Boss")
     local BossList = {}
