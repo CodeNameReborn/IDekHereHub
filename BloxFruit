@@ -2527,15 +2527,15 @@ function TweenSit(Pos)
     local tweenTime = math.max(distance / _G.SST.Tween_Speed, 0.1)
 
     local success, err = pcall(function()
-        currentTween = game:GetService("TweenService"):Create(
+        currentTweenSit = game:GetService("TweenService"):Create(
             hrp,
             TweenInfo.new(tweenTime, Enum.EasingStyle.Linear),
             {CFrame = Pos}
         )
     end)
 
-    if success and currentTween then
-        currentTween:Play()
+    if success and currentTweenSit then
+        currentTweenSit:Play()
     else
         warn("Tween creation failed:", err)
         return
