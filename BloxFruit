@@ -4783,10 +4783,11 @@ spawn(function()
             if not boatsFolder then return end
 
             -- หาเรือที่เป็นของผู้เล่น
-            local ownedBoat = nil
+            local ownedBoat 
             for _, boat in pairs(boatsFolder:GetChildren()) do
                 if boat:FindFirstChild("Owner") and tostring(boat.Owner.Value) == player.Name then
                     ownedBoat = boat
+                    break
                 end
             end
 
@@ -4795,7 +4796,6 @@ spawn(function()
                 repeat task.wait()
                 Tween(destination)
                 until (hrp.Position - destination.Position).Magnitude > 6 or ownedBoat
-                StopTween()
                 if (hrp.Position - destination.Position).Magnitude < 6 and _G.SST.Select_Boat then
                     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("BuyBoat", _G.SST.Select_Boat)
                 end
