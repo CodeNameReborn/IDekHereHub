@@ -3486,8 +3486,8 @@ end)
             CFrameMon = CFrame.new(0, 0, 0)
         },
         ["Bones"] = {
-            Namemon = {"Skeleton"},
-            CFrameMon = CFrame.new(0, 0, 0)
+            Namemon = {"Posessed Mummy","Demonic Soul","Living Zombie","Reborn Skeleton"},
+            CFrameMon = CFrame.new(-9515.3720703125, 164.00624084473, 5786.0610351562)
         },
         ["Dark Fragment"] = {
             Namemon = {"Darkbeard"},
