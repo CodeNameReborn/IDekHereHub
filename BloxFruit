@@ -4833,7 +4833,7 @@ for _, v in pairs(workspace:WaitForChild("Boats"):GetChildren()) do
     end
 end
 _G.SST.Select_Boats = _G.SST.Select_Boats or Select_Boats or ""
-RS:AddDropdownR("Select Boat",BoatsName,_G.SST.Select_Boat,function(v)
+RS:AddDropdownR("Select Boat",BoatsName,_G.SST.Select_Boats,function(v)
     Select_Boats = v
     _G.SST.Select_Boats = Select_Boats
     SS()
