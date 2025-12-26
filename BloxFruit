@@ -4793,10 +4793,11 @@ spawn(function()
 
             -- ถ้าไม่มีเรือ → ไปซื้อ
             if not ownedBoat then
-                repeat task.wait()
                 Tween(destination)
-                until (hrp.Position - destination.Position).Magnitude > 6 or ownedBoat
-                if (hrp.Position - destination.Position).Magnitude < 6 and _G.SST.Select_Boat then
+                while (hrp.Position - destination.Position).Magnitude > 6 do
+                    wait()
+                end
+                if _G.SST.Select_Boat then
                     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("BuyBoat", _G.SST.Select_Boat)
                 end
                 return
