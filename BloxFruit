@@ -4795,7 +4795,7 @@ spawn(function()
             if not ownedBoat then
                 repeat task.wait()
                     TweenSit(destination)
-                until (hrp.Position - destination.Position).Magnitude > 3 or ownedBoat
+                until (hrp.Position - destination.Position).Magnitude => 3 or ownedBoat
                    
                 if _G.SST.Select_Boat then
                     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("BuyBoat", _G.SST.Select_Boat)
@@ -4822,9 +4822,15 @@ spawn(function()
 end)
 
 RS:AddSeperatorR("Misc Function")
-BoatsName = {}
-for i,v in pairs(game:GetService("Workspace").Boats:GetChildren()) do  
-  table.insert(BoatsName ,v.Name  "Owner" ..tostring(v.Owner.Value)
+local BoatsName = {}
+
+for _, v in pairs(workspace:WaitForChild("Boats"):GetChildren()) do
+    if v:FindFirstChild("Owner") then
+        local text = v.Name .. " | Owner: " .. tostring(v.Owner.Value)
+        table.insert(BoatsName, text)
+    else
+        table.insert(BoatsName, v.Name .. " | Owner: N/A")
+    end
 end
 _G.SST.Select_Boats = _G.SST.Select_Boats or Select_Boats or ""
 RS:AddDropdownR("Select Boat",BoatsName,_G.SST.Select_Boat,function(v)
