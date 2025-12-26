@@ -4698,6 +4698,141 @@ RS:AddButtonL("TP To Door Race V4", function()
 end)
 ------------------------------------------------------------ RS R
 RS:AddSeperatorR("Sea")
+_G.SST.Select_Boat = _G.SST.Select_Boat or Select_Boat or ""
+RS:AddDropdownR("Select Boat",{"Lantern","Guardian"},_G.SST.Select_Boat,function(v)
+    Select_Boat = v
+    _G.SST.Select_Boat = Select_Boat
+    SS()
+end)
+_G.SST.Select_Speed_Boat = _G.SST.Select_Speed_Boat or Select_Speed_Boat or "200"
+RS:AddSliderR("Select Speed Boat",0,500,_G.SST.Select_Speed_Boat,function(v)
+    Select_Speed_Boat = v
+    _G.SST.Select_Speed_Boat = Select_Speed_Boat
+    SS()
+end()
+RS:AddtoggleR("Auto Dirvve Bost",_G.SST.Auto_Dirvve_Bost,function(v)
+    Auto_Dirvve_Bost = v
+    _G.SST.Auto_Dirvve_Bost = Auto_Dirvve_Bost
+    SS()
+end)
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualInput = game:GetService("VirtualInputManager")
+
+local player = Players.LocalPlayer
+
+-- ===== DESTINATION (จุดซื้อเรือ) =====
+local destination = CFrame.new(
+    -9533.85938, 7.56481552, -8375.44531,
+    0.962026298, 5.02222548e-08, -0.272956669,
+    -7.66087567e-08, 1, -8.60114113e-08,
+    0.272956669, 1.03656113e-07, 0.962026298
+)
+
+-- ===== MAIN LOOP =====
+spawn(function()
+    while task.wait() do
+        pcall(function()
+            if not _G.SST.Auto_Dirvve_Bost then return end
+
+            local character = player.Character
+            if not character then return end
+
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            if not humanoid or not hrp then return end
+
+            local boats = Workspace:FindFirstChild("Boats")
+            if not boats then return end
+
+            -- ===== หาเรือของผู้เล่น =====
+            local ownedBoat
+            for _, boat in pairs(boats:GetChildren()) do
+                if boat:FindFirstChild("Owner")
+                and tostring(boat.Owner.Value) == player.Name then
+                    ownedBoat = boat
+                    break
+                end
+            end
+
+            -- ===== ไม่มีเรือ → ไปซื้อ =====
+            if not ownedBoat then
+                Tween(destination)
+
+                repeat task.wait()
+                until (hrp.Position - destination.Position).Magnitude < 6
+
+                if SelectBoat then
+                    ReplicatedStorage.Remotes.CommF_:InvokeServer("BuyBoat", _G.SST.Select_Boat)
+                end
+                return
+            end
+
+            -- ===== มีเรือ → ไปนั่ง =====
+            if ownedBoat:FindFirstChild("VehicleSeat") then
+                TweenSit(ownedBoat.VehicleSeat.CFrame)
+                ownedBoat.VehicleSeat.MaxSpeed = _G.SST.Select_Speed_Boat
+
+                if Workspace:FindFirstChild("Map")
+                and Workspace.Map:FindFirstChild("WaterBase-Plane") then
+                    Workspace.Map["WaterBase-Plane"].Size = Vector3.new(1000, 440, 1000)
+                end
+            end
+
+            -- ===== เช็คว่านั่งเรือแล้วจริง ค่อยกด W =====
+            if humanoid.SeatPart
+            and humanoid.SeatPart:IsA("VehicleSeat") then
+                VirtualInput:SendKeyEvent(true, "W", false, game)
+            else
+                -- ปล่อย W ถ้าไม่ได้อยู่บนเรือ
+                VirtualInput:SendKeyEvent(false, "W", false, game)
+            end
+        end)
+    end
+end)
+
+RS:AddToggleR("Farm Sea Event",_G.SST.Farm_Sea_Event,function(v)
+    Farm_Sea_Event = v
+    _G.SST.Farm_Sea_Event = Farm_Sea_Event
+    SS()
+end)
+
+spawn(function()
+    while task.wait(0) do
+        pcall(function()
+
+            if not _G.SST.Farm_Sea_Event then return end
+
+            local Enemies = workspace:FindFirstChild("Enemies")
+            if not Enemies then return end
+
+            for _, v in pairs(Enemies:GetChildren()) do
+                if v
+                and (v.Name == "Shark"
+                or v.Name == "Piranha"
+                or v.Name == "Terrorshark")
+                and v:FindFirstChild("Humanoid")
+                and v:FindFirstChild("Head")
+                and v.Humanoid.Health > 0 then
+
+                    repeat
+                        task.wait()
+                            AutoHaki()
+                            PosMon = v.HumanoidRootPart.CFrame
+                            Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
+                            v.Head.CanCollide = false
+                            v.Humanoid.WalkSpeed = 0
+                            StartMagnet = true
+                    until not _G.SST.Farm_Sea_Event
+                    or not v.Parent
+                    or v.Humanoid.Health <= 0
+                end
+            end
+        end)
+    end
+end)
 
 ------------------------------------------------------------ PM R
 PM:AddSeperatorR("Sever")
