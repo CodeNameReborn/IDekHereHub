@@ -2456,11 +2456,10 @@ end
         while wait() do
             pcall(function()
                 if _G.Auto_Join_Map then
-                    repeat
+                    repeat wait()
                         JoinMap(_G.SST.Select_StageType,_G.SST.Select_Act,_G.SST.Select_Stage,_G.SST.Select_Mode)
                         until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface.Enable == true 
                         if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface.Enable == true then
-                        wait(2)
                         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
                     end
                 end
