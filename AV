@@ -2453,30 +2453,31 @@ end
         SS()
     end)
 
-    spawn(function()
-        while wait() do
-            pcall(function()
-                if  _G.SST.Auto_Join_Map then
-                    CHACK_Join_Map = nil
-                    StartChack = false
-                    StartCompleted = nil
-                    if StartChack == false then
-                        repeat wait()
-                            JoinMap(_G.SST.Select_StageType,_G.SST.Select_Act,_G.SST.Select_Stage,_G.SST.Select_Mode)
-                            CHACK_Join_Map = true
-                        until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Map == true
-                    elseif StartChack == true and StartCompleted == false then
-                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Map == true then
-                            StartChack = true
-                            wait(2)
-                            game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
-                            StartCompleted = true
-                        end
+local CHACK_Join_Map = nil
+local StartChack = false
+local StartCompleted = nil
+
+spawn(function()
+    while wait() do
+        pcall(function()
+            if _G.SST.Auto_Join_Map then
+                if StartChack == false then
+                    repeat wait()
+                        JoinMap(_G.SST.Select_StageType,_G.SST.Select_Act,_G.SST.Select_Stage,_G.SST.Select_Mode)
+                        CHACK_Join_Map = true
+                    until game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("MiniLobbyInterface") and CHACK_Join_Map == true
+                    StartChack = true
+                elseif StartChack == true and StartCompleted == false then
+                    if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("MiniLobbyInterface") and CHACK_Join_Map == true then
+                        wait(2)
+                        game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
+                        StartCompleted = true
                     end
                 end
-            end)
-        end
-    end)
+            end
+        end)
+    end
+end)
 
 
     Main:AddSeperatorL("Event")
@@ -2486,13 +2487,14 @@ end
         SS()
     end)
 
+    CHACK_Join_Event = nil
+        StartChack = false
+                    StartCompleted = nil
+
     spawn(function()
         while wait(1) do
             pcall(function()
                 if _G.SST.Auto_Join_Event then
-                    CHACK_Join_Event = nil
-                    StartChack = false
-                    StartCompleted = nil
                     if StartChack == false then                   
                         repeat wait()
                             local args = {
@@ -2528,17 +2530,18 @@ end
         SS()
     end)
 
+    OneClick = nil
+
     spawn(function()
         while wait() do 
             pcall(function()
                 if _G.SST.Auto_Vote then
-                    OneClick = nil
                     if game:GetService("Players").localPlayer.PlayerGui.EndScreen.Container.Visible == true and game:GetService("Players").localPlayer.PlayerGui.EndScreen.Background.Visible == true and OneClick == false then
                         game:GetService("ReplicatedStorage").Networking.EndScreen.VoteEvent:FireServer(_G.SST.Select_Function)
                         OneClick = true
                     else
                         wait(5)
-                        OneClick = true
+                        OneClick = false
                     end
                 end
             end)
