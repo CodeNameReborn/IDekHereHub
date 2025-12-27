@@ -2455,7 +2455,7 @@ end
 
 local CHACK_Join_Map = nil
 local StartChack = false
-local StartCompleted = nil
+local StartCompleted = false
 
 spawn(function()
     while wait() do
@@ -2488,11 +2488,11 @@ end)
     end)
 
     CHACK_Join_Event = nil
-        StartChack = false
-                    StartCompleted = nil
+    StartChack = false
+    StartCompleted = false
 
     spawn(function()
-        while wait(1) do
+        while wait(0) do
             pcall(function()
                 if _G.SST.Auto_Join_Event then
                     if StartChack == false then                   
@@ -2504,6 +2504,7 @@ end)
                             game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("Fall"):WaitForChild("FallLTMEvent"):FireServer(unpack(args))
                             CHACK_Join_Event = true
                         until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Event == true
+                        StartChack = true
                     elseif StartChack == true and StartCompleted == false then
                         if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Event == true then
                             wait(2)
@@ -2516,11 +2517,11 @@ end)
         end
     end)
     
-    Main:AddSeperatorR("Game Function")
-    _G.SST.Select_Function = _G.SST.Select_Function or Select_Function or ""
-    Main:AddDropdownR("Select Function",{"Retry","Next","Lobby"},_G.SST.Select_Function,function(value)
-        Select_Function = value
-        _G.SST.Select_Function = Select_Function
+    Main:AddSeperatorR("Game Vote Function")
+    _G.SST.Select_Vote = _G.SST.Select_Vote or Select_Vote or ""
+    Main:AddDropdownR("Select Vote",{"Retry","Next","Lobby"},_G.SST.Select_Vote,function(value)
+        Select_Vote = value
+        _G.SST.Select_Vote = Select_Vote
         SS()
     end)
 
