@@ -2613,7 +2613,7 @@ end)
  
 
     spawn(function()
-        while wait() do
+        while wait(1) do
             pcall(function()
                 if _G.SST.Auto_Play then
                     if workspace:FindFirstChild("AutoPlayPart") then
@@ -2624,7 +2624,7 @@ end)
         end
     end)
 
-    Misc:AddSeperatorL("Server")
+    Misc:AddSeperatorR("Server")
 
     Misc:AddButtonR("Rejoin Server",function()
 	    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
