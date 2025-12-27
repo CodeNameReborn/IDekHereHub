@@ -2389,9 +2389,9 @@ end
         local JOIN = {
             [1] = "AddMatch",
             [2] = {
-                    ["Difficulty"] = tostring(Mode),
+                    ["Difficulty"] = Mode,
                     ["Act"] = "Act" ..tostring(Act),
-                    ["StageType"] = tostring(Type),
+                    ["StageType"] = Type,
                     ["Stage"] = "Stage" ..tostring(Stage),
                     ["FriendsOnly"] = false
                 }
