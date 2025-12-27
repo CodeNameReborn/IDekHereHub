@@ -2586,17 +2586,23 @@ end)
     end)
 
 
-    spawn(function()
-        while wait() do
-            pcall(function()
-                if _G.SST.Auto_Restart then
-                    local wavesGui = game:GetService("Players").LocalPlayer.PlayerGui.HUD.Map.WavesAmount
-                    if wavesGui and wavesGui.Visible then
-                        if string.match(wavesGui.Text, _G.SST.Select_Wave) then
-                            game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("MatchRestartSettingEvent"):FireServer("Vote")
-                        end
+spawn(function()
+    while wait() do
+        pcall(function()
+            if _G.SST.Auto_Restart then
+                local wavesGui = game:GetService("Players").LocalPlayer.PlayerGui.HUD.Map.WavesAmount
+                if wavesGui and wavesGui.Visible then
+                    -- ดึงเฉพาะเลข Wave ที่อยู่ก่อน /∞
+                    local currentWave = string.match(wavesGui.Text, "(%d+)%s*/∞")
+                    
+                    -- เช็คเฉพาะว่าตรงกับ _G.SST.Select_Wave เท่านั้น
+                    if currentWave and tonumber(currentWave) == tonumber(_G.SST.Select_Wave) then
+                        game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("MatchRestartSettingEvent"):FireServer("Vote")
+                        print("Auto Restart Triggered at Wave:", _G.SST.Select_Wave)
                     end
                 end
-            end)
-        end
-    end)
+            end
+        end)
+    end
+end)
+
