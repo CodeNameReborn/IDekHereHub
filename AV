@@ -2579,7 +2579,7 @@ end)
         _G.SST.Select_Wave = Select_Wave
         SS()
     end)
-    Main:AddToggleR("Auto Restart",_G.SSt.Auto_Restart,function(value)
+    Main:AddToggleR("Auto Restart",_G.SST.Auto_Restart,function(value)
         Auto_Restart = value
         _G.SST.Auto_Restart = Auto_Restart
         SS()
