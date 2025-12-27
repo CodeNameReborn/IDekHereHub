@@ -2460,8 +2460,8 @@ end
                     repeat wait()
                         JoinMap(_G.SST.Select_StageType,_G.SST.Select_Act,_G.SST.Select_Stage,_G.SST.Select_Mode)
                         CHACK_Join_Map = true
-                        until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Map = true
-                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Map = true then
+                        until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Map == true
+                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Map == true then
                             wait(2)
                         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
                     end
@@ -2490,8 +2490,8 @@ end
                     }
                     game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("Fall"):WaitForChild("FallLTMEvent"):FireServer(unpack(args))
                     CHACK_Join_Event = true
-                    until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Event = true
-                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Event = true then
+                    until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Event == true
+                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Event == true then
                             wait(2)
                         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
                     end 
