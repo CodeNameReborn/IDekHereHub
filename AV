@@ -2406,9 +2406,9 @@ local function JoinMap(StageType, Act, Stage, Mode)
         [1] = "AddMatch",
         [2] = {
             Difficulty = Mode,
-            Act = "Act"..tostring(Act),
+            Act = "Act"..Act,
             StageType = StageType,
-            Stage = "Stage"..tostring(Stage),
+            Stage = "Stage"..Stage,
             FriendsOnly = _G.SST.Auto_Vote_Friends_Only
         }
     }
@@ -2515,7 +2515,7 @@ task.spawn(function()
             local mini = gui:FindFirstChild("MiniLobbyInterface")
             if not mini then return end
 
-            if mini.Enabled == false and not joined then
+            if not mini and not joined then
                 JoinMap(
                     _G.SST.Select_StageType,
                     _G.SST.Select_Act,
@@ -2525,7 +2525,7 @@ task.spawn(function()
                 joined = true
             end
 
-            if mini.Enabled == true and joined then
+            if mini and joined then
                 task.wait(2)
                 game:GetService("ReplicatedStorage")
                     :WaitForChild("Networking")
@@ -2555,7 +2555,7 @@ task.spawn(function()
             local mini = gui:FindFirstChild("MiniLobbyInterface")
             if not mini then return end
 
-            if mini.Enabled == false and not joinedEvent then
+            if not mini and not joinedEvent then
                 game:GetService("ReplicatedStorage")
                     :WaitForChild("Networking")
                     :WaitForChild("Fall")
@@ -2565,7 +2565,7 @@ task.spawn(function()
                 joinedEvent = true
             end
 
-            if mini.Enabled == true and joinedEvent then
+            if mini and joinedEvent then
                 task.wait(2)
                 game:GetService("ReplicatedStorage")
                     :WaitForChild("Networking")
