@@ -2463,7 +2463,7 @@ local StartChack = false
 local StartCompleted = false
 
 spawn(function()
-    while wait() do
+    while wait(1) do
         pcall(function()
             if _G.SST.Auto_Join_Map then
                 if StartChack == false then
@@ -2497,7 +2497,7 @@ end)
     StartCompleted = false
 
     spawn(function()
-        while wait(0) do
+        while wait(1) do
             pcall(function()
                 if _G.SST.Auto_Join_Event then
                     if StartChack == false then                   
