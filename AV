@@ -2601,4 +2601,417 @@ end)
         end
     end)
 
+    Misc:AddSeperatorL("Play")
+    Misc:AddToggleL("Auto Play", _G.SST.Auto_Play, function(value)
+        Auto_Play = value
+        _G.SST.Auto_Play = Auto_Play
+        SS()
+        if not _G.SST.Auto_Play then
+            game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("AutoPlayEvent"):FireServer("Toggle")
+        end
+    end)
+ 
+
+    spawn(function()
+        while wait() do
+            pcall(function()
+                if _G.SST.Auto_Play then
+                    if workspace:FindFirstChild("AutoPlayPart") then
+                        game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("AutoPlayEvent"):FireServer("Toggle")
+                    end
+                end
+            end)
+        end
+    end)
+
+    Misc:AddSeperatorL("Server")
+
+    Misc:AddButtonR("Rejoin Server",function()
+	    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
+    end)
+
+    function Hop()
+        local PlaceID = game.PlaceId
+        local AllIDs = {}
+        local foundAnything = ""
+        local actualHour = os.date("!*t").hour
+        local Deleted = false
+        function TPReturner()
+            local Site;
+            if foundAnything == "" then
+                Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
+            else
+                Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+            end
+            local ID = ""
+            if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
+                foundAnything = Site.nextPageCursor
+            end
+            local num = 0;
+            for i,v in pairs(Site.data) do
+                local Possible = true
+                ID = tostring(v.id)
+                if tonumber(v.maxPlayers) > tonumber(v.playing) then
+                    for _,Existing in pairs(AllIDs) do
+                        if num ~= 0 then
+                            if ID == tostring(Existing) then
+                                Possible = false
+                            end
+                        else
+                            if tonumber(actualHour) ~= tonumber(Existing) then
+                                local delFile = pcall(function()
+                                    AllIDs = {}
+                                    table.insert(AllIDs, actualHour)
+                                end)
+                            end
+                        end
+                        num = num + 1
+                    end
+                    if Possible == true then
+                        table.insert(AllIDs, ID)
+                        wait()
+                        pcall(function()
+                            wait()
+                            game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+                        end)
+                        wait(4)
+                    end
+                end
+            end
+        end
+        function Teleport() 
+            while wait() do
+                pcall(function()
+                    TPReturner()
+                    if foundAnything ~= "" then
+                        TPReturner()
+                    end
+                end)
+            end
+        end
+        Teleport()
+    end
+
+    Misc:AddButtonR("Server Hop",function()
+        Hop()
+    end)
+
+    Misc:AddButtonR("Hop To Lower Player",function()
+        getgenv().AutoTeleport = true
+        getgenv().DontTeleportTheSameNumber = true 
+        getgenv().CopytoClipboard = false
+        if not game:IsLoaded() then
+            print("Game is loading waiting...")
+        end
+        local maxplayers = math.huge
+        local serversmaxplayer;
+        local goodserver;
+        local gamelink = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100" 
+        function serversearch()
+            for _, v in pairs(game:GetService("HttpService"):JSONDecode(game:HttpGetAsync(gamelink)).data) do
+                if type(v) == "table" and v.playing ~= nil and maxplayers > v.playing then
+                    serversmaxplayer = v.maxPlayers
+                    maxplayers = v.playing
+                    goodserver = v.id
+                end
+            end       
+        end
+        function getservers()
+            serversearch()
+            for i,v in pairs(game:GetService("HttpService"):JSONDecode(game:HttpGetAsync(gamelink))) do
+                if i == "nextPageCursor" then
+                    if gamelink:find("&cursor=") then
+                        local a = gamelink:find("&cursor=")
+                        local b = gamelink:sub(a)
+                        gamelink = gamelink:gsub(b, "")
+                    end
+                    gamelink = gamelink .. "&cursor=" ..v
+                    getservers()
+                end
+            end
+        end 
+        getservers()
+        if AutoTeleport then
+            if DontTeleportTheSameNumber then 
+                if #game:GetService("Players"):GetPlayers() - 4  == maxplayers then
+                    return warn("It has same number of players (except you)")
+                elseif goodserver == game.JobId then
+                    return warn("Your current server is the most empty server atm") 
+                end
+            end
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, goodserver)
+        end
+    end)
+
+    Misc:AddSeperatorR("FPS Boost")
+    
+    local originalSettings = {
+        saved = false,
+        quality = nil,
+        shadows = nil,
+        fogEnd = nil,
+        brightness = nil,
+        effects = {},
+        parts = {},
+        decals = {},
+        textures = {},
+        particles = {},
+        meshes = {}
+    }
+
+    function BoostFPS()
+        local lighting = game:GetService("Lighting")
+
+        if not originalSettings.saved then
+            originalSettings.saved = true
+            originalSettings.quality = settings().Rendering.QualityLevel
+            originalSettings.shadows = lighting.GlobalShadows
+            originalSettings.fogEnd = lighting.FogEnd
+            originalSettings.brightness = lighting.Brightness
+
+            -- Save post effects
+            for _, v in pairs(lighting:GetChildren()) do
+                if v:IsA("PostEffect") then
+                    originalSettings.effects[v] = v.Enabled
+                end
+            end
+
+            -- Save individual objects
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    originalSettings.parts[v] = {
+                        Material = v.Material,
+                        Reflectance = v.Reflectance
+                    }
+                    v.Material = Enum.Material.SmoothPlastic
+                    v.Reflectance = 0
+
+                elseif v:IsA("Decal") then
+                    originalSettings.decals[v] = v.Transparency
+                    v.Transparency = 1
+
+                elseif v:IsA("Texture") then
+                    originalSettings.textures[v] = v.Transparency
+                    v.Transparency = 1
+
+                elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                    originalSettings.particles[v] = v.Enabled
+                    v.Enabled = false
+
+                elseif v:IsA("MeshPart") then
+                    originalSettings.meshes[v] = {
+                        Material = v.Material,
+                        TextureID = v.TextureID
+                    }
+                    v.Material = Enum.Material.SmoothPlastic
+                    v.TextureID = ""
+                end
+            end
+        end
+
+        -- Apply low settings
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        lighting.GlobalShadows = false
+        lighting.FogEnd = 100000
+        lighting.Brightness = 1
+
+        for effect in pairs(originalSettings.effects) do
+            effect.Enabled = false
+        end
+
+        if workspace:FindFirstChildOfClass("Camera") then
+            workspace.CurrentCamera:ClearAllChildren()
+        end
+
+        print("✅ Boost FPS: ON")
+    end
+
+    function ResetGraphics()
+        if not originalSettings.saved then
+            warn("⚠️ ยังไม่มีการ BoostFPS มาก่อน")
+            return
+        end
+
+        local lighting = game:GetService("Lighting")
+        settings().Rendering.QualityLevel = originalSettings.quality
+        lighting.GlobalShadows = originalSettings.shadows
+        lighting.FogEnd = originalSettings.fogEnd
+        lighting.Brightness = originalSettings.brightness
+
+        for effect, state in pairs(originalSettings.effects) do
+            effect.Enabled = state
+        end
+
+        for obj, data in pairs(originalSettings.parts) do
+            if obj and obj.Parent then
+                obj.Material = data.Material
+                obj.Reflectance = data.Reflectance
+            end
+        end
+
+        for obj, transparency in pairs(originalSettings.decals) do
+            if obj and obj.Parent then
+                obj.Transparency = transparency
+            end
+        end
+
+        for obj, transparency in pairs(originalSettings.textures) do
+            if obj and obj.Parent then
+                obj.Transparency = transparency
+            end
+        end
+
+        for obj, enabled in pairs(originalSettings.particles) do
+            if obj and obj.Parent then
+                obj.Enabled = enabled
+            end
+        end
+
+        for obj, data in pairs(originalSettings.meshes) do
+            if obj and obj.Parent then
+                obj.Material = data.Material
+                obj.TextureID = data.TextureID
+            end
+        end
+
+        print("✅ Boost FPS: OFF — กู้ค่ากราฟิกทั้งหมดแล้ว")
+    end
+
+
+    function ResetGraphics()
+        if not originalSettings.saved then
+            warn("⚠️ ยังไม่มีการ BoostFPS มาก่อน")
+            return
+        end
+
+        -- คืนค่าที่บันทึกไว้
+        settings().Rendering.QualityLevel = originalSettings.quality or Enum.QualityLevel.Automatic
+        local lighting = game:GetService("Lighting")
+        lighting.GlobalShadows = originalSettings.shadows
+        lighting.FogEnd = originalSettings.fogEnd
+        lighting.Brightness = originalSettings.brightness
+
+        for effect, state in pairs(originalSettings.effects) do
+            effect.Enabled = state
+        end
+
+        print("✅ Boost FPS: OFF (คืนค่าเดิม)")
+    end
+
+
+    Misc:AddToggleR("Boost FPS",_G.SST.Boost_FPS,function(value)
+        Boost_FPS = value
+        _G.SST.Boost_FPS = Boost_FPS
+        SS()
+        if value then
+            BoostFPS()
+        else
+            ResetGraphics()
+        end
+    end)
+
+    local player = game:GetService("Players").LocalPlayer
+    local playerGui = player:WaitForChild("PlayerGui")
+    local blackScreenUI = nil
+
+    local function toggleBlackScreen(enable)
+        if not enable then
+            if blackScreenUI then
+                blackScreenUI.Enabled = false
+            end
+            return
+        end
+
+        if blackScreenUI then
+            blackScreenUI.Enabled = true
+            return
+        end
+
+        blackScreenUI = Instance.new("ScreenGui")
+        blackScreenUI.Name = "Blackscreen"
+        blackScreenUI.DisplayOrder = 1 
+        blackScreenUI.ResetOnSpawn = false 
+        blackScreenUI.IgnoreGuiInset = true 
+        blackScreenUI.Parent = playerGui
+
+        local uiFrame = Instance.new("Frame")
+        uiFrame.BackgroundColor3 = Color3.new(0, 0, 0) 
+        uiFrame.Size = UDim2.new(1, 0, 1, 0) 
+        uiFrame.Position = UDim2.new(0, 0, 0, 0) 
+        uiFrame.BorderSizePixel = 0 
+        uiFrame.Parent = blackScreenUI
+    end
+
+    Misc:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
+        Black_Screen = value
+        _G.SST.Black_Screen = Black_Screen
+        SS()
+        if value then
+            game:GetService("RunService"):Set3dRenderingEnabled(false)
+            toggleBlackScreen(true)
+        else
+            game:GetService("RunService"):Set3dRenderingEnabled(true)
+            toggleBlackScreen(false)
+        end
+    end)
+
+    _G.SST.Select_Farme_Rate =  _G.SST.Select_Farme_Rate or Select_Farme_Rate or 60
+    Misc:AddSliderR("Select Frame Rate For LockFpf", 0, 500, _G.SST.Select_Farme_Rate, function(a)
+        Select_Farme_Rate = a -- ใช้ตัวแปร a แทนค่า Select_Farme_Rate
+        _G.SST.Select_Farme_Rate = Select_Farme_Rate
+        SS() -- ฟังก์ชันเพิ่มเติม
+    end)
+
+    -- เริ่มฟังก์ชัน spawn สำหรับการตั้งค่า FPS
+    spawn(function()
+        while task.wait(1) do
+            pcall(function()
+                if type(_G.SST.Select_Farme_Rate) == "number" and _G.SST.Select_Farme_Rate > 0 then
+                    setfpscap(_G.SST.Select_Farme_Rate) -- ตั้งค่าความเร็วเฟรมตามค่า
+                end
+            end)
+        end
+    end)
+
+
+    Misc:AddSeperatorR("Misc")
+    Misc:AddToggleR("Anti AFK",_G.SST.Anti_AFK,function(value)
+    Anti_AFK = value
+    _G.SST.Anti_AFK = Anti_AFK
+    SS()
+    end)
+
+    -- ✅ Anti-AFK
+    spawn(function()
+        local connected = false
+        while task.wait(1) do
+            if _G.SST and _G.SST.Anti_AFK and not connected then
+                connected = true
+                Players.LocalPlayer.Idled:Connect(function()
+                    VirtualUser:Button2Down(Vector2.new(9999,9999), workspace.CurrentCamera.CFrame)
+                    task.wait(1)
+                    VirtualUser:Button2Up(Vector2.new(9999,9999), workspace.CurrentCamera.CFrame)
+                end)
+            end
+        end
+    end)
+
+
+    Misc:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin,function(value)
+    Auto_Kick_Rejoin = value
+    _G.SST.Auto_Kick_Rejoin = Auto_Kick_Rejoin
+    SS()
+    end)
+
+    spawn(function()
+        while wait() do
+            if _G.SST.Auto_Kick_Rejoin then
+                Auto_Kick_Rejoin = game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+                    if child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
+                            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId)
+                    end
+                end)
+            end
+        end
+    end)
 
