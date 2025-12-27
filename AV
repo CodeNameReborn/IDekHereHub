@@ -2453,36 +2453,21 @@ end
         SS()
     end)
     spawn(function()
-        while wait() do
+        while wait(1) do
             pcall(function()
-                if _G.Auto_Join_Map then
+                if  _G.SST.Auto_Join_Map then
                     repeat wait()
                         JoinMap(tostring(_G.SST.Select_StageType),tostring(_G.SST.Select_Act),tostring(_G.SST.Select_Stage),tostring(_G.SST.Select_Mode))
-                        until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface  
+                        until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface 
                         if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface then
+                            wait(2)
                         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
                     end
                 end
             end)
         end
     end)
--- สร้าง Label ก่อน
-local ST = Main:AddLabelL("ST ; -")
-local SA = Main:AddLabelL("SA ; -")
-local SS = Main:AddLabelL("SS ; -")
-local SM = Main:AddLabelL("SM ; -")
 
--- แล้วค่อยอัปเดตค่า
-task.spawn(function()
-    while task.wait(0.2) do
-        pcall(function()
-            ST:Set("ST ; ".. tostring(_G.SST.Select_StageType or "-"))
-            SA:Set("SA ; ".. tostring(_G.SST.Select_Act or "-"))
-            SS:Set("SS ; ".. tostring(_G.SST.Select_Stage or "-"))
-            SM:Set("SM ; ".. tostring(_G.SST.Select_Mode or "-"))
-        end)
-    end
-end)
 
     Main:AddSeperatorL("Event")
     Main:AddToggleL("Auto Join Event",_G.SST.Auto_Join_Event,function(value)
@@ -2492,7 +2477,7 @@ end)
     end)
 
     spawn(function()
-        while wait() do
+        while wait(1) do
             pcall(function()
                 if _G.SST.Auto_Join_Event then
                     repeat wait()
@@ -2501,8 +2486,9 @@ end)
                         [2] = "Infinite"
                     }
                     game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("Fall"):WaitForChild("FallLTMEvent"):FireServer(unpack(args))
-                    until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface
+                    until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and
                         if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface then
+                            wait(2)
                         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
                     end 
                 end
