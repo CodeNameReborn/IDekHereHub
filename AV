@@ -2457,9 +2457,9 @@ end
             pcall(function()
                 if _G.Auto_Join_Map then
                     repeat wait()
-                        JoinMap(_G.SST.Select_StageType,_G.SST.Select_Act,_G.SST.Select_Stage,_G.SST.Select_Mode)
-                        until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface.Enable == true 
-                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface.Enable == true then
+                        JoinMap(tostring(_G.SST.Select_StageType),tostring(_G.SST.Select_Act),tostring(_G.SST.Select_Stage),tostring(_G.SST.Select_Mode))
+                        until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface  
+                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface then
                         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
                     end
                 end
@@ -2495,12 +2495,14 @@ end)
         while wait() do
             pcall(function()
                 if _G.SST.Auto_Join_Event then
+                    repeat wait()
                     local args = {
                         [1] = "Create",
                         [2] = "Infinite"
                     }
                     game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("Fall"):WaitForChild("FallLTMEvent"):FireServer(unpack(args))
-                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface.Enable == true then
+                    until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface
+                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface then
                         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
                     end 
                 end
