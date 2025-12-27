@@ -2588,7 +2588,7 @@ end)
     spawn(function()
         while wait() do
             pcall(function()
-                if _G.SST.Auto_Restart and not Restarted then
+                if _G.SST.Auto_Restart then
                     local wavesGui = game:GetService("Players").LocalPlayer.PlayerGui.HUD.Map.WavesAmount
                     if wavesGui and wavesGui.Visible then
                         -- ใช้ string.match แทนการเช็คข้อความยาว ๆ
