@@ -2384,114 +2384,197 @@ end
         end
         return uitab
     end
+-- =========================
+-- GLOBAL
+-- =========================
+_G.SST = _G.SST or {}
 
-    function JoinMap(Type,Act,Stage,Mode)
-        local JOIN = {
-            [1] = "AddMatch",
-            [2] = {
-                    ["Difficulty"] = Mode,
-                    ["Act"] = "Act" ..Act,
-                    ["StageType"] = Type,
-                    ["Stage"] = "Stage" ..Stage,
-                    ["FriendsOnly"] = false
-                }
-            }
-        game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer(unpack(JOIN))
+_G.SST.Select_StageType = _G.SST.Select_StageType or "Story"
+_G.SST.Select_Act = _G.SST.Select_Act or "1"
+_G.SST.Select_Stage = _G.SST.Select_Stage or "1"
+_G.SST.Select_Mode = _G.SST.Select_Mode or "Normal"
+
+_G.SST.Auto_Join_Map = _G.SST.Auto_Join_Map or false
+_G.SST.Auto_Join_Event = _G.SST.Auto_Join_Event or false
+_G.SST.Auto_Vote_Friends_Only = _G.SST.Auto_Vote_Friends_Only or false
+
+-- =========================
+-- JOIN MAP FUNCTION
+-- =========================
+local function JoinMap(StageType, Act, Stage, Mode)
+    local args = {
+        [1] = "AddMatch",
+        [2] = {
+            Difficulty = Mode,
+            Act = "Act"..tostring(Act),
+            StageType = StageType,
+            Stage = "Stage"..tostring(Stage),
+            FriendsOnly = _G.SST.Auto_Vote_Friends_Only
+        }
+    }
+
+    game:GetService("ReplicatedStorage")
+        :WaitForChild("Networking")
+        :WaitForChild("LobbyEvent")
+        :FireServer(unpack(args))
+end
+
+-- =========================
+-- UI
+-- =========================
+local ReBornXerUi = Update:AddWindow("IDekhere Hub","",Enum.KeyCode.RightControl)
+local Main = ReBornXerUi:AddTab("Main","6026568198")
+
+-- =========================
+-- INFO
+-- =========================
+Main:AddSeperatorL("Info")
+Main:AddLabelL("Welcome To Idekhere Hub Script")
+Main:AddLabelL("Map : Blox Fruit")
+Main:AddLabelL("Day : "..os.date("%d %B %Y"))
+Main:AddLineL("")
+
+-- =========================
+-- JOIN MAP
+-- =========================
+Main:AddSeperatorL("Join Map")
+
+Main:AddDropdownL("Select StageType",
+    {"Story","Legend Stage"},
+    _G.SST.Select_StageType,
+    function(v)
+        _G.SST.Select_StageType = v
     end
--------------------------------------------------- custom Ui
-    local ReBornXerUi = Update:AddWindow("  IDekhere Hub","",Enum.KeyCode.RightControl)
+)
 
-    local Main = ReBornXerUi:AddTab("Main","6026568198")
-    local Misc = ReBornXerUi:AddTab("Misc","")
-    local Setting = ReBornXerUi:AddTab("","")
+Main:AddDropdownL("Select Act",
+    {"1","2","3","4","5","6"},
+    _G.SST.Select_Act,
+    function(v)
+        _G.SST.Select_Act = v
+    end
+)
 
-    local S = ReBornXerUi:AddTabH("Top","14134158045")
+Main:AddDropdownL("Select Stage",
+    {"1","2","3","4","5","6"},
+    _G.SST.Select_Stage,
+    function(v)
+        _G.SST.Select_Stage = v
+    end
+)
 
-    -------------------------------------------------- Main L Ui
+Main:AddDropdownL("Select Mode",
+    {"Normal","Nightmare"},
+    _G.SST.Select_Mode,
+    function(v)
+        _G.SST.Select_Mode = v
+    end
+)
 
-    Main:AddSeperatorL("Info")
-    Main:AddLabelL("Wecome To Idekhere Hub Script")
-    Main:AddLabelL("Map : Blox Fruit")
-    Main:AddLabelL("Day : ".. os.date("%d".." ".."%B".." ".."%Y"))
-    Main:AddLineL("")
+Main:AddToggleL("Auto Vote Friends Only",
+    _G.SST.Auto_Vote_Friends_Only,
+    function(v)
+        _G.SST.Auto_Vote_Friends_Only = v
+    end
+)
 
-    ---------------------------------------------------- info
+Main:AddToggleL("Auto Join Map",
+    _G.SST.Auto_Join_Map,
+    function(v)
+        _G.SST.Auto_Join_Map = v
+    end
+)
 
-    Main:AddSeperatorL("Join Map")
-    _G.SST.Select_StageType = _G.SST.Select_StageType or Select_StageType or ""
-    Main:AddDropdownL("Select StageType",{"Story","Legeng Stage"},_G.SST.Select_StageType,function(value)
-        Select_StageType = value
-        _G.SST.Select_StageType = Select_StageType
-        SS()
-    end)
-    _G.SST.Select_Act = _G.SST.Select_Act or Select_Act or ""
-    Main:AddDropdownL("Select Act",{"1","2","3","4","5","6"},_G.SST.Select_Act,function(value)
-        Select_Act = value
-        _G.SST.Select_Act = Select_Act
-        SS()
-    end)
-    _G.SST.Select_Stage = _G.SST.Select_Stage or Select_Stage or ""
-    Main:AddDropdownL("Select Stage",{"1","2","3","4","5","6","Infinite"},_G.SST.Select_Stage,function(value)
-        Select_Stage = value
-        _G.SST.Select_Stage = Select_Stage
-        SS()
-    end)
-    _G.SST.Select_Mode = _G.SST.Select_Mode or Select_Mode or ""
-        Main:AddDropdownL("Select Mode",{"Normal","Nightmare"},_G.SST.Select_Mode,function(value)
-        Select_Mode = value
-        _G.SST.Select_Mode = Select_Mode
-        SS()
-    end)
-    Main:AddToggleL("Auto Vote Friends Only",_G.SST.Auto_Vote_Friends_Only,function(value)
-        Auto_Vote_Friends_Only = value
-        _G.SST.Auto_Vote_Friends_Only = Auto_Vote_Friends_Only
-        SS()
-    end)
-    Main:AddToggleL("Auto Join Map",_G.Auto_Join_Map,function(value)
-        Auto_Join_Map = value
-        _G.SST.Auto_Join_Map = Auto_Join_Map
-        SS()
-    end)
-    spawn(function()
-        while wait(1) do
-            pcall(function()
-                if  _G.SST.Auto_Join_Map then
-                    repeat wait()
-                        JoinMap(tostring(_G.SST.Select_StageType),tostring(_G.SST.Select_Act),tostring(_G.SST.Select_Stage),tostring(_G.SST.Select_Mode))
-                        until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface 
-                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface then
-                            wait(2)
-                        game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
-                    end
-                end
-            end)
-        end
-    end)
+-- =========================
+-- EVENT
+-- =========================
+Main:AddSeperatorL("Event")
 
+Main:AddToggleL("Auto Join Event",
+    _G.SST.Auto_Join_Event,
+    function(v)
+        _G.SST.Auto_Join_Event = v
+    end
+)
 
-    Main:AddSeperatorL("Event")
-    Main:AddToggleL("Auto Join Event",_G.SST.Auto_Join_Event,function(value)
-        Auto_Join_Event = value
-        _G.SST.Auto_Join_Event = Auto_Join_Event
-        SS()
-    end)
+-- =========================
+-- AUTO JOIN MAP LOOP
+-- =========================
+task.spawn(function()
+    local joined = false
 
-    spawn(function()
-        while wait(1) do
-            pcall(function()
-                if _G.SST.Auto_Join_Event then
-                    repeat wait()
-                    local args = {
-                        [1] = "Create",
-                        [2] = "Infinite"
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("Fall"):WaitForChild("FallLTMEvent"):FireServer(unpack(args))
-                    until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface 
-                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface then
-                            wait(2)
-                        game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
-                    end 
-                end
-            end)
-        end
-    end)                   
+    while task.wait(1) do
+        pcall(function()
+            if not _G.SST.Auto_Join_Map then
+                joined = false
+                return
+            end
+
+            local player = game:GetService("Players").LocalPlayer
+            local gui = player.PlayerGui
+            local mini = gui:FindFirstChild("MiniLobbyInterface")
+            if not mini then return end
+
+            if mini.Enabled == false and not joined then
+                JoinMap(
+                    _G.SST.Select_StageType,
+                    _G.SST.Select_Act,
+                    _G.SST.Select_Stage,
+                    _G.SST.Select_Mode
+                )
+                joined = true
+            end
+
+            if mini.Enabled == true and joined then
+                task.wait(2)
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("Networking")
+                    :WaitForChild("LobbyEvent")
+                    :FireServer("StartMatch")
+                joined = false
+            end
+        end)
+    end
+end)
+
+-- =========================
+-- AUTO JOIN EVENT LOOP
+-- =========================
+task.spawn(function()
+    local joinedEvent = false
+
+    while task.wait(1) do
+        pcall(function()
+            if not _G.SST.Auto_Join_Event then
+                joinedEvent = false
+                return
+            end
+
+            local player = game:GetService("Players").LocalPlayer
+            local gui = player.PlayerGui
+            local mini = gui:FindFirstChild("MiniLobbyInterface")
+            if not mini then return end
+
+            if mini.Enabled == false and not joinedEvent then
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("Networking")
+                    :WaitForChild("Fall")
+                    :WaitForChild("FallLTMEvent")
+                    :FireServer("Create","Infinite")
+
+                joinedEvent = true
+            end
+
+            if mini.Enabled == true and joinedEvent then
+                task.wait(2)
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("Networking")
+                    :WaitForChild("LobbyEvent")
+                    :FireServer("StartMatch")
+
+                joinedEvent = false
+            end
+        end)
+    end
+end)
+  
