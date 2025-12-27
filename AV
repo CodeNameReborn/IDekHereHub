@@ -2517,7 +2517,7 @@ end)
         end
     end)
     
-    Main:AddSeperatorR("Game Vote Function")
+    Main:AddSeperatorR("Game Vote Match")
     _G.SST.Select_Vote = _G.SST.Select_Vote or Select_Vote or ""
     Main:AddDropdownR("Select Vote",{"Retry","Next","Lobby"},_G.SST.Select_Vote,function(value)
         Select_Vote = value
@@ -2543,6 +2543,29 @@ end)
                     else
                         wait(5)
                         OneClick = false
+                    end
+                end
+            end)
+        end
+    end)
+
+    Main:AddSeperatorR("Wave Function")
+    Main:AddToggleR("Auto Skip Wave",_G.SST.Auto_Skip_Wave,function(value)
+        Auto_Skip_Wave = value
+        _G.SST.Auto_Skip_Wave = Auto_Skip_Wave
+        SS()
+    end)
+    ClickSkip = false
+    spawn(function()
+        while wait() do
+            pcall(function()
+                if _G.SST.Auto_Skip_Wave then
+                    if game:GetService("Players").localPlayer.PlayerGui.SkipWave.Enabled == true and ClickSkip == false then
+                        game:GetService("ReplicatedStorage").Networking.SkipWaveEvent:FireServer("Skip")
+                        ClickSkip = true
+                    else
+                        wait(1)
+                        ClickSkip = false
                     end
                 end
             end)
