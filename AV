@@ -2466,3 +2466,38 @@ end
             end)
         end
     end)
+spawn(function()
+    while wait() do
+        ST:Set("ST  ; ".. _G.SST.Select_StageType)
+        SA:Set("SA  ; ".. _G.SST.Select_Act)
+        SS:Set("SS  ; ".. _G.SST.Select_Stage)
+        SM:Set("SM  ; ".. _G.SST.Select_Mode)
+    end
+end)
+    Main:AddLabelL()
+    Main:AddLabelL()
+    Main:AddLabelL()
+    Main:AddLabelL()
+    Main:AddSeperatorL("Event")
+    Main:AddToggleL("Auto Join Event",_G.SST.Auto_Join_Event,function(value)
+        Auto_Join_Event = value
+        _G.SST.Auto_Join_Event = Auto_Join_Event
+        SS()
+    end)
+
+    spawn(function()
+        while wait() do
+            pcall(function()
+                if _G.SST.Auto_Join_Event then
+                    local args = {
+                        [1] = "Create",
+                        [2] = "Infinite"
+                    }
+                    game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("Fall"):WaitForChild("FallLTMEvent"):FireServer(unpack(args))
+                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface.Enable == true then
+                        game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
+                    end 
+                end
+            end)
+        end
+    end)                   
