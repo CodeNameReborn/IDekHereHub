@@ -2592,7 +2592,7 @@ end)
                     local wavesGui = game:GetService("Players").LocalPlayer.PlayerGui.HUD.Map.WavesAmount
                     if wavesGui and wavesGui.Visible then
                         -- ใช้ string.match แทนการเช็คข้อความยาว ๆ
-                        if string.match(wavesGui.Text, ">".._G.SST.Select_Wave.."<") then
+                        if string.match(wavesGui.Text, "transparency=0>".._G.SST.Select_Wave.."<") then
                             game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("MatchRestartSettingEvent"):FireServer("Vote")
                         end
                     end
