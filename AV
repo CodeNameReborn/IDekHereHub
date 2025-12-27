@@ -2486,7 +2486,7 @@ end
                         [2] = "Infinite"
                     }
                     game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("Fall"):WaitForChild("FallLTMEvent"):FireServer(unpack(args))
-                    until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and
+                    until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface 
                         if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface then
                             wait(2)
                         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
