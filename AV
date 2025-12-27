@@ -2571,3 +2571,32 @@ end)
             end)
         end
     end)
+
+    Main:AddSeperatorR("Wave Restart")
+    _G.SST.Select_Wave = _G.SST.Select_Wave or Select_Wave or 50
+    Main:AddSliderR("Select Wave",0,100,_G.SST.Select_Wave,function(value)
+        Select_Wave = value
+        _G.SST.Select_Wave = Select_Wave
+        SS()
+    end)
+    Main:AddToggleR("Auto Restart",_G.SSt.Auto_Restart,function(value)
+        Auto_Restart = value
+        _G.SST.Auto_Restart = Auto_Restart
+        SS()
+    end)
+
+
+    spawn(function()
+        while wait() do
+            pcall(function()
+                if _G.SST.Auto_Restart then
+                    local wavesGui = game:GetService("Players").LocalPlayer.PlayerGui.HUD.Map.WavesAmount
+                    if wavesGui and wavesGui.Visible then
+                        if string.match(wavesGui.Text, _G.SST.Select_Wave) then
+                            game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("MatchRestartSettingEvent"):FireServer("Vote")
+                        end
+                    end
+                end
+            end)
+        end
+    end)
