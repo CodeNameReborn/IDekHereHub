@@ -2606,7 +2606,7 @@ end)
         Auto_Play = value
         _G.SST.Auto_Play = Auto_Play
         SS()
-        if not _G.SST.Auto_Play then
+        if not _G.SST.Auto_Play and workspace:FindFirstChild("AutoPlayPart") then
             game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("AutoPlayEvent"):FireServer("Toggle")
         end
     end)
@@ -2616,7 +2616,7 @@ end)
         while wait(1) do
             pcall(function()
                 if _G.SST.Auto_Play then
-                    if workspace:FindFirstChild("AutoPlayPart") then
+                    if not workspace:FindFirstChild("AutoPlayPart") then
                         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("AutoPlayEvent"):FireServer("Toggle")
                     end
                 end
