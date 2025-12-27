@@ -2536,7 +2536,7 @@ end)
         while wait() do 
             pcall(function()
                 if _G.SST.Auto_Vote then
-                    if game:GetService("Players").localPlayer.PlayerGui.EndScreen.Container.Visible == true and game:GetService("Players").localPlayer.PlayerGui.EndScreen.Background.Visible == true and OneClick == false then
+                    if game:GetService("Players").localPlayer.PlayerGui.EndScreen.Glow.Visible == true and game:GetService("Players").localPlayer.PlayerGui.EndScreen.Background.Visible == true and OneClick == false then
                         game:GetService("ReplicatedStorage").Networking.EndScreen.VoteEvent:FireServer(_G.SST.Select_Function)
                         OneClick = true
                     else
