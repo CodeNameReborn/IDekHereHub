@@ -2724,7 +2724,8 @@ end
 
 ---
 
-RunService.Heartbeat:Connect(function()
+spawn(function()
+    while wait(1) do
     pcall(function()
         if not _G.SST.Send_WebHook then return end
 
@@ -2756,6 +2757,7 @@ RunService.Heartbeat:Connect(function()
             hasSent = false
         end
     end)
+end
 end)
 
     Misc:AddSeperatorR("Server")
