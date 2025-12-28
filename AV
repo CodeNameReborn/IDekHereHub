@@ -2630,27 +2630,35 @@ end)
         end
     end)
 
-    PWEBHOOK:AddSeperatorR("WebHook")
-    PWEBHOOK:AddTextboxR("Plece WebHook Url","",_G.SST.WebHook_Url or "" ,function(value)
-        WebHook_Url = value
-        _G.SST.WebHook_Url = WebHook_Url
-        SS()
-    end)
-    PWEBHOOK:AddToggleR("Send WebHook",_G.SST.Send_WebHook,function(value)
-        Send_WebHook = value
-        _G.SST.Send_WebHook = Send_WebHook
-        SS()
-    end)
+PWEBHOOK:AddSeperatorR("WebHook")
+
+PWEBHOOK:AddTextboxR("Plece WebHook Url","",_G.SST.WebHook_Url or "" ,function(value)
+    WebHook_Url = value
+    _G.SST.WebHook_Url = WebHook_Url
+    SS()
+end)
+
+PWEBHOOK:AddToggleR("Send WebHook",_G.SST.Send_WebHook,function(value)
+    Send_WebHook = value
+    _G.SST.Send_WebHook = Send_WebHook
+    SS()
+end)
+
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 local player = Players.LocalPlayer
 local hasSent = false
+local lastSentTime = 0  -- เพิ่มตัวแปรเก็บเวลาที่ส่งล่าสุด
+local COOLDOWN = 30     -- หยุดส่งซ้ำอย่างน้อย 30 วินาที (ปรับได้ตามต้องการ)
 
--------------------------------------------------
+---
+
 -- SEND WEBHOOK
--------------------------------------------------
+
+---
+
 local function sendWebhook(Name, RewardsText, GameTime)
     local url = _G.SST.WebHook_Url
     if not url or url == "" then
@@ -2710,17 +2718,20 @@ local function sendWebhook(Name, RewardsText, GameTime)
     end
 end
 
--------------------------------------------------
+---
+
 -- MAIN LOOP
--------------------------------------------------
+
+---
+
 RunService.Heartbeat:Connect(function()
     pcall(function()
         if not _G.SST.Send_WebHook then return end
 
         local endScreen = player.PlayerGui:FindFirstChild("EndScreen")
         if endScreen and endScreen.Holder and endScreen.Holder.Main.Visible then
-            -- ถ้ายังไม่เคยส่งในรอบนี้ → ส่งเลย
-            if not hasSent then
+            -- เช็ค cooldown ก่อนส่ง
+            if not hasSent and (time() - lastSentTime >= COOLDOWN) then
                 local GameTime = endScreen.Holder.Main.StageStatistics.PlayTime.Amount.Text
                 local rewardsText = ""
 
@@ -2738,9 +2749,10 @@ RunService.Heartbeat:Connect(function()
 
                 sendWebhook(player.Name, rewardsText, GameTime)
                 hasSent = true
+                lastSentTime = time()  -- อัปเดตเวลาที่ส่งล่าสุด
             end
         else
-            -- ถ้า EndScreen หายไป → รีเซ็ตให้พร้อมส่งรอบใหม่
+            -- EndScreen หายไป → รีเซ็ตสำหรับรอบใหม่
             hasSent = false
         end
     end)
