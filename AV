@@ -2407,6 +2407,7 @@ end
     local ReBornXerUi = Update:AddWindow("  IDekhere Hub","",Enum.KeyCode.RightControl)
 
     local Main = ReBornXerUi:AddTab("Main","6026568198")
+    local PWEBHOOK = ReBornXerUi:AddTab("Play - WebHook","")
     local Misc = ReBornXerUi:AddTab("Misc","")
     local Setting = ReBornXerUi:AddTab("","")
 
@@ -2470,7 +2471,7 @@ spawn(function()
                     repeat wait()
                         JoinMap(_G.SST.Select_StageType,_G.SST.Select_Act,_G.SST.Select_Stage,_G.SST.Select_Mode,_G.SST.Auto_Vote_Friends_Only)
                         CHACK_Join_Map = true
-                    until game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("MiniLobbyInterface") and CHACK_Join_Map == true and StartChack == true
+                    until game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("MiniLobbyInterface") and CHACK_Join_Map == true 
                     StartChack = true
                 elseif StartChack == true and StartCompleted == false then
                     if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("MiniLobbyInterface") and CHACK_Join_Map == true then
@@ -2606,8 +2607,8 @@ end)
         end
     end)
 
-    Misc:AddSeperatorL("Play")
-    Misc:AddToggleL("Auto Play", _G.SST.Auto_Play, function(value)
+    PWEBHOOK:AddSeperatorL("Play")
+    PWEBHOOK:AddToggleL("Auto Play", _G.SST.Auto_Play, function(value)
         Auto_Play = value
         _G.SST.Auto_Play = Auto_Play
         SS()
@@ -2628,6 +2629,142 @@ end)
             end)
         end
     end)
+
+    PWEBHOOK:AddSeperatorR("WebHook")
+    PWEBHOOK:AddTextboxR("Plece WebHook Url","",_G.SST.WebHook_Url or "" ,function(value)
+        WebHook_Url = value
+        _G.SST.WebHook_Url = WebHook_Url
+        SS()
+    end)
+    PWEBHOOK:AddToggleR("Send WebHook",_G.SST.Send_WebHook,function(value)
+        Send_WebHook = value
+        _G.SST.Send_WebHook = Send_WebHook
+        SS()
+    end)
+    local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local hasSent = false
+local function sendWebhook(Name, RewardsText, GameTime, player)
+    local url = _G.SST.WebHook_Url
+    if not url or url == "" then
+        warn("Invalid Webhook URL")
+        return
+    end
+
+    local namePymain = Name
+    local playerData = game:GetService("Players").localPlayer:GetAttribute()
+
+    if not playerData then
+        warn("Player data not found for:", namePymain)
+        return
+    end
+
+    local fields = {}
+
+    -- Total Info Field
+    table.insert(fields, {
+        ["name"] = "📊 Total 📊",
+        ["value"] = "```Name                : "  ..Name..
+                    "\nGem              : " .. game:GetService("Players").localPlayer:GetAttribute("Gems") ..
+                    "\nGold             : " ..game:GetService("Players").localPlayer:GetAttribute("Gold") ..
+                    "\nLevel            : " .. game:GetService("Players").localPlayer:GetAttribute("Level") .. "   Exp : " .. game:GetService("Players").localPlayer:GetAttribute("Experience") ..
+                    "\nTraitReroll      : " .. game:GetService("Players").localPlayer:GetAttribute("TraitRerolls") .. "```"
+    })
+
+    -- Time Field
+    table.insert(fields, {
+        ["name"] = "⌛ Time ⌛",
+        ["value"] = "```" .. GameTime .. "```"
+    })
+
+    -- Rewards Field
+    table.insert(fields, {
+        ["name"] = "🎁 Rewards 🎁",
+        ["value"] = "```" .. RewardsText .. "```"
+    })
+
+local data = {
+    ["content"] = "",
+    ["embeds"] = {
+        {
+            ["author"] = { ["name"] = "IDekHere Hub WebHook" },
+            ["type"] = "rich",
+            ["title"] = "Anime Vanguards",
+            ["color"] = tonumber(0x13da),
+            ["thumbnail"] = {
+                ["url"] = "https://tr.rbxcdn.com/180DAY-668ccf8ad9d6d533c554d59fe2ddbeef/420/420/Image/Png/noFilter"
+            },
+            ["image"] = {
+                ["url"] = "https://tr.rbxcdn.com/180DAY-3b66598f56036101897a7a5eb31fe52c/768/432/Image/Webp/noFilter"
+            },
+            ["fields"] = fields
+        }
+    }
+}
+
+
+    local jsonData = HttpService:JSONEncode(data)
+    local headers = { ["Content-Type"] = "application/json" }
+
+    local request = http_request or request or HttpPost or syn.request
+    if request then
+        local response = request({
+            Url = url,
+            Body = jsonData,
+            Method = "POST",
+            Headers = headers
+        })
+        if not response or response.StatusCode ~= 200 then
+            warn("Failed to send webhook. Status Code:", response and response.StatusCode)
+        end
+    else
+        warn("HTTP request function not available.")
+    end
+end
+local hasSent = false
+local OffSent = false
+
+spawn(function()
+    while wait() do
+        local player = Players.LocalPlayer
+        if player.PlayerGui.EndScreen.Glow then
+            OffSent = not player.PlayerGui.EndScreen.Glow.Visible == true 
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    pcall(function()
+        local player = Players.LocalPlayer
+        if _G.SST.Send_WebHook and OffSent then
+            local rewardsUI = player.PlayerGui.EndScreen.Holder.Main
+            
+            if rewardsUI and rewardsUI.Enabled then
+                if not hasSent then
+                    local Name = ||player.Name||
+                    local GameTime = rewardsUI.StageStatistics.PlayTime.Amount.Text
+                    local rewardsText = ""
+                    local rewardsFrame = player.PlayerGui.EndScreen.Glow
+                    if rewardsFrame then
+                        for _, rewardItem in ipairs(game:GetService("Players").LocalPlayer.PlayerGui.EndScreen.Holder.Main.StageRewards.Main:GetChildren()) do
+                                local ITTEXT = rewardItem:FindFirstChild("Holder").Main.ItemName.Text
+                                local Amount = rewardItem:FindFirstChild("Holder").Main.ItemName.Text 
+                                rewardsText = rewardsText .. ITTEXT .. ": " .. Amount .. "\n"
+                                end
+                        end
+                    end
+
+                    sendWebhook(Name, rewardsText, GameTime, player)
+                    hasSent = true
+                    OffSent = false
+                end
+            else
+                hasSent = false
+            end
+        end
+    end)
+end)
 
     Misc:AddSeperatorR("Server")
 
@@ -3029,7 +3166,7 @@ end)
             if _G.SST.Auto_Kick_Rejoin then
                 Auto_Kick_Rejoin = game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
                     if child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
-                            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
+                            game:GetService("TeleportService"):Teleport(16146832113)
                     end
                 end)
             end
