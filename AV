@@ -2641,13 +2641,12 @@ end)
         _G.SST.Send_WebHook = Send_WebHook
         SS()
     end)
-   local HttpService = game:GetService("HttpService")
+local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 local player = Players.LocalPlayer
 local hasSent = false
-local OffSent = false
 
 -------------------------------------------------
 -- SEND WEBHOOK
@@ -2659,30 +2658,28 @@ local function sendWebhook(Name, RewardsText, GameTime)
         return
     end
 
-    local fields = {}
-
-    table.insert(fields, {
-        name = "📊 Total 📊",
-        value =
-            "```" ..
-            "Name        : " .. Name .. "\n" ..
-            "Gem         : " .. tostring(player:GetAttribute("Gems")) .. "\n" ..
-            "Gold        : " .. tostring(player:GetAttribute("Gold")) .. "\n" ..
-            "Level       : " .. tostring(player:GetAttribute("Level")) .. "\n"
-            "Exp         : " .. tostring(player:GetAttribute("Experience")) .. "\n" ..
-            "TraitReroll : " .. tostring(player:GetAttribute("TraitRerolls")) ..
-            "```"
-    })
-
-    table.insert(fields, {
-        name = "⌛ Time ⌛",
-        value = "```" .. GameTime .. "```"
-    })
-
-    table.insert(fields, {
-        name = "🎁 Rewards 🎁",
-        value = "```" .. RewardsText .. "```"
-    })
+    local fields = {
+        {
+            name = "📊 Total 📊",
+            value =
+                "```" ..
+                "Name        : " .. Name .. "\n" ..
+                "Gem         : " .. tostring(player:GetAttribute("Gems")) .. "\n" ..
+                "Gold        : " .. tostring(player:GetAttribute("Gold")) .. "\n" ..
+                "Level       : " .. tostring(player:GetAttribute("Level")) .. "\n" ..
+                "Exp         : " .. tostring(player:GetAttribute("Experience")) .. "\n" ..
+                "TraitReroll : " .. tostring(player:GetAttribute("TraitRerolls")) ..
+                "```"
+        },
+        {
+            name = "⌛ Time ⌛",
+            value = "```" .. GameTime .. "```"
+        },
+        {
+            name = "🎁 Rewards 🎁",
+            value = "```" .. RewardsText .. "```"
+        }
+    }
 
     local data = {
         embeds = {{
@@ -2707,24 +2704,11 @@ local function sendWebhook(Name, RewardsText, GameTime)
             Headers = { ["Content-Type"] = "application/json" },
             Body = HttpService:JSONEncode(data)
         })
+        print("✅ WebHook Sent for match:", Name)
     else
         warn("HTTP request function not available")
     end
 end
-
--------------------------------------------------
--- CHECK END SCREEN
--------------------------------------------------
-task.spawn(function()
-    while task.wait(0.5) do
-        local glow = player.PlayerGui:FindFirstChild("EndScreen")
-            and player.PlayerGui.EndScreen:FindFirstChild("Glow")
-
-        if glow then
-            OffSent = glow.Visible
-        end
-    end
-end)
 
 -------------------------------------------------
 -- MAIN LOOP
@@ -2732,38 +2716,33 @@ end)
 RunService.Heartbeat:Connect(function()
     pcall(function()
         if not _G.SST.Send_WebHook then return end
-        if not OffSent or hasSent then return end
 
         local endScreen = player.PlayerGui:FindFirstChild("EndScreen")
-        if not endScreen then return end
+        if endScreen and endScreen.Holder and endScreen.Holder.Main.Visible then
+            -- ถ้ายังไม่เคยส่งในรอบนี้ → ส่งเลย
+            if not hasSent then
+                local GameTime = endScreen.Holder.Main.StageStatistics.PlayTime.Amount.Text
+                local rewardsText = ""
 
-        local mainUI = endScreen.Holder.Main
-        if not mainUI or not mainUI.Visible then return end
-
-        local GameTime = mainUI.StageStatistics.PlayTime.Amount.Text
-        local rewardsText = ""
-
-        local rewardsFolder = mainUI.StageRewards.Main
-        for _, item in ipairs(rewardsFolder:GetChildren()) do
-            local holder = item:FindFirstChild("Holder")
-            if holder then
-                local nameLabel = holder.Main:FindFirstChild("ItemName")
-                local amountLabel = holder.Main:FindFirstChild("Amount")
-
-                if nameLabel and amountLabel then
-                    rewardsText ..= nameLabel.Text .. "" .. amountLabel.Text .. "\n"
+                local rewardsFolder = endScreen.Holder.Main.StageRewards.Main
+                for _, item in ipairs(rewardsFolder:GetChildren()) do
+                    local holder = item:FindFirstChild("Holder")
+                    if holder then
+                        local nameLabel = holder.Main:FindFirstChild("ItemName")
+                        local amountLabel = holder.Main:FindFirstChild("Amount")
+                        if nameLabel and amountLabel then
+                            rewardsText ..= nameLabel.Text .. " " .. amountLabel.Text .. "\n"
+                        end
+                    end
                 end
-            end
-        end
-        if ChackSent == true then
-        sendWebhook(player.Name, rewardsText, GameTime)
-        hasSent = true
-        ChackSent = false
-        elseif not endScreen then
-            wait(3)
-            ChackSent = true
-        end
 
+                sendWebhook(player.Name, rewardsText, GameTime)
+                hasSent = true
+            end
+        else
+            -- ถ้า EndScreen หายไป → รีเซ็ตให้พร้อมส่งรอบใหม่
+            hasSent = false
+        end
     end)
 end)
 
