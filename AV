@@ -2719,10 +2719,10 @@ local function sendWebhook(Name, RewardsText, GameTime)
 end
 
 ---
-
+local OffSent = false
 -- MAIN LOOP
 spawn(function()
-    while wait() do
+    while task.wait() do
         local player = Players.LocalPlayer
         if player.PlayerGui:FindFirstChild("EndScreen") then
             OffSent = not player.PlayerGui:FindFirstChild("EndScreen").Enable
