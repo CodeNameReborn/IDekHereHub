@@ -2721,13 +2721,19 @@ end
 ---
 
 -- MAIN LOOP
-
+spawn(function()
+    while wait() do
+        local player = Players.LocalPlayer
+        if player.PlayerGui:FindFirstChild("EndScreen") then
+            OffSent = not player.PlayerGui:FindFirstChild("EndScreen").Enable
+        end
+    end
+end)
 ---
 
-spawn(function()
-    while wait(1) do
+RunService.Heartbeat:Connect(function()
     pcall(function()
-        if not _G.SST.Send_WebHook then return end
+        if not _G.SST.Send_WebHook and OffSent then return end
 
         local endScreen = player.PlayerGui:FindFirstChild("EndScreen")
         if endScreen and endScreen.Holder and endScreen.Holder.Main.Visible then
@@ -2750,14 +2756,13 @@ spawn(function()
 
                 sendWebhook(player.Name, rewardsText, GameTime)
                 hasSent = true
-                lastSentTime = time()  -- อัปเดตเวลาที่ส่งล่าสุด
+                OffSent = false
             end
         else
             -- EndScreen หายไป → รีเซ็ตสำหรับรอบใหม่
             hasSent = false
         end
     end)
-end
 end)
 
     Misc:AddSeperatorR("Server")
