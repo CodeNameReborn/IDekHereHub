@@ -2668,8 +2668,8 @@ local function sendWebhook(Name, RewardsText, GameTime)
             "Name        : " .. Name .. "\n" ..
             "Gem         : " .. tostring(player:GetAttribute("Gems")) .. "\n" ..
             "Gold        : " .. tostring(player:GetAttribute("Gold")) .. "\n" ..
-            "Level       : " .. tostring(player:GetAttribute("Level")) ..
-            " | Exp : " .. tostring(player:GetAttribute("Experience")) .. "\n" ..
+            "Level       : " .. tostring(player:GetAttribute("Level")) .. "\n"
+            "Exp         : " .. tostring(player:GetAttribute("Experience")) .. "\n" ..
             "TraitReroll : " .. tostring(player:GetAttribute("TraitRerolls")) ..
             "```"
     })
@@ -2738,7 +2738,7 @@ RunService.Heartbeat:Connect(function()
         if not endScreen then return end
 
         local mainUI = endScreen.Holder.Main
-        if not mainUI or not mainUI.Visible then return end
+        if not mainUI or not mainUI.Visible == true then return end
 
         local GameTime = mainUI.StageStatistics.PlayTime.Amount.Text
         local rewardsText = ""
@@ -2751,13 +2751,19 @@ RunService.Heartbeat:Connect(function()
                 local amountLabel = holder.Main:FindFirstChild("Amount")
 
                 if nameLabel and amountLabel then
-                    rewardsText ..= nameLabel.Text .. " x" .. amountLabel.Text .. "\n"
+                    rewardsText ..= nameLabel.Text .. "" .. amountLabel.Text .. "\n"
                 end
             end
         end
-
+        if ChackSent == true then
         sendWebhook(player.Name, rewardsText, GameTime)
         hasSent = true
+        ChackSent = false
+        elseif not endScreen then
+            wait(3)
+            ChackSent = true
+        end
+
     end)
 end)
 
