@@ -2390,7 +2390,7 @@ end
         return uitab
     end
 
-    function JoinMap(Type,Act,Stage,Mode)
+    function JoinMap(Type,Act,Stage,Mode,OnandOff)
         local JOIN = {
             [1] = "AddMatch",
             [2] = {
@@ -2398,7 +2398,7 @@ end
                     ["Act"] = "Act" ..tostring(Act),
                     ["StageType"] = Type,
                     ["Stage"] = "Stage" ..tostring(Stage),
-                    ["FriendsOnly"] = false
+                    ["FriendsOnly"] = tostring(OnandOff)
                 }
             }
         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer(unpack(JOIN))
@@ -2468,9 +2468,9 @@ spawn(function()
             if _G.SST.Auto_Join_Map then
                 if StartChack == false then
                     repeat wait()
-                        JoinMap(_G.SST.Select_StageType,_G.SST.Select_Act,_G.SST.Select_Stage,_G.SST.Select_Mode)
+                        JoinMap(_G.SST.Select_StageType,_G.SST.Select_Act,_G.SST.Select_Stage,_G.SST.Select_Mode,_G.SST.Auto_Vote_Friends_Only)
                         CHACK_Join_Map = true
-                    until game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("MiniLobbyInterface") and CHACK_Join_Map == true
+                    until game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("MiniLobbyInterface") and CHACK_Join_Map == true and StartChack = true
                     StartChack = true
                 elseif StartChack == true and StartCompleted == false then
                     if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("MiniLobbyInterface") and CHACK_Join_Map == true then
@@ -3011,7 +3011,6 @@ task.spawn(function()
 
                 if hrp and hum then
                     hrp.AssemblyLinearVelocity = Vector3.new(0, 0.01, 0)
-                    hum:ChangeState(Enum.HumanoidStateType.Physics)
                 end
             end
         end
