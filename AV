@@ -2738,7 +2738,7 @@ RunService.Heartbeat:Connect(function()
         if not endScreen then return end
 
         local mainUI = endScreen.Holder.Main
-        if not mainUI or mainUI.Visible == true then return end
+        if not mainUI or not mainUI.Visible then return end
 
         local GameTime = mainUI.StageStatistics.PlayTime.Amount.Text
         local rewardsText = ""
