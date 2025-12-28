@@ -2641,7 +2641,7 @@ end)
         _G.SST.Send_WebHook = Send_WebHook
         SS()
     end)
-    local HttpService = game:GetService("HttpService")
+local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local hasSent = false
@@ -2652,24 +2652,16 @@ local function sendWebhook(Name, RewardsText, GameTime, player)
         return
     end
 
-    local namePymain = Name
-    local playerData = game:GetService("Players").localPlayer:GetAttribute()
-
-    if not playerData then
-        warn("Player data not found for:", namePymain)
-        return
-    end
-
     local fields = {}
 
     -- Total Info Field
     table.insert(fields, {
         ["name"] = "📊 Total 📊",
-        ["value"] = "```Name                : "  ..Name..
-                    "\nGem              : " .. game:GetService("Players").localPlayer:GetAttribute("Gems") ..
-                    "\nGold             : " ..game:GetService("Players").localPlayer:GetAttribute("Gold") ..
-                    "\nLevel            : " .. game:GetService("Players").localPlayer:GetAttribute("Level") .. "   Exp : " .. game:GetService("Players").localPlayer:GetAttribute("Experience") ..
-                    "\nTraitReroll      : " .. game:GetService("Players").localPlayer:GetAttribute("TraitRerolls") .. "```"
+        ["value"] = "```Name                : " .. Name ..
+                    "\nGem              : " .. (player:GetAttribute("Gems") or "N/A") ..
+                    "\nGold             : " .. (player:GetAttribute("Gold") or "N/A") ..
+                    "\nLevel            : " .. (player:GetAttribute("Level") or "N/A") .. "   Exp : " .. (player:GetAttribute("Experience") or "N/A") ..
+                    "\nTraitReroll      : " .. (player:GetAttribute("TraitRerolls") or "N/A") .. "```"
     })
 
     -- Time Field
@@ -2684,25 +2676,24 @@ local function sendWebhook(Name, RewardsText, GameTime, player)
         ["value"] = "```" .. RewardsText .. "```"
     })
 
-local data = {
-    ["content"] = "",
-    ["embeds"] = {
-        {
-            ["author"] = { ["name"] = "IDekHere Hub WebHook" },
-            ["type"] = "rich",
-            ["title"] = "Anime Vanguards",
-            ["color"] = tonumber(0x13da),
-            ["thumbnail"] = {
-                ["url"] = "https://tr.rbxcdn.com/180DAY-668ccf8ad9d6d533c554d59fe2ddbeef/420/420/Image/Png/noFilter"
-            },
-            ["image"] = {
-                ["url"] = "https://tr.rbxcdn.com/180DAY-3b66598f56036101897a7a5eb31fe52c/768/432/Image/Webp/noFilter"
-            },
-            ["fields"] = fields
+    local data = {
+        ["content"] = "",
+        ["embeds"] = {
+            {
+                ["author"] = { ["name"] = "IDekHere Hub WebHook" },
+                ["type"] = "rich",
+                ["title"] = "Anime Vanguards",
+                ["color"] = tonumber(0x13da),
+                ["thumbnail"] = {
+                    ["url"] = "https://tr.rbxcdn.com/180DAY-668ccf8ad9d6d533c554d59fe2ddbeef/420/420/Image/Png/noFilter"
+                },
+                ["image"] = {
+                    ["url"] = "https://tr.rbxcdn.com/180DAY-3b66598f56036101897a7a5eb31fe52c/768/432/Image/Webp/noFilter"
+                },
+                ["fields"] = fields
+            }
         }
     }
-}
-
 
     local jsonData = HttpService:JSONEncode(data)
     local headers = { ["Content-Type"] = "application/json" }
@@ -2722,14 +2713,14 @@ local data = {
         warn("HTTP request function not available.")
     end
 end
-local hasSent = false
+
 local OffSent = false
 
 spawn(function()
     while wait() do
         local player = Players.LocalPlayer
-        if player.PlayerGui.EndScreen.Glow then
-            OffSent = not player.PlayerGui.EndScreen.Glow.Visible == true 
+        if player.PlayerGui:FindFirstChild("EndScreen") and player.PlayerGui.EndScreen:FindFirstChild("Glow") then
+            OffSent = not player.PlayerGui.EndScreen.Glow.Visible
         end
     end
 end)
@@ -2738,20 +2729,22 @@ RunService.Heartbeat:Connect(function()
     pcall(function()
         local player = Players.LocalPlayer
         if _G.SST.Send_WebHook and OffSent then
-            local rewardsUI = player.PlayerGui.EndScreen.Holder.Main
+            local rewardsUI = player.PlayerGui:FindFirstChild("EndScreen") and player.PlayerGui.EndScreen:FindFirstChild("Holder") and player.PlayerGui.EndScreen.Holder:FindFirstChild("Main")
             
             if rewardsUI and rewardsUI.Enabled then
                 if not hasSent then
-                    local Name = ||player.Name||
+                    local Name = player.Name
                     local GameTime = rewardsUI.StageStatistics.PlayTime.Amount.Text
                     local rewardsText = ""
-                    local rewardsFrame = player.PlayerGui.EndScreen.Glow
+                    local rewardsFrame = player.PlayerGui.EndScreen.Holder.Main:FindFirstChild("StageRewards") and player.PlayerGui.EndScreen.Holder.Main.StageRewards:FindFirstChild("Main")
                     if rewardsFrame then
-                        for _, rewardItem in ipairs(game:GetService("Players").LocalPlayer.PlayerGui.EndScreen.Holder.Main.StageRewards.Main:GetChildren()) do
-                                local ITTEXT = rewardItem:FindFirstChild("Holder").Main.ItemName.Text
-                                local Amount = rewardItem:FindFirstChild("Holder").Main.ItemName.Text 
+                        for _, rewardItem in ipairs(rewardsFrame:GetChildren()) do
+                            local holder = rewardItem:FindFirstChild("Holder")
+                            if holder and holder:FindFirstChild("Main") then
+                                local ITTEXT = holder.Main:FindFirstChild("ItemName") and holder.Main.ItemName.Text or "Unknown"
+                                local Amount = holder.Main:FindFirstChild("Amount") and holder.Main.Amount.Text or "0"
                                 rewardsText = rewardsText .. ITTEXT .. ": " .. Amount .. "\n"
-                                end
+                            end
                         end
                     end
 
