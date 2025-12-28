@@ -2641,11 +2641,18 @@ end)
         _G.SST.Send_WebHook = Send_WebHook
         SS()
     end)
-local HttpService = game:GetService("HttpService")
+   local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
 local hasSent = false
-local function sendWebhook(Name, RewardsText, GameTime, player)
+local OffSent = false
+
+-------------------------------------------------
+-- SEND WEBHOOK
+-------------------------------------------------
+local function sendWebhook(Name, RewardsText, GameTime)
     local url = _G.SST.WebHook_Url
     if not url or url == "" then
         warn("Invalid Webhook URL")
@@ -2654,108 +2661,103 @@ local function sendWebhook(Name, RewardsText, GameTime, player)
 
     local fields = {}
 
-    -- Total Info Field
     table.insert(fields, {
-        ["name"] = "📊 Total 📊",
-        ["value"] = "```Name                : " .. Name ..
-                    "\nGem              : " .. (player:GetAttribute("Gems") or "N/A") ..
-                    "\nGold             : " .. (player:GetAttribute("Gold") or "N/A") ..
-                    "\nLevel            : " .. (player:GetAttribute("Level") or "N/A") .. "   Exp : " .. (player:GetAttribute("Experience") or "N/A") ..
-                    "\nTraitReroll      : " .. (player:GetAttribute("TraitRerolls") or "N/A") .. "```"
+        name = "📊 Total 📊",
+        value =
+            "```" ..
+            "Name        : " .. Name .. "\n" ..
+            "Gem         : " .. tostring(player:GetAttribute("Gems")) .. "\n" ..
+            "Gold        : " .. tostring(player:GetAttribute("Gold")) .. "\n" ..
+            "Level       : " .. tostring(player:GetAttribute("Level")) ..
+            " | Exp : " .. tostring(player:GetAttribute("Experience")) .. "\n" ..
+            "TraitReroll : " .. tostring(player:GetAttribute("TraitRerolls")) ..
+            "```"
     })
 
-    -- Time Field
     table.insert(fields, {
-        ["name"] = "⌛ Time ⌛",
-        ["value"] = "```" .. GameTime .. "```"
+        name = "⌛ Time ⌛",
+        value = "```" .. GameTime .. "```"
     })
 
-    -- Rewards Field
     table.insert(fields, {
-        ["name"] = "🎁 Rewards 🎁",
-        ["value"] = "```" .. RewardsText .. "```"
+        name = "🎁 Rewards 🎁",
+        value = "```" .. RewardsText .. "```"
     })
 
     local data = {
-        ["content"] = "",
-        ["embeds"] = {
-            {
-                ["author"] = { ["name"] = "IDekHere Hub WebHook" },
-                ["type"] = "rich",
-                ["title"] = "Anime Vanguards",
-                ["color"] = tonumber(0x13da),
-                ["thumbnail"] = {
-                    ["url"] = "https://tr.rbxcdn.com/180DAY-668ccf8ad9d6d533c554d59fe2ddbeef/420/420/Image/Png/noFilter"
-                },
-                ["image"] = {
-                    ["url"] = "https://tr.rbxcdn.com/180DAY-3b66598f56036101897a7a5eb31fe52c/768/432/Image/Webp/noFilter"
-                },
-                ["fields"] = fields
-            }
-        }
+        embeds = {{
+            author = { name = "IDekHere Hub WebHook" },
+            title = "Anime Vanguards",
+            color = 0x13da,
+            thumbnail = {
+                url = "https://tr.rbxcdn.com/180DAY-668ccf8ad9d6d533c554d59fe2ddbeef/420/420/Image/Png/noFilter"
+            },
+            image = {
+                url = "https://tr.rbxcdn.com/180DAY-3b66598f56036101897a7a5eb31fe52c/768/432/Image/Webp/noFilter"
+            },
+            fields = fields
+        }}
     }
 
-    local jsonData = HttpService:JSONEncode(data)
-    local headers = { ["Content-Type"] = "application/json" }
-
-    local request = http_request or request or HttpPost or syn.request
+    local request = http_request or request or syn.request
     if request then
-        local response = request({
+        request({
             Url = url,
-            Body = jsonData,
             Method = "POST",
-            Headers = headers
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = HttpService:JSONEncode(data)
         })
-        if not response or response.StatusCode ~= 200 then
-            warn("Failed to send webhook. Status Code:", response and response.StatusCode)
-        end
     else
-        warn("HTTP request function not available.")
+        warn("HTTP request function not available")
     end
 end
 
-local OffSent = false
+-------------------------------------------------
+-- CHECK END SCREEN
+-------------------------------------------------
+task.spawn(function()
+    while task.wait(0.5) do
+        local glow = player.PlayerGui:FindFirstChild("EndScreen")
+            and player.PlayerGui.EndScreen:FindFirstChild("Glow")
 
-spawn(function()
-    while wait() do
-        local player = Players.LocalPlayer
-        if player.PlayerGui:FindFirstChild("EndScreen") and player.PlayerGui.EndScreen:FindFirstChild("Glow") then
-            OffSent = not player.PlayerGui.EndScreen.Glow.Visible
+        if glow then
+            OffSent = glow.Visible
         end
     end
 end)
 
+-------------------------------------------------
+-- MAIN LOOP
+-------------------------------------------------
 RunService.Heartbeat:Connect(function()
     pcall(function()
-        local player = Players.LocalPlayer
-        if _G.SST.Send_WebHook and OffSent then
-            local rewardsUI = player.PlayerGui:FindFirstChild("EndScreen") and player.PlayerGui.EndScreen:FindFirstChild("Holder") and player.PlayerGui.EndScreen.Holder:FindFirstChild("Main")
-            
-            if rewardsUI and rewardsUI.Enabled then
-                if not hasSent then
-                    local Name = player.Name
-                    local GameTime = rewardsUI.StageStatistics.PlayTime.Amount.Text
-                    local rewardsText = ""
-                    local rewardsFrame = player.PlayerGui.EndScreen.Holder.Main:FindFirstChild("StageRewards") and player.PlayerGui.EndScreen.Holder.Main.StageRewards:FindFirstChild("Main")
-                    if rewardsFrame then
-                        for _, rewardItem in ipairs(rewardsFrame:GetChildren()) do
-                            local holder = rewardItem:FindFirstChild("Holder")
-                            if holder and holder:FindFirstChild("Main") then
-                                local ITTEXT = holder.Main:FindFirstChild("ItemName") and holder.Main.ItemName.Text or "Unknown"
-                                local Amount = holder.Main:FindFirstChild("Amount") and holder.Main.Amount.Text or "0"
-                                rewardsText = rewardsText .. ITTEXT .. ": " .. Amount .. "\n"
-                            end
-                        end
-                    end
+        if not _G.SST.Send_WebHook then return end
+        if not OffSent or hasSent then return end
 
-                    sendWebhook(Name, rewardsText, GameTime, player)
-                    hasSent = true
-                    OffSent = false
+        local endScreen = player.PlayerGui:FindFirstChild("EndScreen")
+        if not endScreen then return end
+
+        local mainUI = endScreen.Holder.Main
+        if not mainUI or not mainUI.Visible then return end
+
+        local GameTime = mainUI.StageStatistics.PlayTime.Amount.Text
+        local rewardsText = ""
+
+        local rewardsFolder = mainUI.StageRewards.Main
+        for _, item in ipairs(rewardsFolder:GetChildren()) do
+            local holder = item:FindFirstChild("Holder")
+            if holder then
+                local nameLabel = holder.Main:FindFirstChild("ItemName")
+                local amountLabel = holder.Main:FindFirstChild("Amount")
+
+                if nameLabel and amountLabel then
+                    rewardsText ..= nameLabel.Text .. " x" .. amountLabel.Text .. "\n"
                 end
-            else
-                hasSent = false
             end
         end
+
+        sendWebhook(player.Name, rewardsText, GameTime)
+        hasSent = true
     end)
 end)
 
