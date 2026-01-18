@@ -1,0 +1,486 @@
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+
+local Library = {}
+_G.Color = Color3.fromRGB(0, 122, 255)
+
+function Library:AddWindow(name)
+    if CoreGui:FindFirstChild("macOS_Premium") then CoreGui["macOS_Premium"]:Destroy() end
+
+    local ScreenGui = Instance.new("ScreenGui", CoreGui)
+    ScreenGui.Name = "macOS_Premium"
+    ScreenGui.ResetOnSpawn = false
+
+    local Main = Instance.new("Frame", ScreenGui)
+    Main.Name = "Main"
+    Main.Size = UDim2.new(0, 620, 0, 400)
+    Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Main.AnchorPoint = Vector2.new(0.5, 0.5)
+    Main.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    Main.ClipsDescendants = true
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+    
+    local MainStroke = Instance.new("UIStroke", Main)
+    MainStroke.Color = Color3.fromRGB(60, 60, 65)
+    MainStroke.Thickness = 1.2
+
+    -- Top Bar
+    local Top = Instance.new("Frame", Main)
+    Top.Size = UDim2.new(1, 0, 0, 40)
+    Top.BackgroundTransparency = 1
+    Top.ZIndex = 10
+
+    local Title = Instance.new("TextLabel", Top)
+    Title.Size = UDim2.new(1, 0, 1, 0)
+    Title.Text = name
+    Title.Font = Enum.Font.GothamBold
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 14
+    Title.BackgroundTransparency = 1
+
+    -- [UI State Management]
+    local CurrentState = "Normal"
+    local OriginalSize = UDim2.new(0, 620, 0, 400)
+    local OriginalPos = UDim2.new(0.5, 0, 0.5, 0)
+    local ExpandOverlay = Instance.new("TextButton", Main)
+    ExpandOverlay.Size = UDim2.new(1, 0, 1, 0)
+    ExpandOverlay.BackgroundTransparency = 1
+    ExpandOverlay.Text = ""
+    ExpandOverlay.Visible = false
+    ExpandOverlay.ZIndex = 5
+
+    local function ChangeUIState(state)
+        CurrentState = state
+        if state == "Normal" then
+            ExpandOverlay.Visible = false
+            Title.Visible = true
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Size = OriginalSize, Position = OriginalPos}):Play()
+        elseif state == "Mini" then
+            ExpandOverlay.Visible = true
+            Title.Visible = false
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = UDim2.new(0, 45, 0, 45), Position = UDim2.new(0.1, 0, 0.1, 0)}):Play()
+        elseif state == "Island" then
+            ExpandOverlay.Visible = true
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = UDim2.new(0, 400, 0, 35), Position = UDim2.new(0.5, 0, 0, 20)}):Play()
+        elseif state == "Full" then
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+        end
+    end
+
+    UserInputService.InputBegan:Connect(function(input, gp)
+        if not gp and input.KeyCode == Enum.KeyCode.RightControl then
+            ChangeUIState(CurrentState == "Normal" and "Island" or "Normal")
+        end
+    end)
+
+    ExpandOverlay.MouseButton1Click:Connect(function() ChangeUIState("Normal") end)
+
+    local function CreateLight(color, x, goal)
+        local b = Instance.new("TextButton", Top)
+        b.Size = UDim2.new(0, 12, 0, 12)
+        b.Position = UDim2.new(0, x, 0.5, -6)
+        b.BackgroundColor3 = color
+        b.Text = ""
+        b.ZIndex = 11
+        Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
+        b.MouseButton1Click:Connect(function() ChangeUIState(goal) end)
+    end
+    CreateLight(Color3.fromRGB(255, 95, 87), 15, "Mini")
+    CreateLight(Color3.fromRGB(255, 189, 46), 35, "Island")
+    CreateLight(Color3.fromRGB(40, 201, 64), 55, "Full")
+
+    -- [Dragging]
+    local dragging, dragStart, startPos
+    Top.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true; dragStart = input.Position; startPos = Main.Position
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+
+    local Sidebar = Instance.new("Frame", Main)
+    Sidebar.Size = UDim2.new(0, 160, 1, -40)
+    Sidebar.Position = UDim2.new(0, 0, 0, 40)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    Sidebar.BorderSizePixel = 0
+
+    local PageContainer = Instance.new("Frame", Main)
+    PageContainer.Size = UDim2.new(1, -160, 1, -40)
+    PageContainer.Position = UDim2.new(0, 160, 0, 40)
+    PageContainer.BackgroundTransparency = 1
+
+    local TabScroll = Instance.new("ScrollingFrame", Sidebar)
+    TabScroll.Size = UDim2.new(1, 0, 1, -10)
+    TabScroll.Position = UDim2.new(0, 0, 0, 5)
+    TabScroll.BackgroundTransparency = 1
+    TabScroll.ScrollBarThickness = 0
+    local TabList = Instance.new("UIListLayout", TabScroll)
+    TabList.Padding = UDim.new(0, 5)
+    TabList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+    local Tabs = {}
+    function Tabs:AddTab(tabName)
+        local TabBtn = Instance.new("TextButton", TabScroll)
+        TabBtn.Size = UDim2.new(0, 140, 0, 32)
+        TabBtn.BackgroundTransparency = 1
+        TabBtn.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        TabBtn.Text = "  " .. tabName
+        TabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+        TabBtn.Font = Enum.Font.GothamMedium
+        TabBtn.TextSize = 13
+        TabBtn.TextXAlignment = Enum.TextXAlignment.Left
+        Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
+
+        local Page = Instance.new("ScrollingFrame", PageContainer)
+        Page.Size = UDim2.new(1, 0, 1, 0)
+        Page.BackgroundTransparency = 1
+        Page.Visible = false
+        Page.ScrollBarThickness = 2
+        Page.ScrollBarImageColor3 = _G.Color
+        Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        Page.CanvasSize = UDim2.new(0, 0, 0, 0)
+        
+        local PagePadding = Instance.new("UIPadding", Page)
+        PagePadding.PaddingLeft = UDim.new(0, 15)
+        PagePadding.PaddingRight = UDim.new(0, 15)
+        PagePadding.PaddingTop = UDim.new(0, 15)
+        PagePadding.PaddingBottom = UDim.new(0, 15)
+
+        local PageLayout = Instance.new("UIListLayout", Page)
+        PageLayout.FillDirection = Enum.FillDirection.Horizontal
+        PageLayout.Padding = UDim.new(0, 15)
+        PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+        local function CreateCol()
+            local col = Instance.new("Frame", Page)
+            col.Size = UDim2.new(0.48, 0, 0, 0)
+            col.AutomaticSize = Enum.AutomaticSize.Y
+            col.BackgroundTransparency = 1
+            local list = Instance.new("UIListLayout", col)
+            list.Padding = UDim.new(0, 10)
+            list.SortOrder = Enum.SortOrder.LayoutOrder
+            return col
+        end
+
+        local Left = CreateCol()
+        local Right = CreateCol()
+
+        TabBtn.MouseButton1Click:Connect(function()
+            for _, v in pairs(PageContainer:GetChildren()) do v.Visible = false end
+            for _, v in pairs(TabScroll:GetChildren()) do 
+                if v:IsA("TextButton") then 
+                    TweenService:Create(v, TweenInfo.new(0.3), {BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(150,150,150)}):Play()
+                end 
+            end
+            Page.Visible = true
+            TweenService:Create(TabBtn, TweenInfo.new(0.3), {BackgroundTransparency = 0.9, TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+        end)
+
+        if #TabScroll:GetChildren() == 2 then 
+            Page.Visible = true 
+            TabBtn.BackgroundTransparency = 0.9 
+            TabBtn.TextColor3 = Color3.fromRGB(255,255,255) 
+        end
+
+        local Tools = {}
+        local Order = 0
+        local function GetSide(s) return (s == "Right" or s == "R") and Right or Left end
+
+        function Tools:AddLabel(text, side)
+            Order = Order + 1
+            local l = Instance.new("TextLabel", GetSide(side))
+            l.Size = UDim2.new(1, 0, 0, 20)
+            l.BackgroundTransparency = 1
+            l.Text = text:upper()
+            l.TextColor3 = Color3.fromRGB(120, 120, 125)
+            l.Font = Enum.Font.GothamBold
+            l.TextSize = 10
+            l.TextXAlignment = Enum.TextXAlignment.Left
+            l.LayoutOrder = Order
+        end
+
+        function Tools:AddSeperator(text, side)
+            Order = Order + 1
+            local s = Instance.new("Frame", GetSide(side))
+            s.Size = UDim2.new(1, 0, 0, 25)
+            s.BackgroundTransparency = 1
+            s.LayoutOrder = Order
+            local t = Instance.new("TextLabel", s)
+            t.Size = UDim2.new(1, 0, 1, 0)
+            t.Text = text
+            t.TextColor3 = _G.Color
+            t.Font = Enum.Font.GothamBold
+            t.TextSize = 11
+            t.BackgroundTransparency = 1
+            t.TextXAlignment = Enum.TextXAlignment.Left
+            local line = Instance.new("Frame", s)
+            line.Size = UDim2.new(1, 0, 0, 1)
+            line.Position = UDim2.new(0, 0, 1, 0)
+            line.BackgroundColor3 = _G.Color
+            line.BackgroundTransparency = 0.7
+        end
+
+function Tools:AddButton(text, side, cb)
+    Order = Order + 1
+    local f = Instance.new("Frame", GetSide(side))
+    f.Size = UDim2.new(1, 0, 0, 38)
+    f.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    f.LayoutOrder = Order
+    f.ClipsDescendants = true -- ป้องกันเนื้อหาเลยขอบตอนย่อขนาด
+    Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
+    
+    local b = Instance.new("TextButton", f)
+    b.Size = UDim2.new(1, 0, 1, 0)
+    b.BackgroundTransparency = 1
+    b.Text = text
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.GothamMedium
+    b.TextSize = 13
+    b.ZIndex = 2
+
+    --// Animation Logic //--
+    local btnTweenIn = TweenService:Create(f, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(1, -6, 0, 34), -- ยุบขนาดลง
+        BackgroundColor3 = Color3.fromRGB(35, 35, 40) -- สีเข้มขึ้น
+    })
+    
+    local btnTweenOut = TweenService:Create(f, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(1, 0, 0, 38), -- กลับมาขนาดเดิม (มีแรงเด้ง)
+        BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    })
+
+    local hoverTween = TweenService:Create(f, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(55, 55, 60) -- สว่างขึ้นตอนเมาส์วาง
+    })
+
+    local leaveTween = TweenService:Create(f, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    })
+
+    --// Connections //--
+    b.MouseEnter:Connect(function() hoverTween:Play() end)
+    b.MouseLeave:Connect(function() leaveTween:Play() end)
+    
+    b.MouseButton1Down:Connect(function()
+        btnTweenIn:Play()
+    end)
+    
+    b.MouseButton1Up:Connect(function()
+        btnTweenOut:Play()
+        cb() -- เรียกใช้ฟังก์ชันที่ส่งมา
+    end)
+end
+
+        function Tools:AddToggle(text, side, def, cb)
+            Order = Order + 1
+            local f = Instance.new("Frame", GetSide(side))
+            f.Size = UDim2.new(1, 0, 0, 38)
+            f.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            f.LayoutOrder = Order
+            Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
+            
+            local t = Instance.new("TextLabel", f)
+            t.Size = UDim2.new(1, -50, 1, 0)
+            t.Position = UDim2.new(0, 12, 0, 0)
+            t.Text = text
+            t.TextColor3 = Color3.fromRGB(220,220,220)
+            t.BackgroundTransparency = 1
+            t.TextXAlignment = Enum.TextXAlignment.Left
+            t.Font = Enum.Font.Gotham
+            t.TextSize = 13
+
+            local btn = Instance.new("TextButton", f)
+            btn.Size = UDim2.new(0, 34, 0, 18)
+            btn.Position = UDim2.new(1, -42, 0.5, -9)
+            btn.BackgroundColor3 = def and _G.Color or Color3.fromRGB(80, 80, 85)
+            btn.Text = ""
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+
+            local dot = Instance.new("Frame", btn)
+            dot.Size = UDim2.new(0, 14, 0, 14)
+            dot.Position = def and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
+            dot.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+
+            local s = def
+            btn.MouseButton1Click:Connect(function()
+                s = not s
+                TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = s and _G.Color or Color3.fromRGB(80, 80, 85)}):Play()
+                TweenService:Create(dot, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = s and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)}):Play()
+                cb(s)
+            end)
+        end
+
+        function Tools:AddTextBox(text, side, placeholder, cb)
+            Order = Order + 1
+            local f = Instance.new("Frame", GetSide(side))
+            f.Size = UDim2.new(1, 0, 0, 38)
+            f.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            f.LayoutOrder = Order
+            Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
+            
+            local box = Instance.new("TextBox", f)
+            box.Size = UDim2.new(1, -20, 1, 0)
+            box.Position = UDim2.new(0, 10, 0, 0)
+            box.BackgroundTransparency = 1
+            box.PlaceholderText = placeholder
+            box.Text = ""
+            box.TextColor3 = Color3.fromRGB(255,255,255)
+            box.Font = Enum.Font.Gotham
+            box.TextSize = 13
+            box.TextXAlignment = Enum.TextXAlignment.Left
+            box.FocusLost:Connect(function() cb(box.Text) end)
+        end
+
+function Tools:AddDropdown(text, side, list_provider, def, cb)
+    Order = Order + 1
+    local open = false
+    local f = Instance.new("Frame", GetSide(side))
+    f.Size = UDim2.new(1, 0, 0, 38)
+    f.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+    f.ClipsDescendants = true
+    f.LayoutOrder = Order
+    Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
+    
+    local MainBtn = Instance.new("TextButton", f)
+    MainBtn.Size = UDim2.new(1, 0, 0, 38)
+    MainBtn.BackgroundTransparency = 1
+    MainBtn.Text = "  " .. text .. " : " .. def
+    MainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MainBtn.TextXAlignment = Enum.TextXAlignment.Left
+    MainBtn.Font = Enum.Font.Gotham
+    MainBtn.TextSize = 13
+    
+    local Arrow = Instance.new("TextLabel", MainBtn)
+    Arrow.Text = "▼"
+    Arrow.Size = UDim2.new(0, 30, 1, 0)
+    Arrow.Position = UDim2.new(1, -30, 0, 0)
+    Arrow.BackgroundTransparency = 1
+    Arrow.TextColor3 = Color3.fromRGB(150, 150, 150)
+    Arrow.TextSize = 10
+
+    local ItemHolder = Instance.new("ScrollingFrame", f)
+    ItemHolder.Size = UDim2.new(1, -10, 0, 0)
+    ItemHolder.Position = UDim2.new(0, 5, 0, 40)
+    ItemHolder.BackgroundTransparency = 1
+    ItemHolder.ScrollBarThickness = 2
+    ItemHolder.ScrollBarImageColor3 = _G.Color
+    
+    local ItemLayout = Instance.new("UIListLayout", ItemHolder)
+    ItemLayout.Padding = UDim.new(0, 4)
+    ItemLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    -- ฟังก์ชันสำหรับสร้างรายการใหม่ (Refresh)
+    local function RefreshItems()
+        -- ลบรายการเก่า
+        for _, v in pairs(ItemHolder:GetChildren()) do
+            if v:IsA("TextButton") then v:Destroy() end
+        end
+
+        -- รับข้อมูลใหม่ (ตรวจสอบว่าเป็น Table หรือ Function)
+        local currentList = (type(list_provider) == "function") and list_provider() or list_provider
+
+        -- สร้างรายการใหม่
+        for i, v in pairs(currentList) do
+            local Item = Instance.new("TextButton", ItemHolder)
+            Item.Size = UDim2.new(1, -5, 0, 28)
+            Item.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
+            Item.Text = tostring(v)
+            Item.TextColor3 = Color3.fromRGB(200, 200, 200)
+            Item.Font = Enum.Font.Gotham
+            Item.TextSize = 12
+            Item.LayoutOrder = i
+            Instance.new("UICorner", Item).CornerRadius = UDim.new(0, 4)
+            
+            Item.MouseEnter:Connect(function()
+                TweenService:Create(Item, TweenInfo.new(0.2), {BackgroundColor3 = _G.Color, TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            end)
+            Item.MouseLeave:Connect(function()
+                TweenService:Create(Item, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65), TextColor3 = Color3.fromRGB(200, 200, 200)}):Play()
+            end)
+
+            Item.MouseButton1Click:Connect(function()
+                MainBtn.Text = "  " .. text .. " : " .. tostring(v)
+                cb(v)
+                -- ปิด Dropdown (ซึ่งจะไปเรียก ToggleDropdown อีกรอบ)
+                MainBtn:Activate() 
+            end)
+        end
+        ItemHolder.CanvasSize = UDim2.new(0, 0, 0, #currentList * 32)
+        return #currentList
+    end
+
+    local function ToggleDropdown()
+        open = not open
+        
+        local currentCount = 0
+        if open then
+            currentCount = RefreshItems() -- รีเฟรชข้อมูลทันทีที่ "เปิด"
+        end
+
+        local targetHeight = open and math.min(currentCount * 32, 130) or 0
+        local targetSize = open and UDim2.new(1, 0, 0, 38 + targetHeight + 10) or UDim2.new(1, 0, 0, 38)
+        local targetHolderSize = open and UDim2.new(1, -10, 0, targetHeight) or UDim2.new(1, -10, 0, 0)
+        
+        TweenService:Create(f, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetSize}):Play()
+        TweenService:Create(ItemHolder, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetHolderSize}):Play()
+        TweenService:Create(Arrow, TweenInfo.new(0.3), {Rotation = open and 180 or 0}):Play()
+    end
+
+    MainBtn.MouseButton1Click:Connect(ToggleDropdown)
+end
+        return Tools
+    end
+    return Tabs
+end
+
+--// การทดสอบ (Test Section) //--
+local Win = Library:AddWindow("IDekhere Premium")
+local Tab = Win:AddTab("Main")
+local Tab2 = Win:AddTab("Settings")
+
+-- Left Side
+Tab:AddSeperator("SERVER INFO", "Left")
+Tab:AddLabel("Status: Active", "Left")
+Tab:AddLabel("Game: Blox Fruits", "Left")
+Tab:AddSeperator("FARMING", "Left")
+Tab:AddToggle("Auto Farm Level", "Left", false, function(v) print("Auto Farm:", v) end)
+Tab:AddToggle("Auto Clicker", "Left", true, function(v) end)
+
+-- Right Side
+Tab:AddSeperator("PLAYER SETTINGS", "Right")
+Tab:AddTextBox("WalkSpeed", "Right", "Speed amount...", function(v) print("Set Speed:", v) end)
+Tab:AddTextBox("JumpPower", "Right", "Jump amount...", function(v) end)
+Tab:AddSeperator("MISC", "Right")
+Tab:AddButton("Destroy UI", "Right", function() end)
+Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
+Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
+Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
+Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
+Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
+Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
+
+-- ตัวอย่าง: Dropdown รายชื่อผู้เล่นที่จะ "รีเฟรชเอง" ทุกครั้งที่กดเปิด
+Tab2:AddDropdown("Select Player", "Left", function()
+    -- ฟังก์ชันนี้จะทำงานทุกครั้งที่กดเปิด Dropdown
+    local p_list = {}
+    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+        table.insert(p_list, p.Name)
+    end
+    return p_list -- ส่งรายการล่าสุดกลับไป
+end, "None", function(selected)
+    print("คุณเลือก: " .. selected)
+end)
+
+-- ตัวอย่าง: Dropdown ปกติ (ส่งเป็น Table เหมือนเดิมก็ได้)
+Tab2:AddDropdown("Fixed List", "Right", {"Option 1", "Option 2"}, "Option 1", function(v) 
+    print(v) 
+end)
