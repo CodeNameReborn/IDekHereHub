@@ -437,6 +437,58 @@ function Tools:AddDropdown(text, side, list_provider, def, cb)
 
     MainBtn.MouseButton1Click:Connect(ToggleDropdown)
 end
+
+function Tools:AddSlider(text, side, min, max, def, cb)
+    Order = Order + 1
+    local f = Instance.new("Frame", GetSide(side))
+    f.Size = UDim2.new(1, 0, 0, 45)
+    f.BackgroundTransparency = 1
+    f.LayoutOrder = Order
+
+    local l = Instance.new("TextLabel", f)
+    l.Size = UDim2.new(1, 0, 0, 20)
+    l.Text = text .. " : " .. def
+    l.TextColor3 = Color3.fromRGB(220, 220, 220)
+    l.BackgroundTransparency = 1
+    l.Font = Enum.Font.Gotham
+    l.TextSize = 12
+    l.TextXAlignment = Enum.TextXAlignment.Left
+
+    local bg = Instance.new("Frame", f)
+    bg.Size = UDim2.new(1, 0, 0, 4)
+    bg.Position = UDim2.new(0, 0, 0, 30)
+    bg.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(1, 0)
+
+    local fill = Instance.new("Frame", bg)
+    fill.Size = UDim2.new((def - min) / (max - min), 0, 1, 0)
+    fill.BackgroundColor3 = _G.Color
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+    local btn = Instance.new("TextButton", f)
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundTransparency = 1
+    btn.Text = ""
+
+    local function update()
+        local p = math.clamp((UserInputService:GetMouseLocation().X - bg.AbsolutePosition.X) / bg.AbsoluteSize.X, 0, 1)
+        local val = math.floor(min + (max - min) * p)
+        fill.Size = UDim2.new(p, 0, 1, 0)
+        l.Text = text .. " : " .. val
+        cb(val)
+    end
+
+    btn.MouseButton1Down:Connect(function()
+        local move; move = RunService.RenderStepped:Connect(update)
+        local release; release = UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                move:Disconnect()
+                release:Disconnect()
+            end
+        end)
+    end)
+end
+
         return Tools
     end
     return Tabs
