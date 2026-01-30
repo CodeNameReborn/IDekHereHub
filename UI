@@ -1,7 +1,249 @@
+--[[
+    ═══════════════════════════════════════════════════════════════
+    macOS Premium UI Library + Feature Flags System
+    Full Code - Ready to Use
+    ═══════════════════════════════════════════════════════════════
+]]--
+
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+--[[
+    ═══════════════════════════════════════════════════════════════
+    FEATURE FLAGS SYSTEM
+    ═══════════════════════════════════════════════════════════════
+]]--
+
+local FeatureFlags = {}
+FeatureFlags.__index = FeatureFlags
+
+-- Configuration
+local FF_CONFIG = {
+    REMOTE_URL = nil, -- ใส่ URL ของ JSON flags ถ้าต้องการ เช่น "https://yoursite.com/flags.json"
+    CACHE_DURATION = 300,
+    DEBUG = true
+}
+
+-- กำหนด Flags ที่ใช้งานได้
+local DEFAULT_FLAGS = {
+    -- UI Features
+    ["ui_animations"] = {
+        enabled = true,
+        description = "เปิด/ปิด Animation",
+        type = "boolean"
+    },
+    ["ui_mini_mode"] = {
+        enabled = true,
+        description = "อนุญาต Mini Mode",
+        type = "boolean"
+    },
+    ["ui_island_mode"] = {
+        enabled = true,
+        description = "อนุญาต Island Mode",
+        type = "boolean"
+    },
+    
+    -- Farming Features
+    ["auto_farm_level"] = {
+        enabled = true,
+        description = "เปิดใช้ Auto Farm Level",
+        type = "boolean"
+    },
+    ["auto_clicker"] = {
+        enabled = true,
+        description = "เปิดใช้ Auto Clicker",
+        type = "boolean"
+    },
+    
+    -- Player Settings
+    ["custom_walkspeed"] = {
+        enabled = true,
+        description = "ปรับ WalkSpeed ได้",
+        type = "boolean",
+        max_value = 100
+    },
+    ["custom_jumppower"] = {
+        enabled = true,
+        description = "ปรับ JumpPower ได้",
+        type = "boolean",
+        max_value = 200
+    },
+    
+    -- Advanced
+    ["beta_features"] = {
+        enabled = false,
+        description = "ฟีเจอร์ทดลอง (Beta)",
+        type = "boolean"
+    },
+    ["admin_tools"] = {
+        enabled = false,
+        description = "เครื่องมือ Admin",
+        type = "boolean",
+        whitelist = {123456} -- ใส่ UserId ของ Admin
+    },
+    ["high_performance_mode"] = {
+        enabled = false,
+        description = "โหมด Performance สูง (ลด FX)",
+        type = "boolean"
+    },
+    
+    -- A/B Testing Example
+    ["new_ui_style"] = {
+        enabled = true,
+        description = "UI สไตล์ใหม่ (50% ของผู้เล่น)",
+        type = "percentage",
+        rollout = 50
+    }
+}
+
+function FeatureFlags.new()
+    local self = setmetatable({}, FeatureFlags)
+    
+    self.flags = {}
+    self.listeners = {}
+    self.cache_time = 0
+    self.user_id = Players.LocalPlayer.UserId
+    self.user_hash = self:_hashUserId(self.user_id)
+    
+    for name, config in pairs(DEFAULT_FLAGS) do
+        self.flags[name] = {
+            enabled = config.enabled,
+            config = config
+        }
+    end
+    
+    if FF_CONFIG.REMOTE_URL then
+        self:fetchRemoteFlags()
+    end
+    
+    return self
+end
+
+function FeatureFlags:isEnabled(flag_name)
+    local flag = self.flags[flag_name]
+    if not flag then
+        self:_log("⚠️ Flag ไม่มีอยู่: " .. flag_name)
+        return false
+    end
+    
+    if flag.config.whitelist then
+        local in_whitelist = table.find(flag.config.whitelist, self.user_id)
+        if not in_whitelist then
+            return false
+        end
+    end
+    
+    if flag.config.type == "percentage" then
+        local rollout = flag.config.rollout or 0
+        return self:_isInRollout(flag_name, rollout)
+    end
+    
+    return flag.enabled
+end
+
+function FeatureFlags:getConfig(flag_name)
+    local flag = self.flags[flag_name]
+    return flag and flag.config or nil
+end
+
+function FeatureFlags:setFlag(flag_name, enabled)
+    if not self.flags[flag_name] then
+        self:_log("⚠️ ไม่สามารถตั้งค่า flag ที่ไม่มี: " .. flag_name)
+        return false
+    end
+    
+    self.flags[flag_name].enabled = enabled
+    self:_notifyListeners(flag_name, enabled)
+    self:_log("✅ Flag อัพเดท: " .. flag_name .. " = " .. tostring(enabled))
+    
+    return true
+end
+
+function FeatureFlags:onChange(flag_name, callback)
+    if not self.listeners[flag_name] then
+        self.listeners[flag_name] = {}
+    end
+    table.insert(self.listeners[flag_name], callback)
+end
+
+function FeatureFlags:getAllFlags()
+    local result = {}
+    for name, flag in pairs(self.flags) do
+        result[name] = {
+            name = name,
+            enabled = self:isEnabled(name),
+            description = flag.config.description,
+            type = flag.config.type
+        }
+    end
+    return result
+end
+
+function FeatureFlags:fetchRemoteFlags()
+    if not FF_CONFIG.REMOTE_URL then return end
+    
+    local success, response = pcall(function()
+        return HttpService:GetAsync(FF_CONFIG.REMOTE_URL .. "?user=" .. self.user_id)
+    end)
+    
+    if success then
+        local data = HttpService:JSONDecode(response)
+        for name, value in pairs(data) do
+            if self.flags[name] then
+                self.flags[name].enabled = value
+            end
+        end
+        self:_log("✅ โหลด Remote Flags สำเร็จ")
+    else
+        self:_log("❌ โหลด Remote Flags ไม่สำเร็จ")
+    end
+end
+
+function FeatureFlags:_hashUserId(user_id)
+    local str = tostring(user_id)
+    local hash = 0
+    for i = 1, #str do
+        hash = (hash * 31 + string.byte(str, i)) % 100
+    end
+    return hash
+end
+
+function FeatureFlags:_isInRollout(flag_name, percentage)
+    local combined = flag_name .. tostring(self.user_id)
+    local hash = 0
+    for i = 1, #combined do
+        hash = (hash * 31 + string.byte(combined, i)) % 100
+    end
+    return hash < percentage
+end
+
+function FeatureFlags:_notifyListeners(flag_name, new_value)
+    local listeners = self.listeners[flag_name]
+    if listeners then
+        for _, callback in pairs(listeners) do
+            pcall(callback, new_value)
+        end
+    end
+end
+
+function FeatureFlags:_log(message)
+    if FF_CONFIG.DEBUG then
+        print("[🚩 FeatureFlags]", message)
+    end
+end
+
+-- Singleton
+local FF_Instance = FeatureFlags.new()
+
+--[[
+    ═══════════════════════════════════════════════════════════════
+    UI LIBRARY
+    ═══════════════════════════════════════════════════════════════
+]]--
 
 local Library = {}
 _G.Color = Color3.fromRGB(0, 122, 255)
@@ -26,7 +268,6 @@ function Library:AddWindow(name)
     MainStroke.Color = Color3.fromRGB(60, 60, 65)
     MainStroke.Thickness = 1.2
 
-    -- Top Bar
     local Top = Instance.new("Frame", Main)
     Top.Size = UDim2.new(1, 0, 0, 40)
     Top.BackgroundTransparency = 1
@@ -40,7 +281,6 @@ function Library:AddWindow(name)
     Title.TextSize = 14
     Title.BackgroundTransparency = 1
 
-    -- [UI State Management]
     local CurrentState = "Normal"
     local OriginalSize = UDim2.new(0, 620, 0, 400)
     local OriginalPos = UDim2.new(0.5, 0, 0.5, 0)
@@ -52,6 +292,17 @@ function Library:AddWindow(name)
     ExpandOverlay.ZIndex = 5
 
     local function ChangeUIState(state)
+        -- ตรวจสอบ Feature Flags ก่อนเปลี่ยน State
+        if state == "Mini" and not FF_Instance:isEnabled("ui_mini_mode") then
+            print("⛔ Mini Mode ถูกปิดใช้งาน")
+            return
+        end
+        
+        if state == "Island" and not FF_Instance:isEnabled("ui_island_mode") then
+            print("⛔ Island Mode ถูกปิดใช้งาน")
+            return
+        end
+        
         CurrentState = state
         if state == "Normal" then
             ExpandOverlay.Visible = false
@@ -91,7 +342,6 @@ function Library:AddWindow(name)
     CreateLight(Color3.fromRGB(255, 189, 46), 35, "Island")
     CreateLight(Color3.fromRGB(40, 201, 64), 55, "Full")
 
-    -- [Dragging]
     local dragging, dragStart, startPos
     Top.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -228,56 +478,54 @@ function Library:AddWindow(name)
             line.BackgroundTransparency = 0.7
         end
 
-function Tools:AddButton(text, side, cb)
-    Order = Order + 1
-    local f = Instance.new("Frame", GetSide(side))
-    f.Size = UDim2.new(1, 0, 0, 38)
-    f.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-    f.LayoutOrder = Order
-    f.ClipsDescendants = true -- ป้องกันเนื้อหาเลยขอบตอนย่อขนาด
-    Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
-    
-    local b = Instance.new("TextButton", f)
-    b.Size = UDim2.new(1, 0, 1, 0)
-    b.BackgroundTransparency = 1
-    b.Text = text
-    b.TextColor3 = Color3.fromRGB(255, 255, 255)
-    b.Font = Enum.Font.GothamMedium
-    b.TextSize = 13
-    b.ZIndex = 2
+        function Tools:AddButton(text, side, cb)
+            Order = Order + 1
+            local f = Instance.new("Frame", GetSide(side))
+            f.Size = UDim2.new(1, 0, 0, 38)
+            f.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            f.LayoutOrder = Order
+            f.ClipsDescendants = true
+            Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
+            
+            local b = Instance.new("TextButton", f)
+            b.Size = UDim2.new(1, 0, 1, 0)
+            b.BackgroundTransparency = 1
+            b.Text = text
+            b.TextColor3 = Color3.fromRGB(255, 255, 255)
+            b.Font = Enum.Font.GothamMedium
+            b.TextSize = 13
+            b.ZIndex = 2
 
-    --// Animation Logic //--
-    local btnTweenIn = TweenService:Create(f, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(1, -6, 0, 34), -- ยุบขนาดลง
-        BackgroundColor3 = Color3.fromRGB(35, 35, 40) -- สีเข้มขึ้น
-    })
-    
-    local btnTweenOut = TweenService:Create(f, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(1, 0, 0, 38), -- กลับมาขนาดเดิม (มีแรงเด้ง)
-        BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-    })
+            local btnTweenIn = TweenService:Create(f, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, -6, 0, 34),
+                BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+            })
+            
+            local btnTweenOut = TweenService:Create(f, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, 0, 0, 38),
+                BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            })
 
-    local hoverTween = TweenService:Create(f, TweenInfo.new(0.2), {
-        BackgroundColor3 = Color3.fromRGB(55, 55, 60) -- สว่างขึ้นตอนเมาส์วาง
-    })
+            local hoverTween = TweenService:Create(f, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(55, 55, 60)
+            })
 
-    local leaveTween = TweenService:Create(f, TweenInfo.new(0.2), {
-        BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-    })
+            local leaveTween = TweenService:Create(f, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            })
 
-    --// Connections //--
-    b.MouseEnter:Connect(function() hoverTween:Play() end)
-    b.MouseLeave:Connect(function() leaveTween:Play() end)
-    
-    b.MouseButton1Down:Connect(function()
-        btnTweenIn:Play()
-    end)
-    
-    b.MouseButton1Up:Connect(function()
-        btnTweenOut:Play()
-        cb() -- เรียกใช้ฟังก์ชันที่ส่งมา
-    end)
-end
+            b.MouseEnter:Connect(function() hoverTween:Play() end)
+            b.MouseLeave:Connect(function() leaveTween:Play() end)
+            
+            b.MouseButton1Down:Connect(function()
+                btnTweenIn:Play()
+            end)
+            
+            b.MouseButton1Up:Connect(function()
+                btnTweenOut:Play()
+                cb()
+            end)
+        end
 
         function Tools:AddToggle(text, side, def, cb)
             Order = Order + 1
@@ -340,199 +588,297 @@ end
             box.FocusLost:Connect(function() cb(box.Text) end)
         end
 
-function Tools:AddDropdown(text, side, list_provider, def, cb)
-    Order = Order + 1
-    local open = false
-    local f = Instance.new("Frame", GetSide(side))
-    f.Size = UDim2.new(1, 0, 0, 38)
-    f.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-    f.ClipsDescendants = true
-    f.LayoutOrder = Order
-    Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
-    
-    local MainBtn = Instance.new("TextButton", f)
-    MainBtn.Size = UDim2.new(1, 0, 0, 38)
-    MainBtn.BackgroundTransparency = 1
-    MainBtn.Text = "  " .. text .. " : " .. def
-    MainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    MainBtn.TextXAlignment = Enum.TextXAlignment.Left
-    MainBtn.Font = Enum.Font.Gotham
-    MainBtn.TextSize = 13
-    
-    local Arrow = Instance.new("TextLabel", MainBtn)
-    Arrow.Text = "▼"
-    Arrow.Size = UDim2.new(0, 30, 1, 0)
-    Arrow.Position = UDim2.new(1, -30, 0, 0)
-    Arrow.BackgroundTransparency = 1
-    Arrow.TextColor3 = Color3.fromRGB(150, 150, 150)
-    Arrow.TextSize = 10
-
-    local ItemHolder = Instance.new("ScrollingFrame", f)
-    ItemHolder.Size = UDim2.new(1, -10, 0, 0)
-    ItemHolder.Position = UDim2.new(0, 5, 0, 40)
-    ItemHolder.BackgroundTransparency = 1
-    ItemHolder.ScrollBarThickness = 2
-    ItemHolder.ScrollBarImageColor3 = _G.Color
-    
-    local ItemLayout = Instance.new("UIListLayout", ItemHolder)
-    ItemLayout.Padding = UDim.new(0, 4)
-    ItemLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    -- ฟังก์ชันสำหรับสร้างรายการใหม่ (Refresh)
-    local function RefreshItems()
-        -- ลบรายการเก่า
-        for _, v in pairs(ItemHolder:GetChildren()) do
-            if v:IsA("TextButton") then v:Destroy() end
-        end
-
-        -- รับข้อมูลใหม่ (ตรวจสอบว่าเป็น Table หรือ Function)
-        local currentList = (type(list_provider) == "function") and list_provider() or list_provider
-
-        -- สร้างรายการใหม่
-        for i, v in pairs(currentList) do
-            local Item = Instance.new("TextButton", ItemHolder)
-            Item.Size = UDim2.new(1, -5, 0, 28)
-            Item.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
-            Item.Text = tostring(v)
-            Item.TextColor3 = Color3.fromRGB(200, 200, 200)
-            Item.Font = Enum.Font.Gotham
-            Item.TextSize = 12
-            Item.LayoutOrder = i
-            Instance.new("UICorner", Item).CornerRadius = UDim.new(0, 4)
+        function Tools:AddDropdown(text, side, list_provider, def, cb)
+            Order = Order + 1
+            local open = false
+            local f = Instance.new("Frame", GetSide(side))
+            f.Size = UDim2.new(1, 0, 0, 38)
+            f.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            f.ClipsDescendants = true
+            f.LayoutOrder = Order
+            Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             
-            Item.MouseEnter:Connect(function()
-                TweenService:Create(Item, TweenInfo.new(0.2), {BackgroundColor3 = _G.Color, TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-            end)
-            Item.MouseLeave:Connect(function()
-                TweenService:Create(Item, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65), TextColor3 = Color3.fromRGB(200, 200, 200)}):Play()
-            end)
+            local MainBtn = Instance.new("TextButton", f)
+            MainBtn.Size = UDim2.new(1, 0, 0, 38)
+            MainBtn.BackgroundTransparency = 1
+            MainBtn.Text = "  " .. text .. " : " .. def
+            MainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            MainBtn.TextXAlignment = Enum.TextXAlignment.Left
+            MainBtn.Font = Enum.Font.Gotham
+            MainBtn.TextSize = 13
+            
+            local Arrow = Instance.new("TextLabel", MainBtn)
+            Arrow.Text = "▼"
+            Arrow.Size = UDim2.new(0, 30, 1, 0)
+            Arrow.Position = UDim2.new(1, -30, 0, 0)
+            Arrow.BackgroundTransparency = 1
+            Arrow.TextColor3 = Color3.fromRGB(150, 150, 150)
+            Arrow.TextSize = 10
 
-            Item.MouseButton1Click:Connect(function()
-                MainBtn.Text = "  " .. text .. " : " .. tostring(v)
-                cb(v)
-                -- ปิด Dropdown (ซึ่งจะไปเรียก ToggleDropdown อีกรอบ)
-                MainBtn:Activate() 
-            end)
-        end
-        ItemHolder.CanvasSize = UDim2.new(0, 0, 0, #currentList * 32)
-        return #currentList
-    end
+            local ItemHolder = Instance.new("ScrollingFrame", f)
+            ItemHolder.Size = UDim2.new(1, -10, 0, 0)
+            ItemHolder.Position = UDim2.new(0, 5, 0, 40)
+            ItemHolder.BackgroundTransparency = 1
+            ItemHolder.ScrollBarThickness = 2
+            ItemHolder.ScrollBarImageColor3 = _G.Color
+            
+            local ItemLayout = Instance.new("UIListLayout", ItemHolder)
+            ItemLayout.Padding = UDim.new(0, 4)
+            ItemLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    local function ToggleDropdown()
-        open = not open
-        
-        local currentCount = 0
-        if open then
-            currentCount = RefreshItems() -- รีเฟรชข้อมูลทันทีที่ "เปิด"
-        end
+            local ToggleDropdown
 
-        local targetHeight = open and math.min(currentCount * 32, 130) or 0
-        local targetSize = open and UDim2.new(1, 0, 0, 38 + targetHeight + 10) or UDim2.new(1, 0, 0, 38)
-        local targetHolderSize = open and UDim2.new(1, -10, 0, targetHeight) or UDim2.new(1, -10, 0, 0)
-        
-        TweenService:Create(f, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetSize}):Play()
-        TweenService:Create(ItemHolder, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetHolderSize}):Play()
-        TweenService:Create(Arrow, TweenInfo.new(0.3), {Rotation = open and 180 or 0}):Play()
-    end
+            local function RefreshItems()
+                for _, v in pairs(ItemHolder:GetChildren()) do
+                    if v:IsA("TextButton") then v:Destroy() end
+                end
 
-    MainBtn.MouseButton1Click:Connect(ToggleDropdown)
-end
+                local currentList = (type(list_provider) == "function") and list_provider() or list_provider
 
-function Tools:AddSlider(text, side, min, max, def, cb)
-    Order = Order + 1
-    local f = Instance.new("Frame", GetSide(side))
-    f.Size = UDim2.new(1, 0, 0, 45)
-    f.BackgroundTransparency = 1
-    f.LayoutOrder = Order
+                for i, v in pairs(currentList) do
+                    local Item = Instance.new("TextButton", ItemHolder)
+                    Item.Size = UDim2.new(1, -5, 0, 28)
+                    Item.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
+                    Item.Text = tostring(v)
+                    Item.TextColor3 = Color3.fromRGB(200, 200, 200)
+                    Item.Font = Enum.Font.Gotham
+                    Item.TextSize = 12
+                    Item.LayoutOrder = i
+                    Instance.new("UICorner", Item).CornerRadius = UDim.new(0, 4)
+                    
+                    Item.MouseEnter:Connect(function()
+                        TweenService:Create(Item, TweenInfo.new(0.2), {BackgroundColor3 = _G.Color, TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+                    end)
+                    Item.MouseLeave:Connect(function()
+                        TweenService:Create(Item, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 65), TextColor3 = Color3.fromRGB(200, 200, 200)}):Play()
+                    end)
 
-    local l = Instance.new("TextLabel", f)
-    l.Size = UDim2.new(1, 0, 0, 20)
-    l.Text = text .. " : " .. def
-    l.TextColor3 = Color3.fromRGB(220, 220, 220)
-    l.BackgroundTransparency = 1
-    l.Font = Enum.Font.Gotham
-    l.TextSize = 12
-    l.TextXAlignment = Enum.TextXAlignment.Left
-
-    local bg = Instance.new("Frame", f)
-    bg.Size = UDim2.new(1, 0, 0, 4)
-    bg.Position = UDim2.new(0, 0, 0, 30)
-    bg.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    Instance.new("UICorner", bg).CornerRadius = UDim.new(1, 0)
-
-    local fill = Instance.new("Frame", bg)
-    fill.Size = UDim2.new((def - min) / (max - min), 0, 1, 0)
-    fill.BackgroundColor3 = _G.Color
-    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
-
-    local btn = Instance.new("TextButton", f)
-    btn.Size = UDim2.new(1, 0, 1, 0)
-    btn.BackgroundTransparency = 1
-    btn.Text = ""
-
-    local function update()
-        local p = math.clamp((UserInputService:GetMouseLocation().X - bg.AbsolutePosition.X) / bg.AbsoluteSize.X, 0, 1)
-        local val = math.floor(min + (max - min) * p)
-        fill.Size = UDim2.new(p, 0, 1, 0)
-        l.Text = text .. " : " .. val
-        cb(val)
-    end
-
-    btn.MouseButton1Down:Connect(function()
-        local move; move = RunService.RenderStepped:Connect(update)
-        local release; release = UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                move:Disconnect()
-                release:Disconnect()
+                    Item.MouseButton1Click:Connect(function()
+                        MainBtn.Text = "  " .. text .. " : " .. tostring(v)
+                        cb(v)
+                        ToggleDropdown()
+                    end)
+                end
+                ItemHolder.CanvasSize = UDim2.new(0, 0, 0, #currentList * 32)
+                return #currentList
             end
-        end)
-    end)
-end
 
+            ToggleDropdown = function()
+                open = not open
+                
+                local currentCount = 0
+                if open then
+                    currentCount = RefreshItems() 
+                end
+
+                local targetHeight = open and math.min(currentCount * 32, 130) or 0
+                local targetSize = open and UDim2.new(1, 0, 0, 38 + targetHeight + 10) or UDim2.new(1, 0, 0, 38)
+                local targetHolderSize = open and UDim2.new(1, -10, 0, targetHeight) or UDim2.new(1, -10, 0, 0)
+                
+                TweenService:Create(f, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetSize}):Play()
+                TweenService:Create(ItemHolder, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = targetHolderSize}):Play()
+                TweenService:Create(Arrow, TweenInfo.new(0.3), {Rotation = open and 180 or 0}):Play()
+            end
+
+            MainBtn.MouseButton1Click:Connect(ToggleDropdown)
+        end
+        
         return Tools
     end
     return Tabs
 end
 
---// การทดสอบ (Test Section) //--
-local Win = Library:AddWindow("IDekhere Premium")
-local Tab = Win:AddTab("Main")
-local Tab2 = Win:AddTab("Settings")
+--[[
+    ═══════════════════════════════════════════════════════════════
+    ตัวอย่างการใช้งาน (USAGE EXAMPLE)
+    ═══════════════════════════════════════════════════════════════
+]]--
 
--- Left Side
+local Win = Library:AddWindow("IDekhere Premium 🚩")
+
+-- Tab หลัก
+local Tab = Win:AddTab("Main")
+
+-- ตรวจสอบ Flags ก่อนแสดง UI
 Tab:AddSeperator("SERVER INFO", "Left")
 Tab:AddLabel("Status: Active", "Left")
 Tab:AddLabel("Game: Blox Fruits", "Left")
+
 Tab:AddSeperator("FARMING", "Left")
-Tab:AddToggle("Auto Farm Level", "Left", false, function(v) print("Auto Farm:", v) end)
-Tab:AddToggle("Auto Clicker", "Left", true, function(v) end)
 
--- Right Side
+-- ตัวอย่าง: แสดง Auto Farm ถ้า Flag เปิดอยู่
+if FF_Instance:isEnabled("auto_farm_level") then
+    Tab:AddToggle("Auto Farm Level ✅", "Left", false, function(v) 
+        print("🌾 Auto Farm:", v) 
+    end)
+else
+    Tab:AddLabel("⛔ Auto Farm: Disabled by Admin", "Left")
+end
+
+if FF_Instance:isEnabled("auto_clicker") then
+    Tab:AddToggle("Auto Clicker ✅", "Left", true, function(v) 
+        print("👆 Auto Click:", v)
+    end)
+end
+
+-- Player Settings
 Tab:AddSeperator("PLAYER SETTINGS", "Right")
-Tab:AddTextBox("WalkSpeed", "Right", "Speed amount...", function(v) print("Set Speed:", v) end)
-Tab:AddTextBox("JumpPower", "Right", "Jump amount...", function(v) end)
-Tab:AddSeperator("MISC", "Right")
-Tab:AddButton("Destroy UI", "Right", function() end)
-Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
-Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
-Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
-Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
-Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
-Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) print(v) end)
 
--- ตัวอย่าง: Dropdown รายชื่อผู้เล่นที่จะ "รีเฟรชเอง" ทุกครั้งที่กดเปิด
-Tab2:AddDropdown("Select Player", "Left", function()
-    -- ฟังก์ชันนี้จะทำงานทุกครั้งที่กดเปิด Dropdown
+if FF_Instance:isEnabled("custom_walkspeed") then
+    local config = FF_Instance:getConfig("custom_walkspeed")
+    local maxSpeed = config and config.max_value or 100
+    Tab:AddTextBox("WalkSpeed", "Right", "Max: " .. maxSpeed, function(v) 
+        local speed = tonumber(v)
+        if speed and speed <= maxSpeed then
+            print("🏃 Set Speed:", speed)
+        else
+            print("⚠️ Speed เกิน limit!")
+        end
+    end)
+end
+
+if FF_Instance:isEnabled("custom_jumppower") then
+    Tab:AddTextBox("JumpPower", "Right", "Jump amount...", function(v) 
+        print("🦘 Set Jump:", v)
+    end)
+end
+
+Tab:AddSeperator("MISC", "Right")
+Tab:AddButton("Destroy UI 🗑️", "Right", function() 
+    CoreGui["macOS_Premium"]:Destroy()
+end)
+
+Tab:AddDropdown("Select Map", "Left", {"Jungle", "Desert", "Snow"}, "Jungle", function(v) 
+    print("🗺️ เลือกแผนที่:", v) 
+end)
+
+-- Dropdown แบบ Dynamic (รีเฟรชรายชื่อผู้เล่นเอง)
+Tab:AddDropdown("Select Player", "Left", function()
     local p_list = {}
     for _, p in pairs(game:GetService("Players"):GetPlayers()) do
         table.insert(p_list, p.Name)
     end
-    return p_list -- ส่งรายการล่าสุดกลับไป
+    return p_list
 end, "None", function(selected)
-    print("คุณเลือก: " .. selected)
+    print("👤 คุณเลือก:", selected)
 end)
 
--- ตัวอย่าง: Dropdown ปกติ (ส่งเป็น Table เหมือนเดิมก็ได้)
-Tab2:AddDropdown("Fixed List", "Right", {"Option 1", "Option 2"}, "Option 1", function(v) 
-    print(v) 
+--[[
+    ═══════════════════════════════════════════════════════════════
+    TAB สำหรับจัดการ FEATURE FLAGS
+    ═══════════════════════════════════════════════════════════════
+]]--
+
+local FlagsTab = Win:AddTab("🚩 Flags")
+
+-- แสดง Feature Flags ทั้งหมด
+local function groupFlags()
+    local groups = {UI = {}, Features = {}, Admin = {}, Other = {}}
+    
+    for name, data in pairs(FF_Instance:getAllFlags()) do
+        if name:match("^ui_") then
+            table.insert(groups.UI, {name = name, data = data})
+        elseif name:match("admin") or name:match("beta") then
+            table.insert(groups.Admin, {name = name, data = data})
+        elseif name:match("auto_") or name:match("custom_") then
+            table.insert(groups.Features, {name = name, data = data})
+        else
+            table.insert(groups.Other, {name = name, data = data})
+        end
+    end
+    
+    return groups
+end
+
+local groups = groupFlags()
+
+-- แสดง UI Flags
+FlagsTab:AddSeperator("🎨 UI FLAGS", "Left")
+for _, flag in pairs(groups.UI) do
+    FlagsTab:AddToggle(
+        flag.data.description, 
+        "Left", 
+        flag.data.enabled, 
+        function(v)
+            FF_Instance:setFlag(flag.name, v)
+        end
+    )
+end
+
+-- แสดง Feature Flags
+FlagsTab:AddSeperator("⚡ FEATURES", "Left")
+for _, flag in pairs(groups.Features) do
+    FlagsTab:AddToggle(
+        flag.data.description, 
+        "Left", 
+        flag.data.enabled, 
+        function(v)
+            FF_Instance:setFlag(flag.name, v)
+        end
+    )
+end
+
+-- แสดง Admin & Beta Flags
+FlagsTab:AddSeperator("👑 ADMIN & BETA", "Right")
+for _, flag in pairs(groups.Admin) do
+    FlagsTab:AddToggle(
+        flag.data.description, 
+        "Right", 
+        flag.data.enabled, 
+        function(v)
+            FF_Instance:setFlag(flag.name, v)
+        end
+    )
+end
+
+-- แสดง Other Flags
+FlagsTab:AddSeperator("🔧 OTHER", "Right")
+for _, flag in pairs(groups.Other) do
+    FlagsTab:AddToggle(
+        flag.data.description, 
+        "Right", 
+        flag.data.enabled, 
+        function(v)
+            FF_Instance:setFlag(flag.name, v)
+        end
+    )
+end
+
+-- ปุ่ม Utility
+FlagsTab:AddButton("🔄 Refresh from Server", "Left", function()
+    FF_Instance:fetchRemoteFlags()
+    print("✅ Refreshed flags from server")
 end)
+
+FlagsTab:AddButton("📋 Print All Flags", "Right", function()
+    print("=== 🚩 CURRENT FLAGS ===")
+    for name, data in pairs(FF_Instance:getAllFlags()) do
+        local status = data.enabled and "✅" or "❌"
+        print(string.format("%s %s - %s", status, name, data.description))
+    end
+    print("========================")
+end)
+
+-- Tab สำหรับ Beta Features (ถ้าเปิดอยู่)
+if FF_Instance:isEnabled("beta_features") then
+    local BetaTab = Win:AddTab("⚠️ Beta")
+    BetaTab:AddLabel("🧪 EXPERIMENTAL FEATURES", "Left")
+    BetaTab:AddSeperator("WARNING", "Left")
+    BetaTab:AddLabel("คุณสมบัติเหล่านี้อาจไม่เสถียร", "Left")
+    BetaTab:AddButton("Test Beta Feature", "Left", function()
+        print("🧪 ทดสอบฟีเจอร์ Beta")
+    end)
+end
+
+-- ฟัง Flag Changes แบบ Real-time
+FF_Instance:onChange("auto_farm_level", function(enabled)
+    if enabled then
+        print("✅ Auto Farm เปิดใช้งานแล้ว!")
+    else
+        print("❌ Auto Farm ถูกปิดใช้งาน!")
+    end
+end)
+
+print("🚩 Feature Flags System โหลดเสร็จแล้ว!")
+print("📊 User ID:", Players.LocalPlayer.UserId)
+print("🎲 User Hash:", FF_Instance.user_hash)
