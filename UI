@@ -845,9 +845,9 @@ function Library:AddWindow(name)
             border.Thickness = 1
             border.Transparency = 0.5
             
-            -- Label with current value
+            -- Label
             local label = Instance.new("TextLabel", f)
-            label.Size = UDim2.new(0.7, 0, 0, 22)
+            label.Size = UDim2.new(0.6, 0, 0, 22)
             label.Position = UDim2.new(0, 12, 0, 8)
             label.Text = text
             label.TextColor3 = Color3.fromRGB(230, 230, 230)
@@ -856,16 +856,26 @@ function Library:AddWindow(name)
             label.Font = Enum.Font.GothamBold
             label.TextSize = 13
             
-            -- Value display
-            local valueLabel = Instance.new("TextLabel", f)
-            valueLabel.Size = UDim2.new(0.3, -12, 0, 22)
-            valueLabel.Position = UDim2.new(0.7, 0, 0, 8)
-            valueLabel.Text = def
-            valueLabel.TextColor3 = _G.Color
-            valueLabel.BackgroundTransparency = 1
-            valueLabel.TextXAlignment = Enum.TextXAlignment.Right
-            valueLabel.Font = Enum.Font.GothamBold
-            valueLabel.TextSize = 14
+            -- Value input box (คลิกได้)
+            local valueBox = Instance.new("TextBox", f)
+            valueBox.Size = UDim2.new(0.3, -12, 0, 22)
+            valueBox.Position = UDim2.new(0.7, 0, 0, 8)
+            valueBox.Text = tostring(def)
+            valueBox.TextColor3 = _G.Color
+            valueBox.BackgroundColor3 = Color3.fromRGB(40, 42, 50)
+            valueBox.BackgroundTransparency = 0.5
+            valueBox.TextXAlignment = Enum.TextXAlignment.Center
+            valueBox.Font = Enum.Font.GothamBold
+            valueBox.TextSize = 14
+            valueBox.PlaceholderText = tostring(def)
+            valueBox.ClearTextOnFocus = false
+            Instance.new("UICorner", valueBox).CornerRadius = UDim.new(0, 6)
+            
+            -- Border for value box
+            local valueBoxBorder = Instance.new("UIStroke", valueBox)
+            valueBoxBorder.Color = _G.Color
+            valueBoxBorder.Thickness = 1
+            valueBoxBorder.Transparency = 0.7
             
             -- Slider background (track)
             local track = Instance.new("Frame", f)
@@ -930,31 +940,62 @@ function Library:AddWindow(name)
             local function updateSlider(input)
                 local trackPos = track.AbsolutePosition.X
                 local trackSize = track.AbsoluteSize.X
-                local mouseX = input.Position.X
+                local inputX = input.Position.X
                 
                 -- Calculate percentage (0 to 1)
-                local percent = math.clamp((mouseX - trackPos) / trackSize, 0, 1)
+                local percent = math.clamp((inputX - trackPos) / trackSize, 0, 1)
                 
                 -- Calculate value
                 currentValue = math.floor(min + (max - min) * percent)
                 
                 -- Update UI
-                valueLabel.Text = currentValue
+                valueBox.Text = tostring(currentValue)
                 fill.Size = UDim2.new(percent, 0, 1, 0)
                 thumb.Position = UDim2.new(percent, -9, 0.5, -9)
                 
                 -- Pulse animation on value change
-                TweenService:Create(valueLabel, TweenInfo.new(0.1), {TextSize = 16}):Play()
+                TweenService:Create(valueBox, TweenInfo.new(0.1), {TextSize = 16}):Play()
                 wait(0.1)
-                TweenService:Create(valueLabel, TweenInfo.new(0.1), {TextSize = 14}):Play()
+                TweenService:Create(valueBox, TweenInfo.new(0.1), {TextSize = 14}):Play()
                 
                 -- Callback
                 cb(currentValue)
             end
             
-            -- Mouse events
+            local function updateFromValue(value)
+                local numValue = tonumber(value)
+                if numValue then
+                    -- Clamp value
+                    numValue = math.clamp(math.floor(numValue), min, max)
+                    currentValue = numValue
+                    
+                    -- Update slider position
+                    local percent = (numValue - min) / (max - min)
+                    fill.Size = UDim2.new(percent, 0, 1, 0)
+                    thumb.Position = UDim2.new(percent, -9, 0.5, -9)
+                    valueBox.Text = tostring(numValue)
+                    
+                    -- Callback
+                    cb(numValue)
+                else
+                    -- Reset to current value if invalid
+                    valueBox.Text = tostring(currentValue)
+                end
+            end
+            
+            -- Value box events (สำหรับมือถือ - คลิกพิมพ์ได้เลย)
+            valueBox.FocusLost:Connect(function(enterPressed)
+                updateFromValue(valueBox.Text)
+            end)
+            
+            valueBox.Focused:Connect(function()
+                TweenService:Create(valueBoxBorder, TweenInfo.new(0.2), {Transparency = 0.3}):Play()
+                TweenService:Create(border, TweenInfo.new(0.2), {Color = _G.Color, Transparency = 0.2}):Play()
+            end)
+            
+            -- Mouse/Touch events for slider
             thumb.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = true
                     -- Scale and glow animation
                     TweenService:Create(thumb, TweenInfo.new(0.2), {
@@ -967,13 +1008,13 @@ function Library:AddWindow(name)
             end)
             
             UserInputService.InputChanged:Connect(function(input)
-                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                     updateSlider(input)
                 end
             end)
             
             UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
+                if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and dragging then
                     dragging = false
                     -- Scale back
                     TweenService:Create(thumb, TweenInfo.new(0.2), {
@@ -982,12 +1023,13 @@ function Library:AddWindow(name)
                     }):Play()
                     TweenService:Create(thumbGlow, TweenInfo.new(0.2), {Thickness = 3, Transparency = 0.5}):Play()
                     TweenService:Create(border, TweenInfo.new(0.2), {Color = Color3.fromRGB(50, 52, 60), Transparency = 0.5}):Play()
+                    TweenService:Create(valueBoxBorder, TweenInfo.new(0.2), {Transparency = 0.7}):Play()
                 end
             end)
             
             -- Click on track to jump
             track.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 and not dragging then
+                if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not dragging then
                     updateSlider(input)
                 end
             end)
