@@ -246,7 +246,7 @@ local FF_Instance = FeatureFlags.new()
 ]]--
 
 local Library = {}
-_G.Color = Color3.fromRGB(0, 122, 255)
+_G.Color = Color3.fromRGB(88, 101, 242) -- Discord Blurple สวยๆ
 
 function Library:AddWindow(name)
     if CoreGui:FindFirstChild("macOS_Premium") then CoreGui["macOS_Premium"]:Destroy() end
@@ -255,31 +255,77 @@ function Library:AddWindow(name)
     ScreenGui.Name = "macOS_Premium"
     ScreenGui.ResetOnSpawn = false
 
+    -- Blur Background Effect
+    local BlurEffect = Instance.new("BlurEffect", game.Lighting)
+    BlurEffect.Name = "UIBlur"
+    BlurEffect.Size = 0
+    TweenService:Create(BlurEffect, TweenInfo.new(0.5), {Size = 10}):Play()
+
     local Main = Instance.new("Frame", ScreenGui)
     Main.Name = "Main"
-    Main.Size = UDim2.new(0, 620, 0, 400)
+    Main.Size = UDim2.new(0, 680, 0, 450)
     Main.Position = UDim2.new(0.5, 0, 0.5, 0)
     Main.AnchorPoint = Vector2.new(0.5, 0.5)
-    Main.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    Main.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
+    Main.BackgroundTransparency = 0.05
     Main.ClipsDescendants = true
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 16)
     
+    -- Gradient Overlay
+    local Gradient = Instance.new("UIGradient", Main)
+    Gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 32, 40)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 17, 24))
+    }
+    Gradient.Rotation = 45
+    
+    -- Outer Glow
     local MainStroke = Instance.new("UIStroke", Main)
-    MainStroke.Color = Color3.fromRGB(60, 60, 65)
-    MainStroke.Thickness = 1.2
+    MainStroke.Color = Color3.fromRGB(88, 101, 242)
+    MainStroke.Thickness = 1.5
+    MainStroke.Transparency = 0.5
+    
+    -- Drop Shadow (using multiple frames for depth)
+    for i = 1, 3 do
+        local shadow = Instance.new("ImageLabel", Main)
+        shadow.Size = UDim2.new(1, 20 + i*5, 1, 20 + i*5)
+        shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+        shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+        shadow.BackgroundTransparency = 1
+        shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+        shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+        shadow.ImageTransparency = 0.7 + (i * 0.1)
+        shadow.ZIndex = -i
+    end
 
+    -- Top Bar with Glassmorphism
     local Top = Instance.new("Frame", Main)
-    Top.Size = UDim2.new(1, 0, 0, 40)
-    Top.BackgroundTransparency = 1
+    Top.Size = UDim2.new(1, 0, 0, 50)
+    Top.BackgroundColor3 = Color3.fromRGB(30, 32, 40)
+    Top.BackgroundTransparency = 0.3
     Top.ZIndex = 10
+    
+    local TopGradient = Instance.new("UIGradient", Top)
+    TopGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 42, 50)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 27, 35))
+    }
+    TopGradient.Rotation = 90
+    
+    local TopStroke = Instance.new("UIStroke", Top)
+    TopStroke.Color = Color3.fromRGB(88, 101, 242)
+    TopStroke.Thickness = 0.5
+    TopStroke.Transparency = 0.7
 
     local Title = Instance.new("TextLabel", Top)
     Title.Size = UDim2.new(1, 0, 1, 0)
-    Title.Text = name
+    Title.Text = "✨ " .. name
     Title.Font = Enum.Font.GothamBold
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 14
+    Title.TextSize = 16
     Title.BackgroundTransparency = 1
+    Title.TextStrokeTransparency = 0.8
+    Title.TextStrokeColor3 = Color3.fromRGB(88, 101, 242)
 
     local CurrentState = "Normal"
     local OriginalSize = UDim2.new(0, 620, 0, 400)
@@ -328,19 +374,42 @@ function Library:AddWindow(name)
 
     ExpandOverlay.MouseButton1Click:Connect(function() ChangeUIState("Normal") end)
 
-    local function CreateLight(color, x, goal)
+    local function CreateLight(color, glowColor, x, goal)
         local b = Instance.new("TextButton", Top)
-        b.Size = UDim2.new(0, 12, 0, 12)
-        b.Position = UDim2.new(0, x, 0.5, -6)
+        b.Size = UDim2.new(0, 13, 0, 13)
+        b.Position = UDim2.new(0, x, 0.5, -6.5)
         b.BackgroundColor3 = color
         b.Text = ""
         b.ZIndex = 11
         Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
-        b.MouseButton1Click:Connect(function() ChangeUIState(goal) end)
+        
+        -- Glow Effect
+        local glow = Instance.new("UIStroke", b)
+        glow.Color = glowColor
+        glow.Thickness = 2
+        glow.Transparency = 0.5
+        
+        -- Hover Animation
+        b.MouseEnter:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.2), {Size = UDim2.new(0, 15, 0, 15), Position = UDim2.new(0, x-1, 0.5, -7.5)}):Play()
+            TweenService:Create(glow, TweenInfo.new(0.2), {Transparency = 0.2, Thickness = 3}):Play()
+        end)
+        b.MouseLeave:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.2), {Size = UDim2.new(0, 13, 0, 13), Position = UDim2.new(0, x, 0.5, -6.5)}):Play()
+            TweenService:Create(glow, TweenInfo.new(0.2), {Transparency = 0.5, Thickness = 2}):Play()
+        end)
+        
+        b.MouseButton1Click:Connect(function() 
+            -- Click animation
+            TweenService:Create(b, TweenInfo.new(0.1), {Size = UDim2.new(0, 11, 0, 11)}):Play()
+            wait(0.1)
+            TweenService:Create(b, TweenInfo.new(0.1), {Size = UDim2.new(0, 13, 0, 13)}):Play()
+            ChangeUIState(goal) 
+        end)
     end
-    CreateLight(Color3.fromRGB(255, 95, 87), 15, "Mini")
-    CreateLight(Color3.fromRGB(255, 189, 46), 35, "Island")
-    CreateLight(Color3.fromRGB(40, 201, 64), 55, "Full")
+    CreateLight(Color3.fromRGB(255, 95, 87), Color3.fromRGB(255, 95, 87), 15, "Mini")
+    CreateLight(Color3.fromRGB(255, 189, 46), Color3.fromRGB(255, 189, 46), 35, "Island")
+    CreateLight(Color3.fromRGB(40, 201, 64), Color3.fromRGB(40, 201, 64), 55, "Full")
 
     local dragging, dragStart, startPos
     Top.InputBegan:Connect(function(input)
@@ -357,14 +426,29 @@ function Library:AddWindow(name)
     UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
     local Sidebar = Instance.new("Frame", Main)
-    Sidebar.Size = UDim2.new(0, 160, 1, -40)
-    Sidebar.Position = UDim2.new(0, 0, 0, 40)
-    Sidebar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    Sidebar.Size = UDim2.new(0, 180, 1, -50)
+    Sidebar.Position = UDim2.new(0, 0, 0, 50)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(22, 24, 30)
     Sidebar.BorderSizePixel = 0
+    
+    local SidebarGradient = Instance.new("UIGradient", Sidebar)
+    SidebarGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 27, 35)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 20, 26))
+    }
+    SidebarGradient.Rotation = 90
+    
+    -- Sidebar glow line
+    local SidebarLine = Instance.new("Frame", Sidebar)
+    SidebarLine.Size = UDim2.new(0, 1, 1, 0)
+    SidebarLine.Position = UDim2.new(1, 0, 0, 0)
+    SidebarLine.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+    SidebarLine.BackgroundTransparency = 0.7
+    SidebarLine.BorderSizePixel = 0
 
     local PageContainer = Instance.new("Frame", Main)
-    PageContainer.Size = UDim2.new(1, -160, 1, -40)
-    PageContainer.Position = UDim2.new(0, 160, 0, 40)
+    PageContainer.Size = UDim2.new(1, -180, 1, -50)
+    PageContainer.Position = UDim2.new(0, 180, 0, 50)
     PageContainer.BackgroundTransparency = 1
 
     local TabScroll = Instance.new("ScrollingFrame", Sidebar)
@@ -379,15 +463,34 @@ function Library:AddWindow(name)
     local Tabs = {}
     function Tabs:AddTab(tabName)
         local TabBtn = Instance.new("TextButton", TabScroll)
-        TabBtn.Size = UDim2.new(0, 140, 0, 32)
+        TabBtn.Size = UDim2.new(0, 160, 0, 38)
         TabBtn.BackgroundTransparency = 1
-        TabBtn.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        TabBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
         TabBtn.Text = "  " .. tabName
         TabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
-        TabBtn.Font = Enum.Font.GothamMedium
-        TabBtn.TextSize = 13
+        TabBtn.Font = Enum.Font.GothamBold
+        TabBtn.TextSize = 14
         TabBtn.TextXAlignment = Enum.TextXAlignment.Left
-        Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
+        Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 8)
+        
+        -- Tab Gradient
+        local TabGradient = Instance.new("UIGradient", TabBtn)
+        TabGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(88, 101, 242)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(58, 71, 212))
+        }
+        TabGradient.Rotation = 45
+        
+        -- Icon for tab
+        local Icon = Instance.new("TextLabel", TabBtn)
+        Icon.Size = UDim2.new(0, 20, 1, 0)
+        Icon.Position = UDim2.new(1, -25, 0, 0)
+        Icon.BackgroundTransparency = 1
+        Icon.Text = "›"
+        Icon.TextColor3 = Color3.fromRGB(88, 101, 242)
+        Icon.Font = Enum.Font.GothamBold
+        Icon.TextSize = 20
+        Icon.TextTransparency = 1
 
         local Page = Instance.new("ScrollingFrame", PageContainer)
         Page.Size = UDim2.new(1, 0, 1, 0)
@@ -427,17 +530,48 @@ function Library:AddWindow(name)
             for _, v in pairs(PageContainer:GetChildren()) do v.Visible = false end
             for _, v in pairs(TabScroll:GetChildren()) do 
                 if v:IsA("TextButton") then 
-                    TweenService:Create(v, TweenInfo.new(0.3), {BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(150,150,150)}):Play()
+                    TweenService:Create(v, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+                        BackgroundTransparency = 1, 
+                        TextColor3 = Color3.fromRGB(150,150,150)
+                    }):Play()
+                    -- Hide icon
+                    if v:FindFirstChild("TextLabel") then
+                        TweenService:Create(v.TextLabel, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+                    end
                 end 
             end
             Page.Visible = true
-            TweenService:Create(TabBtn, TweenInfo.new(0.3), {BackgroundTransparency = 0.9, TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+            TweenService:Create(TabBtn, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+                BackgroundTransparency = 0, 
+                TextColor3 = Color3.fromRGB(255,255,255)
+            }):Play()
+            TweenService:Create(Icon, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
+        end)
+        
+        -- Hover effect
+        TabBtn.MouseEnter:Connect(function()
+            if TabBtn.BackgroundTransparency == 1 then
+                TweenService:Create(TabBtn, TweenInfo.new(0.2), {
+                    BackgroundTransparency = 0.95,
+                    TextColor3 = Color3.fromRGB(200, 200, 200)
+                }):Play()
+            end
+        end)
+        
+        TabBtn.MouseLeave:Connect(function()
+            if TabBtn.BackgroundTransparency > 0.5 then
+                TweenService:Create(TabBtn, TweenInfo.new(0.2), {
+                    BackgroundTransparency = 1,
+                    TextColor3 = Color3.fromRGB(150, 150, 150)
+                }):Play()
+            end
         end)
 
         if #TabScroll:GetChildren() == 2 then 
             Page.Visible = true 
-            TabBtn.BackgroundTransparency = 0.9 
-            TabBtn.TextColor3 = Color3.fromRGB(255,255,255) 
+            TabBtn.BackgroundTransparency = 0
+            TabBtn.TextColor3 = Color3.fromRGB(255,255,255)
+            Icon.TextTransparency = 0
         end
 
         local Tools = {}
@@ -460,62 +594,99 @@ function Library:AddWindow(name)
         function Tools:AddSeperator(text, side)
             Order = Order + 1
             local s = Instance.new("Frame", GetSide(side))
-            s.Size = UDim2.new(1, 0, 0, 25)
+            s.Size = UDim2.new(1, 0, 0, 30)
             s.BackgroundTransparency = 1
             s.LayoutOrder = Order
+            
             local t = Instance.new("TextLabel", s)
             t.Size = UDim2.new(1, 0, 1, 0)
             t.Text = text
-            t.TextColor3 = _G.Color
+            t.TextColor3 = Color3.fromRGB(255, 255, 255)
             t.Font = Enum.Font.GothamBold
-            t.TextSize = 11
+            t.TextSize = 12
             t.BackgroundTransparency = 1
             t.TextXAlignment = Enum.TextXAlignment.Left
+            t.TextStrokeTransparency = 0.8
+            t.TextStrokeColor3 = _G.Color
+            
             local line = Instance.new("Frame", s)
-            line.Size = UDim2.new(1, 0, 0, 1)
-            line.Position = UDim2.new(0, 0, 1, 0)
+            line.Size = UDim2.new(1, 0, 0, 2)
+            line.Position = UDim2.new(0, 0, 1, -2)
             line.BackgroundColor3 = _G.Color
-            line.BackgroundTransparency = 0.7
+            line.BackgroundTransparency = 0.5
+            line.BorderSizePixel = 0
+            Instance.new("UICorner", line).CornerRadius = UDim.new(1, 0)
+            
+            -- Gradient for line
+            local lineGradient = Instance.new("UIGradient", line)
+            lineGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(88, 101, 242)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(138, 151, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(88, 101, 242))
+            }
         end
 
         function Tools:AddButton(text, side, cb)
             Order = Order + 1
             local f = Instance.new("Frame", GetSide(side))
-            f.Size = UDim2.new(1, 0, 0, 38)
-            f.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            f.Size = UDim2.new(1, 0, 0, 42)
+            f.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
             f.LayoutOrder = Order
-            f.ClipsDescendants = true
-            Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
+            f.ClipsDescendants = false
+            Instance.new("UICorner", f).CornerRadius = UDim.new(0, 10)
+            
+            -- Button Gradient
+            local btnGradient = Instance.new("UIGradient", f)
+            btnGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(88, 101, 242)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(58, 71, 212))
+            }
+            btnGradient.Rotation = 45
+            
+            -- Glow Effect
+            local glow = Instance.new("UIStroke", f)
+            glow.Color = Color3.fromRGB(88, 101, 242)
+            glow.Thickness = 0
+            glow.Transparency = 0.5
             
             local b = Instance.new("TextButton", f)
             b.Size = UDim2.new(1, 0, 1, 0)
             b.BackgroundTransparency = 1
             b.Text = text
             b.TextColor3 = Color3.fromRGB(255, 255, 255)
-            b.Font = Enum.Font.GothamMedium
-            b.TextSize = 13
+            b.Font = Enum.Font.GothamBold
+            b.TextSize = 14
             b.ZIndex = 2
 
-            local btnTweenIn = TweenService:Create(f, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(1, -6, 0, 34),
-                BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+            -- Shine effect
+            local shine = Instance.new("Frame", f)
+            shine.Size = UDim2.new(0, 0, 2, 0)
+            shine.Position = UDim2.new(0, 0, -0.5, 0)
+            shine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            shine.BackgroundTransparency = 0.5
+            shine.BorderSizePixel = 0
+            shine.Rotation = 45
+            shine.ZIndex = 3
+
+            local btnTweenIn = TweenService:Create(f, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, -8, 0, 38),
+                BackgroundColor3 = Color3.fromRGB(58, 71, 212)
             })
             
-            local btnTweenOut = TweenService:Create(f, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Size = UDim2.new(1, 0, 0, 38),
-                BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            local btnTweenOut = TweenService:Create(f, TweenInfo.new(0.3, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+                Size = UDim2.new(1, 0, 0, 42),
+                BackgroundColor3 = Color3.fromRGB(88, 101, 242)
             })
 
-            local hoverTween = TweenService:Create(f, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(55, 55, 60)
-            })
-
-            local leaveTween = TweenService:Create(f, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-            })
-
-            b.MouseEnter:Connect(function() hoverTween:Play() end)
-            b.MouseLeave:Connect(function() leaveTween:Play() end)
+            b.MouseEnter:Connect(function() 
+                TweenService:Create(glow, TweenInfo.new(0.3), {Thickness = 3, Transparency = 0.3}):Play()
+                TweenService:Create(f, TweenInfo.new(0.3), {Size = UDim2.new(1, 4, 0, 44)}):Play()
+            end)
+            
+            b.MouseLeave:Connect(function() 
+                TweenService:Create(glow, TweenInfo.new(0.3), {Thickness = 0, Transparency = 0.5}):Play()
+                TweenService:Create(f, TweenInfo.new(0.3), {Size = UDim2.new(1, 0, 0, 42)}):Play()
+            end)
             
             b.MouseButton1Down:Connect(function()
                 btnTweenIn:Play()
@@ -523,6 +694,14 @@ function Library:AddWindow(name)
             
             b.MouseButton1Up:Connect(function()
                 btnTweenOut:Play()
+                -- Shine animation
+                TweenService:Create(shine, TweenInfo.new(0.5), {
+                    Position = UDim2.new(1.5, 0, -0.5, 0),
+                    Size = UDim2.new(0.5, 0, 2, 0)
+                }):Play()
+                wait(0.5)
+                shine.Position = UDim2.new(0, 0, -0.5, 0)
+                shine.Size = UDim2.new(0, 0, 2, 0)
                 cb()
             end)
         end
@@ -530,39 +709,95 @@ function Library:AddWindow(name)
         function Tools:AddToggle(text, side, def, cb)
             Order = Order + 1
             local f = Instance.new("Frame", GetSide(side))
-            f.Size = UDim2.new(1, 0, 0, 38)
-            f.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            f.Size = UDim2.new(1, 0, 0, 42)
+            f.BackgroundColor3 = Color3.fromRGB(30, 32, 40)
             f.LayoutOrder = Order
-            Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
+            Instance.new("UICorner", f).CornerRadius = UDim.new(0, 10)
+            
+            -- Card gradient
+            local cardGradient = Instance.new("UIGradient", f)
+            cardGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 37, 45)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 27, 35))
+            }
+            cardGradient.Rotation = 45
+            
+            -- Border
+            local border = Instance.new("UIStroke", f)
+            border.Color = Color3.fromRGB(50, 52, 60)
+            border.Thickness = 1
+            border.Transparency = 0.5
             
             local t = Instance.new("TextLabel", f)
-            t.Size = UDim2.new(1, -50, 1, 0)
-            t.Position = UDim2.new(0, 12, 0, 0)
+            t.Size = UDim2.new(1, -60, 1, 0)
+            t.Position = UDim2.new(0, 15, 0, 0)
             t.Text = text
-            t.TextColor3 = Color3.fromRGB(220,220,220)
+            t.TextColor3 = Color3.fromRGB(230, 230, 230)
             t.BackgroundTransparency = 1
             t.TextXAlignment = Enum.TextXAlignment.Left
-            t.Font = Enum.Font.Gotham
+            t.Font = Enum.Font.GothamBold
             t.TextSize = 13
 
             local btn = Instance.new("TextButton", f)
-            btn.Size = UDim2.new(0, 34, 0, 18)
-            btn.Position = UDim2.new(1, -42, 0.5, -9)
-            btn.BackgroundColor3 = def and _G.Color or Color3.fromRGB(80, 80, 85)
+            btn.Size = UDim2.new(0, 40, 0, 22)
+            btn.Position = UDim2.new(1, -48, 0.5, -11)
+            btn.BackgroundColor3 = def and _G.Color or Color3.fromRGB(50, 52, 60)
             btn.Text = ""
             Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+            
+            -- Toggle gradient
+            local toggleGradient = Instance.new("UIGradient", btn)
+            if def then
+                toggleGradient.Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(88, 101, 242)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(118, 131, 255))
+                }
+            else
+                toggleGradient.Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 52, 60)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 42, 50))
+                }
+            end
+            toggleGradient.Rotation = 90
 
             local dot = Instance.new("Frame", btn)
-            dot.Size = UDim2.new(0, 14, 0, 14)
-            dot.Position = def and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
-            dot.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            dot.Size = UDim2.new(0, 16, 0, 16)
+            dot.Position = def and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+            dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+            
+            -- Dot shadow
+            local dotShadow = Instance.new("UIStroke", dot)
+            dotShadow.Color = Color3.fromRGB(0, 0, 0)
+            dotShadow.Thickness = 2
+            dotShadow.Transparency = 0.7
 
             local s = def
             btn.MouseButton1Click:Connect(function()
                 s = not s
-                TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = s and _G.Color or Color3.fromRGB(80, 80, 85)}):Play()
-                TweenService:Create(dot, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = s and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)}):Play()
+                
+                if s then
+                    TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = _G.Color}):Play()
+                    toggleGradient.Color = ColorSequence.new{
+                        ColorSequenceKeypoint.new(0, Color3.fromRGB(88, 101, 242)),
+                        ColorSequenceKeypoint.new(1, Color3.fromRGB(118, 131, 255))
+                    }
+                    TweenService:Create(border, TweenInfo.new(0.3), {Color = _G.Color, Transparency = 0.3}):Play()
+                    TweenService:Create(t, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+                else
+                    TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 52, 60)}):Play()
+                    toggleGradient.Color = ColorSequence.new{
+                        ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 52, 60)),
+                        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 42, 50))
+                    }
+                    TweenService:Create(border, TweenInfo.new(0.3), {Color = Color3.fromRGB(50, 52, 60), Transparency = 0.5}):Play()
+                    TweenService:Create(t, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(230, 230, 230)}):Play()
+                end
+                
+                TweenService:Create(dot, TweenInfo.new(0.4, Enum.EasingStyle.Back), {
+                    Position = s and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+                }):Play()
+                
                 cb(s)
             end)
         end
@@ -586,6 +821,176 @@ function Library:AddWindow(name)
             box.TextSize = 13
             box.TextXAlignment = Enum.TextXAlignment.Left
             box.FocusLost:Connect(function() cb(box.Text) end)
+        end
+
+        function Tools:AddSlider(text, side, min, max, def, cb)
+            Order = Order + 1
+            local f = Instance.new("Frame", GetSide(side))
+            f.Size = UDim2.new(1, 0, 0, 55)
+            f.BackgroundColor3 = Color3.fromRGB(30, 32, 40)
+            f.LayoutOrder = Order
+            Instance.new("UICorner", f).CornerRadius = UDim.new(0, 10)
+            
+            -- Card gradient
+            local cardGradient = Instance.new("UIGradient", f)
+            cardGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 37, 45)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 27, 35))
+            }
+            cardGradient.Rotation = 45
+            
+            -- Border
+            local border = Instance.new("UIStroke", f)
+            border.Color = Color3.fromRGB(50, 52, 60)
+            border.Thickness = 1
+            border.Transparency = 0.5
+            
+            -- Label with current value
+            local label = Instance.new("TextLabel", f)
+            label.Size = UDim2.new(0.7, 0, 0, 22)
+            label.Position = UDim2.new(0, 12, 0, 8)
+            label.Text = text
+            label.TextColor3 = Color3.fromRGB(230, 230, 230)
+            label.BackgroundTransparency = 1
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Font = Enum.Font.GothamBold
+            label.TextSize = 13
+            
+            -- Value display
+            local valueLabel = Instance.new("TextLabel", f)
+            valueLabel.Size = UDim2.new(0.3, -12, 0, 22)
+            valueLabel.Position = UDim2.new(0.7, 0, 0, 8)
+            valueLabel.Text = def
+            valueLabel.TextColor3 = _G.Color
+            valueLabel.BackgroundTransparency = 1
+            valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+            valueLabel.Font = Enum.Font.GothamBold
+            valueLabel.TextSize = 14
+            
+            -- Slider background (track)
+            local track = Instance.new("Frame", f)
+            track.Size = UDim2.new(1, -24, 0, 8)
+            track.Position = UDim2.new(0, 12, 0, 38)
+            track.BackgroundColor3 = Color3.fromRGB(40, 42, 50)
+            Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+            
+            -- Track gradient
+            local trackGradient = Instance.new("UIGradient", track)
+            trackGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 47, 55)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 37, 45))
+            }
+            trackGradient.Rotation = 90
+            
+            -- Filled portion (progress)
+            local fill = Instance.new("Frame", track)
+            fill.Size = UDim2.new((def - min) / (max - min), 0, 1, 0)
+            fill.BackgroundColor3 = _G.Color
+            fill.BorderSizePixel = 0
+            Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+            
+            -- Fill gradient
+            local fillGradient = Instance.new("UIGradient", fill)
+            fillGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(88, 101, 242)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(138, 151, 255))
+            }
+            
+            -- Fill glow
+            local fillGlow = Instance.new("UIStroke", fill)
+            fillGlow.Color = _G.Color
+            fillGlow.Thickness = 2
+            fillGlow.Transparency = 0.6
+            
+            -- Draggable thumb
+            local thumb = Instance.new("Frame", track)
+            thumb.Size = UDim2.new(0, 18, 0, 18)
+            thumb.Position = UDim2.new((def - min) / (max - min), -9, 0.5, -9)
+            thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            thumb.BorderSizePixel = 0
+            Instance.new("UICorner", thumb).CornerRadius = UDim.new(1, 0)
+            
+            -- Thumb glow
+            local thumbGlow = Instance.new("UIStroke", thumb)
+            thumbGlow.Color = _G.Color
+            thumbGlow.Thickness = 3
+            thumbGlow.Transparency = 0.5
+            
+            -- Inner shadow for thumb
+            local thumbInner = Instance.new("Frame", thumb)
+            thumbInner.Size = UDim2.new(0, 10, 0, 10)
+            thumbInner.Position = UDim2.new(0.5, -5, 0.5, -5)
+            thumbInner.BackgroundColor3 = _G.Color
+            thumbInner.BackgroundTransparency = 0.7
+            Instance.new("UICorner", thumbInner).CornerRadius = UDim.new(1, 0)
+            
+            local currentValue = def
+            local dragging = false
+            
+            local function updateSlider(input)
+                local trackPos = track.AbsolutePosition.X
+                local trackSize = track.AbsoluteSize.X
+                local mouseX = input.Position.X
+                
+                -- Calculate percentage (0 to 1)
+                local percent = math.clamp((mouseX - trackPos) / trackSize, 0, 1)
+                
+                -- Calculate value
+                currentValue = math.floor(min + (max - min) * percent)
+                
+                -- Update UI
+                valueLabel.Text = currentValue
+                fill.Size = UDim2.new(percent, 0, 1, 0)
+                thumb.Position = UDim2.new(percent, -9, 0.5, -9)
+                
+                -- Pulse animation on value change
+                TweenService:Create(valueLabel, TweenInfo.new(0.1), {TextSize = 16}):Play()
+                wait(0.1)
+                TweenService:Create(valueLabel, TweenInfo.new(0.1), {TextSize = 14}):Play()
+                
+                -- Callback
+                cb(currentValue)
+            end
+            
+            -- Mouse events
+            thumb.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                    -- Scale and glow animation
+                    TweenService:Create(thumb, TweenInfo.new(0.2), {
+                        Size = UDim2.new(0, 24, 0, 24), 
+                        Position = UDim2.new(thumb.Position.X.Scale, -12, 0.5, -12)
+                    }):Play()
+                    TweenService:Create(thumbGlow, TweenInfo.new(0.2), {Thickness = 5, Transparency = 0.2}):Play()
+                    TweenService:Create(border, TweenInfo.new(0.2), {Color = _G.Color, Transparency = 0.2}):Play()
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    updateSlider(input)
+                end
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
+                    dragging = false
+                    -- Scale back
+                    TweenService:Create(thumb, TweenInfo.new(0.2), {
+                        Size = UDim2.new(0, 18, 0, 18), 
+                        Position = UDim2.new(thumb.Position.X.Scale, -9, 0.5, -9)
+                    }):Play()
+                    TweenService:Create(thumbGlow, TweenInfo.new(0.2), {Thickness = 3, Transparency = 0.5}):Play()
+                    TweenService:Create(border, TweenInfo.new(0.2), {Color = Color3.fromRGB(50, 52, 60), Transparency = 0.5}):Play()
+                end
+            end)
+            
+            -- Click on track to jump
+            track.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and not dragging then
+                    updateSlider(input)
+                end
+            end)
         end
 
         function Tools:AddDropdown(text, side, list_provider, def, cb)
@@ -727,23 +1132,35 @@ Tab:AddSeperator("PLAYER SETTINGS", "Right")
 if FF_Instance:isEnabled("custom_walkspeed") then
     local config = FF_Instance:getConfig("custom_walkspeed")
     local maxSpeed = config and config.max_value or 100
-    Tab:AddTextBox("WalkSpeed", "Right", "Max: " .. maxSpeed, function(v) 
-        local speed = tonumber(v)
-        if speed and speed <= maxSpeed then
-            print("🏃 Set Speed:", speed)
-        else
-            print("⚠️ Speed เกิน limit!")
-        end
+    Tab:AddSlider("WalkSpeed", "Right", 16, maxSpeed, 16, function(v) 
+        print("🏃 Set Speed:", v)
+        -- ใส่โค้ดปรับ WalkSpeed ที่นี่
+        -- game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
     end)
 end
 
 if FF_Instance:isEnabled("custom_jumppower") then
-    Tab:AddTextBox("JumpPower", "Right", "Jump amount...", function(v) 
+    local config = FF_Instance:getConfig("custom_jumppower")
+    local maxJump = config and config.max_value or 200
+    Tab:AddSlider("JumpPower", "Right", 50, maxJump, 50, function(v) 
         print("🦘 Set Jump:", v)
+        -- ใส่โค้ดปรับ JumpPower ที่นี่
+        -- game.Players.LocalPlayer.Character.Humanoid.JumpPower = v
     end)
 end
 
 Tab:AddSeperator("MISC", "Right")
+
+-- ตัวอย่าง Sliders เพิ่มเติม
+Tab:AddSlider("FOV", "Right", 70, 120, 90, function(v)
+    print("👁️ FOV:", v)
+    -- workspace.CurrentCamera.FieldOfView = v
+end)
+
+Tab:AddSlider("Volume", "Right", 0, 100, 50, function(v)
+    print("🔊 Volume:", v .. "%")
+end)
+
 Tab:AddButton("Destroy UI 🗑️", "Right", function() 
     CoreGui["macOS_Premium"]:Destroy()
 end)
