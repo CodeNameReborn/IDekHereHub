@@ -55,6 +55,14 @@ function loadcheck()
     end
 end
 
+function SS()
+    if _G.SST then
+        writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
+    else
+        loadcheck()
+    end
+end
+
 function LoadSetting()
     if isfile(fileName) then
         local content = readfile(fileName)
@@ -68,15 +76,6 @@ function LoadSetting()
             _G.SST = defaultSettings
             SS()
         end
-    else
-        loadcheck()
-    end
-end
-
-
-function SS()
-    if _G.SST then
-        writefile(fileName, game:GetService("HttpService"):JSONEncode(_G.SST))
     else
         loadcheck()
     end
@@ -121,7 +120,7 @@ chooseTeam.AncestryChanged:Wait()
      MODILEMAGE.BorderSizePixel = 0
      MODILEMAGE.Position = UDim2.new(0, 0.5, 0, 0)
      MODILEMAGE.Size = UDim2.new(0, 38, 0, 31)
-     MODILEMAGE.Image = "rbxassetid://"
+     MODILEMAGE.Image = "rbxassetid://0"
      
     posto.Name = "posto"
      posto.Parent = Open
@@ -1106,14 +1105,14 @@ Sound:Play() -- ใช้ Sound:Play() แทนการตั้ง Sound.Play
             end)
      
      coroutine.wrap(function()
-     while wait() do
+     while task.wait() do
      end
      end)()
      
          
      
      coroutine.wrap(function()
-     while wait() do
+     while task.wait() do
      end
      end)()
         
@@ -1190,14 +1189,14 @@ Sound:Play() -- ใช้ Sound:Play() แทนการตั้ง Sound.Play
             end)
      
      coroutine.wrap(function()
-     while wait() do
+     while task.wait() do
      end
      end)()
      
          
      
      coroutine.wrap(function()
-     while wait() do
+     while task.wait() do
      end
      end)()
         local abcd = false
@@ -1301,14 +1300,14 @@ Sound:Play() -- ใช้ Sound:Play() แทนการตั้ง Sound.Play
             end)
      
      coroutine.wrap(function()
-     while wait() do
+     while task.wait() do
      end
      end)()
      
          
      
      coroutine.wrap(function()
-     while wait() do
+     while task.wait() do
      end
      end)()
         
@@ -1385,7 +1384,7 @@ Sound:Play() -- ใช้ Sound:Play() แทนการตั้ง Sound.Play
             end)
      
      coroutine.wrap(function()
-     while wait() do
+     while task.wait() do
      end
      end)()
     
@@ -1393,7 +1392,7 @@ Sound:Play() -- ใช้ Sound:Play() แทนการตั้ง Sound.Play
          
      
      coroutine.wrap(function()
-     while wait() do
+     while task.wait() do
      end
      end)()
         end
@@ -2618,7 +2617,7 @@ end
     end)
 
     spawn(function()
-        while wait() do
+        while task.wait() do
             if _G.SST.Auto_Farm_Level or _G.SST.Auto_Farm_Boss or _G.SST.Auto_Farm_All_Boss or _G.SST.Auto_Second_Sea or _G.SST.Auto_Farm_Material then
                 pcall(function()
                     game:GetService("ReplicatedStorage").Remotes.CommE:FireServer("Ken",true)
@@ -3407,7 +3406,7 @@ end)
         end)
     -- ใหม่
     spawn(function()
-        while wait() do
+        while task.wait() do
             pcall(function()
                 if _G.SST.Auto_Second_Sea and game:GetService("Players").LocalPlayer.Data.Level.Value >= 699 then
                     local IceDoor = game:GetService("Workspace").Map.Ice.Door
@@ -3456,7 +3455,7 @@ end)
     end 
 
     spawn(function()
-        while wait() do
+        while task.wait() do
             pcall(function()
                 if _G.SST.Auto_Third_Sea and game:GetService("Players").LocalPlayer.Data.Level.Value >= 1500 then
                     if game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("ZQuestProgress","Check") == 0 then
@@ -3998,7 +3997,7 @@ MS:AddToggleR("Auto Stats", _G.SST.Auto_Stats, function(vu)
 end)
 
 spawn(function()
-    while wait() do
+    while task.wait() do
         pcall(function()
             if _G.SST.Auto_Stats then
                 local playerPoints = game:GetService("Players").LocalPlayer.Data.Points.Value
@@ -4075,7 +4074,7 @@ IE:AddToggleL("Auto Death Step",_G.SST.Auto_Death_Step,function(vu)
 end)
 
 spawn(function()
-    while wait() do
+    while task.wait() do
         pcall(function()
             if _G.SST.Auto_Death_Step then
                 if game.Players.LocalPlayer.Backpack:FindFirstChild("Combat") or game.Players.LocalPlayer.Character:FindFirstChild("Combat") and game:GetService("Players")["LocalPlayer"].Data.Beli.Value >= 150000 then
@@ -4218,7 +4217,7 @@ IE:AddToggleL("Auto Find Sword",_G.SST.Auto_Find_Sword,function(vu)
     SS()
 end)
 spawn(function()
-    while wait() do
+    while task.wait() do
         pcall(function()
             if _G.SST.Auto_Find_Sword and _G.SST.Select_Sword then
                 local Sword = _G.SST.Select_Sword
@@ -4341,7 +4340,7 @@ IE:AddToggleL("Auto Find Gun",_G.SST.Auto_Find_Gun,function(vu)
 end)
 
 spawn(function()
-    while wait() do
+    while task.wait() do
         pcall(function()
             if _G.SST.Auto_Find_Gun and _G.SST.Select_Gun then
                 local Gun = _G.SST.Select_Gun
@@ -4437,7 +4436,7 @@ IE:AddToggleL("Auto Find Accessory",_G.SST.Auto_Find_Accessory,function(vu)
 end)
 
 spawn(function()
-    while wait() do
+    while task.wait() do
         pcall(function()
             if _G.SST.Auto_Find_Accessory and _G.SST.Select_Accessory then
                 local Accessory = _G.SST.Select_Accessory
@@ -4488,7 +4487,7 @@ IE:AddToggleL("Auto Chest",_G.SST.Auto_Chest,function(vu)
 end)
 
 spawn(function()
-    while wait() do
+    while task.wait() do
         pcall(function()
             if _G.SST.Auto_Chest then
 
@@ -4501,7 +4500,7 @@ IE:AddSeperatorR("Soon !!!")
 ------------------------------------------------------------ RS L
 RS:AddSeperatorL("Race")
 spawn(function()
-    while wait() do
+    while task.wait() do
                 RacePy:Set("Player Race : ".. game.Players.LocalPlayer.Data.Race.Value)
     end
 end)
@@ -4609,7 +4608,7 @@ RS:AddToggleL("Auto Evo Race V3",_G.SST.Auto_Evo_Race_V3,function(vu)
 end)
 
 spawn(function()
-    while wait() do
+    while task.wait() do
         pcall(function()
             if _G.SST.Auto_Evo_Race_V3 and World2 then
                  
@@ -4622,7 +4621,7 @@ RS:AddSeperatorL("Race V4")
 RaceCheck = RS:AddLabelL("Gear Chack : You Not Unlock")
     spawn(function()
         pcall(function()
-            while wait() do
+            while task.wait() do
                 if game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("UpgradeRace","Check") == 0 then
                 Race:Set("Gear Chack : Not Quest")
                 elseif game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("UpgradeRace","Check") == 5 then
@@ -4641,7 +4640,7 @@ RS:AddToggleL("Auto Race V4",_G.SST.Auto_Race_V4,function(vu)
 end)
 
 spawn(function()
-    while wait() do
+    while task.wait() do
         pcall(function()
             if _G.SST.Auto_Race_V4 then
             local RacePlayer = game.Players.LocalPlayer.Data.Race.Value
@@ -4935,7 +4934,7 @@ function Hop()
 		end
 	end
 	function Teleport() 
-		while wait() do
+		while task.wait() do
 			pcall(function()
 				TPReturner()
 				if foundAnything ~= "" then
@@ -5122,58 +5121,6 @@ function BoostFPS()
 end
 
 function ResetGraphics()
-	if not originalSettings.saved then
-		warn("⚠️ ยังไม่มีการ BoostFPS มาก่อน")
-		return
-	end
-
-	local lighting = game:GetService("Lighting")
-	settings().Rendering.QualityLevel = originalSettings.quality
-	lighting.GlobalShadows = originalSettings.shadows
-	lighting.FogEnd = originalSettings.fogEnd
-	lighting.Brightness = originalSettings.brightness
-
-	for effect, state in pairs(originalSettings.effects) do
-		effect.Enabled = state
-	end
-
-	for obj, data in pairs(originalSettings.parts) do
-		if obj and obj.Parent then
-			obj.Material = data.Material
-			obj.Reflectance = data.Reflectance
-		end
-	end
-
-	for obj, transparency in pairs(originalSettings.decals) do
-		if obj and obj.Parent then
-			obj.Transparency = transparency
-		end
-	end
-
-	for obj, transparency in pairs(originalSettings.textures) do
-		if obj and obj.Parent then
-			obj.Transparency = transparency
-		end
-	end
-
-	for obj, enabled in pairs(originalSettings.particles) do
-		if obj and obj.Parent then
-			obj.Enabled = enabled
-		end
-	end
-
-	for obj, data in pairs(originalSettings.meshes) do
-		if obj and obj.Parent then
-			obj.Material = data.Material
-			obj.TextureID = data.TextureID
-		end
-	end
-
-	print("✅ Boost FPS: OFF — กู้ค่ากราฟิกทั้งหมดแล้ว")
-end
-
-
-function ResetGraphics()
     if not originalSettings.saved then
         warn("⚠️ ยังไม่มีการ BoostFPS มาก่อน")
         return
@@ -5250,7 +5197,7 @@ PM:AddToggleR("Black Screen",_G.SST.Black_Screen, function(value)
 end)
 
 spawn(function()
-      while wait() do
+      while task.wait() do
         if _G.SST.Black_Screen then
             for i, v in pairs(game.Workspace["_WorldOrigin"]:GetChildren()) do
                 if v.Name == "CurvedRing" or v.Name == "SlashHit" or v.Name == "DamageCounter" or v.Name == "SwordSlash" or v.Name == "SlashTail" or v.Name == "Sounds" then
@@ -5310,13 +5257,21 @@ SS()
 end)
 
 spawn(function()
-	while wait() do
+	local Auto_Kick_Rejoin_Connection = nil
+	while task.wait() do
 		if _G.SST.Auto_Kick_Rejoin then
-			Auto_Kick_Rejoin = game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
-				if child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
-						game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
-				end
-			end)
+			if not Auto_Kick_Rejoin_Connection then
+				Auto_Kick_Rejoin_Connection = game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+					if child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
+							game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
+					end
+				end)
+			end
+		else
+			if Auto_Kick_Rejoin_Connection then
+				Auto_Kick_Rejoin_Connection:Disconnect()
+				Auto_Kick_Rejoin_Connection = nil
+			end
 		end
 	end
 end)
