@@ -3583,7 +3583,7 @@ end)
 
 -- ================== AUTO FARM ==================
 spawn(function()
-    while task.wait(0.1) do
+    while task.wait(0) do
         pcall(function()
             if not _G.SST.Auto_Farm_Material then
                 StartMagnet = false  -- ✅ รีเซ็ต Magnet เมื่อปิด Auto Farm
@@ -3613,7 +3613,7 @@ spawn(function()
                     foundMob = true
 
                     repeat
-                        task.wait(0.05)
+                        task.wait()
                         Equip(_G.ItemName)
                         AutoHaki()
                         PosMon = v.HumanoidRootPart.CFrame
