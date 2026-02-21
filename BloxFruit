@@ -3583,13 +3583,20 @@ end)
 
 -- ================== AUTO FARM ==================
 spawn(function()
-    while task.wait() do
+    while task.wait(0.1) do
         pcall(function()
-            if not _G.SST.Auto_Farm_Material then return end
+            if not _G.SST.Auto_Farm_Material then
+                StartMagnet = false  -- ✅ รีเซ็ต Magnet เมื่อปิด Auto Farm
+                return
+            end
             if _G.SST.Select_Materials == "" then return end
 
             local data = Materials[_G.SST.Select_Materials]
             if not data then return end
+
+            -- ✅ ตรวจสอบว่า CFrameMon ถูกตั้งค่าแล้วหรือยัง (ไม่ใช่ 0,0,0)
+            local cf = data.CFrameMon
+            local isValidCF = cf and (cf.X ~= 0 or cf.Y ~= 0 or cf.Z ~= 0)
 
             local enemies = workspace:FindFirstChild("Enemies")
             if not enemies then return end
@@ -3597,7 +3604,7 @@ spawn(function()
             local foundMob = false
             local currentMaterial = _G.SST.Select_Materials
 
-            for _,v in pairs(enemies:GetChildren()) do
+            for _, v in pairs(enemies:GetChildren()) do
                 if table.find(data.Namemon, v.Name)
                 and v:FindFirstChild("Humanoid")
                 and v:FindFirstChild("HumanoidRootPart")
@@ -3606,29 +3613,35 @@ spawn(function()
                     foundMob = true
 
                     repeat
-                        task.wait()
+                        task.wait(0.05)
                         Equip(_G.ItemName)
-                            AutoHaki()
-                            PosMon = v.HumanoidRootPart.CFrame
-                            Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
-                            v.Head.CanCollide = false
-                            v.Humanoid.WalkSpeed = 0
-                            StartMagnet = true
+                        AutoHaki()
+                        PosMon = v.HumanoidRootPart.CFrame
+                        Tween(v.HumanoidRootPart.CFrame * CFrame.new(_G.SST.Pos_X, _G.SST.Pos_Y, _G.SST.Pos_Z))
+                        v.Head.CanCollide = false
+                        v.Humanoid.WalkSpeed = 0
+                        StartMagnet = true
                     until not _G.SST.Auto_Farm_Material
-                    or _G.SST.Select_Materials ~= currentMaterial
-                    or not v.Parent
-                    or v.Humanoid.Health <= 0
+                        or _G.SST.Select_Materials ~= currentMaterial
+                        or not v.Parent
+                        or v.Humanoid.Health <= 0
+
+                    StartMagnet = false  -- ✅ รีเซ็ต Magnet หลังมอนตาย
+                    break  -- ✅ ล็อคเป้าหมายทีละตัว ไม่กระโดดไปตัวอื่น
                 end
             end
 
-            -- ❗ ไม่เจอมอน → ไปจุดฟาร์ม
-            if not foundMob and data.CFrameMon then
-                Tween(data.CFrameMon)
+            -- ❗ ไม่เจอมอน → เทเลพอร์ตไปจุดฟาร์ม
+            if not foundMob then
+                if isValidCF then
+                    Tween(cf)
+                else
+                    warn("[AutoFarm] ยังไม่ได้ตั้งค่า CFrameMon สำหรับ: " .. _G.SST.Select_Materials)
+                end
             end
         end)
     end
 end)
-
 
 
     MS:AddSeperatorL("Boss")
