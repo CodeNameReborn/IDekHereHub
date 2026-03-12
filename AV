@@ -1000,14 +1000,12 @@ end)()
         game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer(unpack(JOIN))
     end
 -------------------------------------------------- custom Ui
-    local ReBornXerUi = Update:AddWindow("  IDekhere Hub","",Enum.KeyCode.RightControl)
+    local ReBornXerUi = Library:AddWindow("  IDekhere Hub","",Enum.KeyCode.RightControl)
 
     local Main = ReBornXerUi:AddTab("Main","6026568198")
     local PWEBHOOK = ReBornXerUi:AddTab("Play - WebHook","")
     local Misc = ReBornXerUi:AddTab("Misc","")
     local Setting = ReBornXerUi:AddTab("","")
-
-    local S = ReBornXerUi:AddTabH("Top","14134158045")
 
     -------------------------------------------------- Main L Ui
 
