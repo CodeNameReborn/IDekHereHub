@@ -1053,30 +1053,55 @@ end)()
         SS()
     end)
 
-local CHACK_Join_Map = nil
-local StartChack = false
-local StartCompleted = false
-
 spawn(function()
-    while wait(1) do
+
+    local Step = 1
+
+    while _G.SST.Auto_Join_Map do
         pcall(function()
-            if _G.SST.Auto_Join_Map then
-                if StartChack == false then
-                    repeat wait()
-                        JoinMap(_G.SST.Select_StageType,_G.SST.Select_Act,_G.SST.Select_Stage,_G.SST.Select_Mode,_G.SST.Auto_Vote_Friends_Only)
-                        CHACK_Join_Map = true
-                    until game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("MiniLobbyInterface") and CHACK_Join_Map == true 
-                    StartChack = true
-                elseif StartChack == true and StartCompleted == false then
-                    if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("MiniLobbyInterface") and CHACK_Join_Map == true then
-                        wait(2)
-                        game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
-                        StartCompleted = true
-                    end
+
+            local Player = game:GetService("Players").LocalPlayer
+            local PlayerGui = Player.PlayerGui
+            local LobbyGui = PlayerGui:FindFirstChild("MiniLobbyInterface")
+
+            -- STEP 1 : Join Map
+            if Step == 1 then
+                if not LobbyGui then
+                    JoinMap(
+                        _G.SST.Select_StageType,
+                        _G.SST.Select_Act,
+                        _G.SST.Select_Stage,
+                        _G.SST.Select_Mode,
+                        _G.SST.Auto_Vote_Friends_Only
+                    )
+                else
+                    Step = 2
                 end
             end
+
+            -- STEP 2 : รอ Lobby โหลด
+            if Step == 2 then
+                if LobbyGui then
+                    wait(2)
+                    Step = 3
+                end
+            end
+
+            -- STEP 3 : Start Match
+            if Step == 3 then
+                game:GetService("ReplicatedStorage")
+                :WaitForChild("Networking")
+                :WaitForChild("LobbyEvent")
+                :FireServer("StartMatch")
+
+                Step = 4
+            end
+
         end)
+
+        task.wait(0.5)
     end
+
 end)
 
 
@@ -1092,30 +1117,53 @@ end)
     StartCompleted = false
 
     spawn(function()
-        while wait(1) do
-            pcall(function()
-                if _G.SST.Auto_Join_Event then
-                    if StartChack == false then                   
-                        repeat wait()
-                            local args = {
-                                [1] = "Create",
-                                [2] = "Infinite"
-                            }
-                            game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("Fall"):WaitForChild("FallLTMEvent"):FireServer(unpack(args))
-                            CHACK_Join_Event = true
-                        until game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Event == true
-                        StartChack = true
-                    elseif StartChack == true and StartCompleted == false then
-                        if game:GetService("Players").LocalPlayer.PlayerGui.MiniLobbyInterface and CHACK_Join_Event == true then
-                            wait(2)
-                            game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("LobbyEvent"):FireServer("StartMatch")
-                            StartCompleted = true
-                        end
-                    end 
+
+    local Step = 1
+
+    while _G.SST.Auto_Join_Event do
+        pcall(function()
+
+            local Player = game:GetService("Players").LocalPlayer
+            local PlayerGui = Player.PlayerGui
+            local LobbyGui = PlayerGui:FindFirstChild("MiniLobbyInterface")
+
+            -- STEP 1 : Create Event Lobby
+            if Step == 1 then
+                if not LobbyGui then
+                    game:GetService("ReplicatedStorage")
+                    :WaitForChild("Networking")
+                    :WaitForChild("Fall")
+                    :WaitForChild("FallLTMEvent")
+                    :FireServer("Create","Infinite")
+                else
+                    Step = 2
                 end
-            end)
-        end
-    end)
+            end
+
+            -- STEP 2 : รอ Lobby โหลด
+            if Step == 2 then
+                if LobbyGui then
+                    task.wait(2)
+                    Step = 3
+                end
+            end
+
+            -- STEP 3 : Start Match
+            if Step == 3 then
+                game:GetService("ReplicatedStorage")
+                :WaitForChild("Networking")
+                :WaitForChild("LobbyEvent")
+                :FireServer("StartMatch")
+
+                Step = 4
+            end
+
+        end)
+
+        task.wait(0.5)
+    end
+
+end)
     
     Main:AddSeperatorR("Game Vote Match")
     _G.SST.Select_Vote = _G.SST.Select_Vote or Select_Vote or ""
@@ -1131,23 +1179,39 @@ end)
         SS()
     end)
 
-    OneClick = nil
+local OneClick = false
 
-    spawn(function()
-        while wait() do 
-            pcall(function()
-                if _G.SST.Auto_Vote then
-                    if game:GetService("Players").localPlayer.PlayerGui.EndScreen.Glow.Visible == true and game:GetService("Players").localPlayer.PlayerGui.EndScreen.Background.Visible == true and OneClick == false then
-                        game:GetService("ReplicatedStorage").Networking.EndScreen.VoteEvent:FireServer(_G.SST.Select_Function)
-                        OneClick = true
-                    else
-                        wait(5)
-                        OneClick = false
-                    end
+spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+
+            if not _G.SST.Auto_Vote then return end
+
+            local Player = game:GetService("Players").LocalPlayer
+            local EndScreen = Player.PlayerGui:FindFirstChild("EndScreen")
+
+            if EndScreen 
+            and EndScreen:FindFirstChild("Glow")
+            and EndScreen:FindFirstChild("Background") then
+
+                if EndScreen.Glow.Visible 
+                and EndScreen.Background.Visible 
+                and not OneClick then
+
+                    game:GetService("ReplicatedStorage")
+                    .Networking.EndScreen.VoteEvent
+                    :FireServer(_G.SST.Select_Function)
+
+                    OneClick = true
                 end
-            end)
-        end
-    end)
+
+            else
+                OneClick = false
+            end
+
+        end)
+    end
+end)
 
     Main:AddSeperatorR("Wave Function")
     Main:AddToggleR("Auto Skip Wave",_G.SST.Auto_Skip_Wave,function(value)
@@ -1155,22 +1219,32 @@ end)
         _G.SST.Auto_Skip_Wave = Auto_Skip_Wave
         SS()
     end)
-    ClickSkip = false
-    spawn(function()
-        while wait() do
-            pcall(function()
-                if _G.SST.Auto_Skip_Wave then
-                    if game:GetService("Players").localPlayer.PlayerGui.SkipWave.Enabled == true and ClickSkip == false then
-                        game:GetService("ReplicatedStorage").Networking.SkipWaveEvent:FireServer("Skip")
-                        ClickSkip = true
-                    else
-                        wait(1)
-                        ClickSkip = false
-                    end
-                end
-            end)
-        end
-    end)
+local ClickSkip = false
+
+spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+
+            if not _G.SST.Auto_Skip_Wave then return end
+
+            local Player = game:GetService("Players").LocalPlayer
+            local SkipGui = Player.PlayerGui:FindFirstChild("SkipWave")
+
+            if SkipGui and SkipGui.Enabled and not ClickSkip then
+
+                game:GetService("ReplicatedStorage")
+                .Networking.SkipWaveEvent
+                :FireServer("Skip")
+
+                ClickSkip = true
+
+            elseif SkipGui and not SkipGui.Enabled then
+                ClickSkip = false
+            end
+
+        end)
+    end
+end)
 
     Main:AddSeperatorR("Wave Restart")
     _G.SST.Select_Wave = _G.SST.Select_Wave or Select_Wave or 50
@@ -1185,21 +1259,37 @@ end)
         SS()
     end)
 
-    spawn(function()
-        while wait() do
-            pcall(function()
-                if _G.SST.Auto_Restart then
-                    local wavesGui = game:GetService("Players").LocalPlayer.PlayerGui.HUD.Map.WavesAmount
-                    if wavesGui and wavesGui.Visible then
-                        -- ใช้ string.match แทนการเช็คข้อความยาว ๆ
-                        if string.match(wavesGui.Text, _G.SST.Select_Wave.."</font></stroke><stroke") then
-                            game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("MatchRestartSettingEvent"):FireServer("Vote")
-                        end
-                    end
+local RestartClicked = false
+
+spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+
+            if not _G.SST.Auto_Restart then return end
+
+            local Player = game:GetService("Players").LocalPlayer
+            local wavesGui = Player.PlayerGui:FindFirstChild("HUD")
+                and Player.PlayerGui.HUD.Map:FindFirstChild("WavesAmount")
+
+            if wavesGui and wavesGui.Visible then
+
+                if string.match(wavesGui.Text, _G.SST.Select_Wave.."</font></stroke><stroke") and not RestartClicked then
+
+                    game:GetService("ReplicatedStorage")
+                    :WaitForChild("Networking")
+                    :WaitForChild("MatchRestartSettingEvent")
+                    :FireServer("Vote")
+
+                    RestartClicked = true
                 end
-            end)
-        end
-    end)
+
+            else
+                RestartClicked = false
+            end
+
+        end)
+    end
+end)
 
     PWEBHOOK:AddSeperatorL("Play")
     PWEBHOOK:AddToggleL("Auto Play", _G.SST.Auto_Play, function(value)
@@ -1212,17 +1302,35 @@ end)
     end)
  
 
-    spawn(function()
-        while wait(1) do
-            pcall(function()
-                if _G.SST.Auto_Play then
-                    if not workspace:FindFirstChild("AutoPlayPart") then
-                        game:GetService("ReplicatedStorage"):WaitForChild("Networking"):WaitForChild("AutoPlayEvent"):FireServer("Toggle")
-                    end
-                end
-            end)
-        end
-    end)
+local AutoPlayToggled = false
+
+spawn(function()
+    while task.wait(1) do
+        pcall(function()
+
+            if not _G.SST.Auto_Play then
+                AutoPlayToggled = false
+                return
+            end
+
+            local AutoPlayPart = workspace:FindFirstChild("AutoPlayPart")
+
+            if not AutoPlayPart and not AutoPlayToggled then
+
+                game:GetService("ReplicatedStorage")
+                :WaitForChild("Networking")
+                :WaitForChild("AutoPlayEvent")
+                :FireServer("Toggle")
+
+                AutoPlayToggled = true
+
+            elseif AutoPlayPart then
+                AutoPlayToggled = false
+            end
+
+        end)
+    end
+end)
 
 PWEBHOOK:AddSeperatorR("WebHook")
 
@@ -1325,40 +1433,52 @@ spawn(function()
 end)
 ---
 
-RunService.Heartbeat:Connect(function()
-    pcall(function()
-        if not _G.SST.Send_WebHook and OffSent then return end
+local hasSent = false
+local lastSentTime = 0
+local COOLDOWN = 30
 
-        local endScreen = player.PlayerGui:FindFirstChild("EndScreen")
-        if endScreen and endScreen.Holder and endScreen.Holder.Main.Visible then
-            -- เช็ค cooldown ก่อนส่ง
-            if not hasSent and (time() - lastSentTime >= COOLDOWN) then
-                local GameTime = endScreen.Holder.Main.StageStatistics.PlayTime.Amount.Text
-                local rewardsText = ""
+spawn(function()
+    while task.wait(1) do
+        pcall(function()
 
-                local rewardsFolder = endScreen.Holder.Main.StageRewards.Main
-                for _, item in ipairs(rewardsFolder:GetChildren()) do
-                    local holder = item:FindFirstChild("Holder")
-                    if holder then
-                        local nameLabel = holder.Main:FindFirstChild("ItemName")
-                        local amountLabel = holder.Main:FindFirstChild("Amount")
-                        if nameLabel and amountLabel then
-                            rewardsText ..= nameLabel.Text .. " " .. amountLabel.Text .. "\n"
+            if not _G.SST.Send_WebHook then return end
+
+            local endScreen = player.PlayerGui:FindFirstChild("EndScreen")
+
+            if endScreen and endScreen.Holder and endScreen.Holder.Main.Visible then
+
+                if not hasSent and (time() - lastSentTime >= COOLDOWN) then
+
+                    local GameTime = endScreen.Holder.Main.StageStatistics.PlayTime.Amount.Text
+                    local rewardsText = ""
+
+                    local rewardsFolder = endScreen.Holder.Main.StageRewards.Main
+
+                    for _, item in ipairs(rewardsFolder:GetChildren()) do
+                        local holder = item:FindFirstChild("Holder")
+                        if holder then
+                            local nameLabel = holder.Main:FindFirstChild("ItemName")
+                            local amountLabel = holder.Main:FindFirstChild("Amount")
+
+                            if nameLabel and amountLabel then
+                                rewardsText ..= nameLabel.Text.." "..amountLabel.Text.."\n"
+                            end
                         end
                     end
+
+                    sendWebhook(player.Name, rewardsText, GameTime)
+
+                    hasSent = true
+                    lastSentTime = time()
+
                 end
-
-                sendWebhook(player.Name, rewardsText, GameTime)
-                hasSent = true
-                OffSent = false
+            else
+                hasSent = false
             end
-        else
-            -- EndScreen หายไป → รีเซ็ตสำหรับรอบใหม่
-            hasSent = false
-        end
-    end)
-end)
 
+        end)
+    end
+end)
     Misc:AddSeperatorR("Server")
 
     Misc:AddButtonR("Rejoin Server",function()
@@ -1495,71 +1615,38 @@ end)
     }
 
     function BoostFPS()
-        local lighting = game:GetService("Lighting")
 
-        if not originalSettings.saved then
-            originalSettings.saved = true
-            originalSettings.quality = settings().Rendering.QualityLevel
-            originalSettings.shadows = lighting.GlobalShadows
-            originalSettings.fogEnd = lighting.FogEnd
-            originalSettings.brightness = lighting.Brightness
+    local lighting = game:GetService("Lighting")
 
-            -- Save post effects
-            for _, v in pairs(lighting:GetChildren()) do
-                if v:IsA("PostEffect") then
-                    originalSettings.effects[v] = v.Enabled
-                end
-            end
-
-            -- Save individual objects
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    originalSettings.parts[v] = {
-                        Material = v.Material,
-                        Reflectance = v.Reflectance
-                    }
-                    v.Material = Enum.Material.SmoothPlastic
-                    v.Reflectance = 0
-
-                elseif v:IsA("Decal") then
-                    originalSettings.decals[v] = v.Transparency
-                    v.Transparency = 1
-
-                elseif v:IsA("Texture") then
-                    originalSettings.textures[v] = v.Transparency
-                    v.Transparency = 1
-
-                elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
-                    originalSettings.particles[v] = v.Enabled
-                    v.Enabled = false
-
-                elseif v:IsA("MeshPart") then
-                    originalSettings.meshes[v] = {
-                        Material = v.Material,
-                        TextureID = v.TextureID
-                    }
-                    v.Material = Enum.Material.SmoothPlastic
-                    v.TextureID = ""
-                end
-            end
-        end
-
-        -- Apply low settings
-        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-        lighting.GlobalShadows = false
-        lighting.FogEnd = 100000
-        lighting.Brightness = 1
-
-        for effect in pairs(originalSettings.effects) do
-            effect.Enabled = false
-        end
-
-        if workspace:FindFirstChildOfClass("Camera") then
-            workspace.CurrentCamera:ClearAllChildren()
-        end
-
-        print("✅ Boost FPS: ON")
+    if not originalSettings.saved then
+        originalSettings.saved = true
+        originalSettings.quality = settings().Rendering.QualityLevel
+        originalSettings.shadows = lighting.GlobalShadows
+        originalSettings.fogEnd = lighting.FogEnd
+        originalSettings.brightness = lighting.Brightness
     end
+
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    lighting.GlobalShadows = false
+    lighting.FogEnd = 100000
+    lighting.Brightness = 1
+
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Material = Enum.Material.SmoothPlastic
+            v.Reflectance = 0
+
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            v.Transparency = 1
+
+        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            v.Enabled = false
+        end
+    end
+
+    print("✅ Boost FPS: ON")
+
+end
 
     function ResetGraphics()
         if not originalSettings.saved then
