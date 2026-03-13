@@ -1,39 +1,45 @@
 -- ============================================================
---   IDekhere Hub v3  |  UI Settings Tab included
+--   IDekhere Hub v4  |  Fully Debugged
 -- ============================================================
-
 local TweenService     = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService       = game:GetService("RunService")
 
--- ลบ GUI เก่า
+-- ── ลบ GUI เก่า ───────────────────────────────────────────────
 local _old = game.CoreGui:FindFirstChild("IDekhere Hub")
 if _old then _old:Destroy() end
 
 -- ══════════════════════════════════════════════════════════════
---  THEME  (ปรับจาก UI Settings Tab ได้ทุกอย่าง)
+--  THEME
 -- ══════════════════════════════════════════════════════════════
 local Theme = {
-    Accent      = Color3.fromRGB(51, 255, 255),   -- สีหลัก
-    WinBg       = Color3.fromRGB(17, 17, 17),      -- พื้นหลัง window
-    TopBg       = Color3.fromRGB(25, 25, 25),      -- topbar
-    CardBg      = Color3.fromRGB(28, 28, 28),      -- card
-    CardStroke  = Color3.fromRGB(44, 44, 44),      -- เส้นขอบ card
-    Text        = Color3.fromRGB(195, 195, 195),   -- ข้อความทั่วไป
-    WinRadius   = 10,   -- 0-24
-    CardRadius  = 6,    -- 0-16
-    WinOpacity  = 0,    -- BackgroundTransparency (0=ทึบ, 0.6=โปร่ง)
-    TabAnim     = "slide", -- slide | scale | wipe | flip | stagger | fade
-    WinW        = 620,
-    WinH        = 400,
+    Accent     = Color3.fromRGB(51,255,255),
+    WinBg      = Color3.fromRGB(17,17,17),
+    TopBg      = Color3.fromRGB(25,25,25),
+    CardBg     = Color3.fromRGB(28,28,28),
+    CardStroke = Color3.fromRGB(44,44,44),
+    Text       = Color3.fromRGB(195,195,195),
+    WinRadius  = 10,
+    CardRadius = 6,
+    WinOpacity = 0,
+    TabAnim    = "slide",
+    WinW       = 620,
+    WinH       = 400,
 }
 
--- callbacks ที่ UI Settings จะเรียกตอนปรับ
+-- FIX: ThemeCallbacks เก็บ list ของ callbacks ไม่ใช่แค่ตัวเดียว
 local ThemeCallbacks = {}
-local function onThemeChange(key, fn) ThemeCallbacks[key] = fn end
+local function onThemeChange(key, fn)
+    if not ThemeCallbacks[key] then ThemeCallbacks[key] = {} end
+    table.insert(ThemeCallbacks[key], fn)
+end
 local function applyTheme(key, val)
     Theme[key] = val
-    if ThemeCallbacks[key] then ThemeCallbacks[key](val) end
+    if ThemeCallbacks[key] then
+        for _, fn in ipairs(ThemeCallbacks[key]) do
+            pcall(fn, val)
+        end
+    end
 end
 
 -- ══════════════════════════════════════════════════════════════
@@ -52,24 +58,21 @@ GUI.IgnoreGuiInset  = true
 local function MakeDraggable(handle, obj)
     local drag, ds, sp = false, nil, nil
     handle.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1
-        or i.UserInputType == Enum.UserInputType.Touch then
-            drag = true
-            ds   = Vector2.new(i.Position.X, i.Position.Y)
-            sp   = obj.Position
+        if i.UserInputType==Enum.UserInputType.MouseButton1
+        or i.UserInputType==Enum.UserInputType.Touch then
+            drag=true; ds=Vector2.new(i.Position.X,i.Position.Y); sp=obj.Position
         end
     end)
     handle.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1
-        or i.UserInputType == Enum.UserInputType.Touch then drag = false end
+        if i.UserInputType==Enum.UserInputType.MouseButton1
+        or i.UserInputType==Enum.UserInputType.Touch then drag=false end
     end)
     UserInputService.InputChanged:Connect(function(i)
         if not drag then return end
-        if i.UserInputType == Enum.UserInputType.MouseMovement
-        or i.UserInputType == Enum.UserInputType.Touch then
-            local d = Vector2.new(i.Position.X, i.Position.Y) - ds
-            obj.Position = UDim2.new(sp.X.Scale, sp.X.Offset+d.X,
-                                     sp.Y.Scale, sp.Y.Offset+d.Y)
+        if i.UserInputType==Enum.UserInputType.MouseMovement
+        or i.UserInputType==Enum.UserInputType.Touch then
+            local d=Vector2.new(i.Position.X,i.Position.Y)-ds
+            obj.Position=UDim2.new(sp.X.Scale,sp.X.Offset+d.X,sp.Y.Scale,sp.Y.Offset+d.Y)
         end
     end)
 end
@@ -77,114 +80,75 @@ end
 -- ══════════════════════════════════════════════════════════════
 --  Main Frame
 -- ══════════════════════════════════════════════════════════════
-local WIN_NAME  = "IDekhere Hub"
-local WIN_LOGO  = 0
-local WIN_KEY   = Enum.KeyCode.RightControl
+local WIN_NAME = "IDekhere Hub"
+local WIN_LOGO = 0
+local WIN_KEY  = Enum.KeyCode.RightControl
 
-local Main = Instance.new("Frame", GUI)
-Main.Name                 = "Main"
-Main.AnchorPoint          = Vector2.new(0.5, 0.5)
-Main.BackgroundColor3     = Theme.WinBg
-Main.BackgroundTransparency = Theme.WinOpacity
-Main.Position             = UDim2.new(0.5, 0, 0.5, 0)
-Main.Size                 = UDim2.new(0, Theme.WinW, 0, Theme.WinH)
-Main.BorderSizePixel      = 0
-Main.ClipsDescendants     = false
+local NORMAL_SIZE = UDim2.new(0,Theme.WinW,0,Theme.WinH)
+local NORMAL_POS  = UDim2.new(0.5,0,0.5,0)
+local isIsland=false; local isMax=false; local uiHidden=false
 
-local MainCorner = Instance.new("UICorner", Main)
-MainCorner.CornerRadius   = UDim.new(0, Theme.WinRadius)
+local Main = Instance.new("Frame",GUI)
+Main.Name="Main"; Main.AnchorPoint=Vector2.new(0.5,0.5)
+Main.BackgroundColor3=Theme.WinBg; Main.BackgroundTransparency=Theme.WinOpacity
+Main.Position=NORMAL_POS; Main.Size=NORMAL_SIZE
+Main.BorderSizePixel=0; Main.ClipsDescendants=false
 
-local MainStroke = Instance.new("UIStroke", Main)
-MainStroke.Color          = Theme.Accent
-MainStroke.Thickness      = 1.5
+local MainCorner=Instance.new("UICorner",Main)
+MainCorner.CornerRadius=UDim.new(0,Theme.WinRadius)
+local MainStroke=Instance.new("UIStroke",Main)
+MainStroke.Color=Theme.Accent; MainStroke.Thickness=1.5
 
-local NORMAL_SIZE = UDim2.new(0, Theme.WinW, 0, Theme.WinH)
-local NORMAL_POS  = UDim2.new(0.5, 0, 0.5, 0)
-local isIsland = false
-local isMax    = false
-local uiHidden = false
-
-local function tweenCorner(r, delay)
-    task.delay(delay or 0, function()
-        TweenService:Create(MainCorner, TweenInfo.new(0.3, Enum.EasingStyle.Sine),
-            {CornerRadius = UDim.new(0, r)}):Play()
+local function tweenCorner(r,d)
+    task.delay(d or 0,function()
+        TweenService:Create(MainCorner,TweenInfo.new(0.3,Enum.EasingStyle.Sine),
+            {CornerRadius=UDim.new(0,r)}):Play()
     end)
 end
 
--- Theme callbacks → live update Main
-onThemeChange("Accent", function(c)
-    MainStroke.Color = c
-end)
-onThemeChange("WinBg", function(c)
-    Main.BackgroundColor3 = c
-end)
-onThemeChange("WinOpacity", function(v)
-    Main.BackgroundTransparency = v
-end)
-onThemeChange("WinRadius", function(r)
-    TweenService:Create(MainCorner, TweenInfo.new(0.3, Enum.EasingStyle.Sine),
-        {CornerRadius = UDim.new(0, r)}):Play()
-end)
-onThemeChange("WinW", function(w)
-    NORMAL_SIZE = UDim2.new(0, w, 0, Theme.WinH)
-    TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-        {Size = NORMAL_SIZE}):Play()
-end)
-onThemeChange("WinH", function(h)
-    NORMAL_SIZE = UDim2.new(0, Theme.WinW, 0, h)
-    TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-        {Size = NORMAL_SIZE}):Play()
-end)
+onThemeChange("Accent",    function(c) MainStroke.Color=c end)
+onThemeChange("WinBg",     function(c) Main.BackgroundColor3=c end)
+onThemeChange("WinOpacity",function(v) Main.BackgroundTransparency=v end)
+onThemeChange("WinRadius", function(r) tweenCorner(r) end)
 
 -- ══════════════════════════════════════════════════════════════
 --  Top bar
 -- ══════════════════════════════════════════════════════════════
-local Top = Instance.new("Frame", Main)
-Top.Name              = "Top"
-Top.BackgroundColor3  = Theme.TopBg
-Top.Size              = UDim2.new(1, 0, 0, 34)
-Top.BorderSizePixel   = 0
-Instance.new("UICorner", Top).CornerRadius = UDim.new(0, Theme.WinRadius)
-local TopFix = Instance.new("Frame", Top)
-TopFix.BackgroundColor3 = Theme.TopBg
-TopFix.Position = UDim2.new(0, 0, 0.5, 0)
-TopFix.Size     = UDim2.new(1, 0, 0.5, 0)
-TopFix.BorderSizePixel = 0
+local Top=Instance.new("Frame",Main)
+Top.Name="Top"; Top.BackgroundColor3=Theme.TopBg
+Top.Size=UDim2.new(1,0,0,34); Top.BorderSizePixel=0
+local TopCorner=Instance.new("UICorner",Top); TopCorner.CornerRadius=UDim.new(0,Theme.WinRadius)
+local TopFix=Instance.new("Frame",Top)
+TopFix.BackgroundColor3=Theme.TopBg; TopFix.Position=UDim2.new(0,0,0.5,0)
+TopFix.Size=UDim2.new(1,0,0.5,0); TopFix.BorderSizePixel=0
 
-onThemeChange("TopBg", function(c)
-    Top.BackgroundColor3  = c
-    TopFix.BackgroundColor3 = c
-end)
-onThemeChange("WinRadius", function(r)
-    Top:FindFirstChildWhichIsA("UICorner").CornerRadius = UDim.new(0, r)
-end)
+onThemeChange("TopBg",    function(c) Top.BackgroundColor3=c; TopFix.BackgroundColor3=c end)
+onThemeChange("WinRadius",function(r) TopCorner.CornerRadius=UDim.new(0,r) end)
 
--- mac dot helper
-local function macBtn(name, color, px, fn)
-    local b = Instance.new("TextButton", Top)
-    b.Name = name
-    b.BackgroundColor3 = color
-    b.Size = UDim2.new(0, 13, 0, 13)
-    b.Position = UDim2.new(0, px, 0.5, -6)
-    b.Text = ""; b.AutoButtonColor = false; b.ZIndex = 5
-    Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
+-- mac dot buttons
+local function macBtn(name,color,px,fn)
+    local b=Instance.new("TextButton",Top)
+    b.Name=name; b.BackgroundColor3=color
+    b.Size=UDim2.new(0,13,0,13); b.Position=UDim2.new(0,px,0.5,-6)
+    b.Text=""; b.AutoButtonColor=false; b.ZIndex=5
+    Instance.new("UICorner",b).CornerRadius=UDim.new(1,0)
     b.MouseButton1Click:Connect(fn)
     b.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.Touch then fn() end
+        if i.UserInputType==Enum.UserInputType.Touch then fn() end
     end)
     return b
 end
 
--- ── 🔴 Mini ──────────────────────────────────────────────────
-macBtn("CloseBtn", Color3.fromRGB(255,59,48), 8, function()
+-- 🔴 Mini mode
+macBtn("CloseBtn",Color3.fromRGB(255,59,48),8,function()
     if GUI:FindFirstChild("MiniBtn") then return end
-    TweenService:Create(Main, TweenInfo.new(0.12, Enum.EasingStyle.Sine), {Size=UDim2.new(0,650,0,420)}):Play()
+    TweenService:Create(Main,TweenInfo.new(0.12,Enum.EasingStyle.Sine),{Size=UDim2.new(0,650,0,420)}):Play()
     task.wait(0.1); tweenCorner(50)
-    TweenService:Create(Main, TweenInfo.new(0.44, Enum.EasingStyle.Back, Enum.EasingDirection.In),
-        {Size=UDim2.new(0,0,0,0), Position=UDim2.new(0,52,0,52), BackgroundTransparency=0.5}):Play()
-    task.wait(0.47); Main.Visible = false
+    TweenService:Create(Main,TweenInfo.new(0.44,Enum.EasingStyle.Back,Enum.EasingDirection.In),
+        {Size=UDim2.new(0,0,0,0),Position=UDim2.new(0,52,0,52),BackgroundTransparency=0.5}):Play()
+    task.wait(0.47); Main.Visible=false
 
-    local mini = Instance.new("Frame", GUI)
+    local mini=Instance.new("Frame",GUI)
     mini.Name="MiniBtn"; mini.AnchorPoint=Vector2.new(0.5,0.5)
     mini.Position=UDim2.new(0,52,0,52); mini.Size=UDim2.new(0,0,0,0)
     mini.BackgroundColor3=Color3.fromRGB(16,16,16); mini.BorderSizePixel=0; mini.ZIndex=50
@@ -192,9 +156,8 @@ macBtn("CloseBtn", Color3.fromRGB(255,59,48), 8, function()
     local msk=Instance.new("UIStroke",mini); msk.Color=Theme.Accent; msk.Thickness=1.5
     local mt=Instance.new("TextLabel",mini); mt.Size=UDim2.new(1,0,1,0); mt.BackgroundTransparency=1
     mt.Text="◈"; mt.TextColor3=Theme.Accent; mt.Font=Enum.Font.GothamBold; mt.TextSize=18; mt.ZIndex=51
-    TweenService:Create(mini, TweenInfo.new(0.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
+    TweenService:Create(mini,TweenInfo.new(0.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
         {Size=UDim2.new(0,45,0,45)}):Play()
-
     local ca=Instance.new("TextButton",mini); ca.Size=UDim2.new(1,0,1,0)
     ca.BackgroundTransparency=1; ca.Text=""; ca.ZIndex=52
     ca.MouseEnter:Connect(function()
@@ -212,64 +175,66 @@ macBtn("CloseBtn", Color3.fromRGB(255,59,48), 8, function()
         Main.Size=UDim2.new(0,0,0,0); Main.Position=UDim2.new(0,52,0,52)
         tweenCorner(Theme.WinRadius)
         TweenService:Create(Main,TweenInfo.new(0.55,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
-            {Size=NORMAL_SIZE, Position=NORMAL_POS, BackgroundTransparency=Theme.WinOpacity}):Play()
+            {Size=NORMAL_SIZE,Position=NORMAL_POS,BackgroundTransparency=Theme.WinOpacity}):Play()
     end
     ca.MouseButton1Click:Connect(restoreMini)
     ca.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.Touch then restoreMini() end end)
 end)
 
--- ── 🟡 Island ────────────────────────────────────────────────
-local islandClick = Instance.new("TextButton", Main)
+-- 🟡 Island mode
+-- FIX: islandClick อยู่ใน Main แต่ Visible=false ตลอด จะไม่บัง content
+local islandClick=Instance.new("TextButton",Main)
 islandClick.Size=UDim2.new(1,0,1,0); islandClick.BackgroundTransparency=1
-islandClick.Text=""; islandClick.ZIndex=2; islandClick.Visible=false
-local iDot=Instance.new("Frame",islandClick); iDot.AnchorPoint=Vector2.new(0,0.5)
-iDot.Position=UDim2.new(0,12,0.5,0); iDot.Size=UDim2.new(0,7,0,7)
-iDot.BackgroundColor3=Theme.Accent; iDot.BorderSizePixel=0; iDot.ZIndex=32
+islandClick.Text=""; islandClick.ZIndex=3; islandClick.Visible=false
+-- island decoration
+local iDot=Instance.new("Frame",islandClick)
+iDot.AnchorPoint=Vector2.new(0,0.5); iDot.Position=UDim2.new(0,12,0.5,0)
+iDot.Size=UDim2.new(0,7,0,7); iDot.BackgroundColor3=Theme.Accent; iDot.BorderSizePixel=0; iDot.ZIndex=4
 Instance.new("UICorner",iDot).CornerRadius=UDim.new(1,0)
-local iLbl=Instance.new("TextLabel",islandClick); iLbl.Size=UDim2.new(1,0,1,0)
-iLbl.BackgroundTransparency=1; iLbl.Text=WIN_NAME
-iLbl.TextColor3=Color3.fromRGB(200,200,200); iLbl.Font=Enum.Font.GothamBold; iLbl.TextSize=12; iLbl.ZIndex=31
-local iArr=Instance.new("TextLabel",islandClick); iArr.BackgroundTransparency=1
-iArr.AnchorPoint=Vector2.new(1,0.5); iArr.Position=UDim2.new(1,-10,0.5,0)
+local iLbl=Instance.new("TextLabel",islandClick)
+iLbl.Size=UDim2.new(1,0,1,0); iLbl.BackgroundTransparency=1; iLbl.Text=WIN_NAME
+iLbl.TextColor3=Color3.fromRGB(200,200,200); iLbl.Font=Enum.Font.GothamBold; iLbl.TextSize=12; iLbl.ZIndex=4
+local iArr=Instance.new("TextLabel",islandClick)
+iArr.BackgroundTransparency=1; iArr.AnchorPoint=Vector2.new(1,0.5); iArr.Position=UDim2.new(1,-10,0.5,0)
 iArr.Size=UDim2.new(0,20,1,0); iArr.Text="▼"; iArr.TextColor3=Theme.Accent
-iArr.Font=Enum.Font.GothamBold; iArr.TextSize=9; iArr.ZIndex=32
+iArr.Font=Enum.Font.GothamBold; iArr.TextSize=9; iArr.ZIndex=4
 
-onThemeChange("Accent", function(c) iDot.BackgroundColor3=c; iArr.TextColor3=c end)
+onThemeChange("Accent",function(c) iDot.BackgroundColor3=c; iArr.TextColor3=c end)
 
 local function restoreIsland()
     if not isIsland then return end
     isIsland=false; islandClick.Visible=false; Top.Visible=true
     TweenService:Create(Main,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),
-        {Size=NORMAL_SIZE, Position=NORMAL_POS}):Play()
-    tweenCorner(Theme.WinRadius, 0.05)
+        {Size=NORMAL_SIZE,Position=NORMAL_POS}):Play()
+    tweenCorner(Theme.WinRadius,0.05)
 end
 islandClick.MouseButton1Click:Connect(restoreIsland)
 islandClick.InputBegan:Connect(function(i)
     if i.UserInputType==Enum.UserInputType.Touch then restoreIsland() end
 end)
 
-macBtn("MinimizeBtn", Color3.fromRGB(255,204,0), 24, function()
+macBtn("MinimizeBtn",Color3.fromRGB(255,204,0),24,function()
     if GUI:FindFirstChild("MiniBtn") or isIsland then return end
     isIsland=true; Top.Visible=false
     TweenService:Create(Main,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),
-        {Size=UDim2.new(0,180,0,30), Position=UDim2.new(0.5,0,0,10)}):Play()
+        {Size=UDim2.new(0,180,0,30),Position=UDim2.new(0.5,0,0,10)}):Play()
     tweenCorner(22)
-    task.delay(0.45, function() islandClick.Visible=true end)
+    task.delay(0.45,function() islandClick.Visible=true end)
 end)
 
--- ── 🟢 Fullscreen ─────────────────────────────────────────────
-macBtn("MaximizeBtn", Color3.fromRGB(52,199,89), 40, function()
+-- 🟢 Fullscreen
+macBtn("MaximizeBtn",Color3.fromRGB(52,199,89),40,function()
     if isIsland or GUI:FindFirstChild("MiniBtn") then return end
-    isMax = not isMax
+    isMax=not isMax
     if isMax then
-        local vp = workspace.CurrentCamera.ViewportSize
+        local vp=workspace.CurrentCamera.ViewportSize
         TweenService:Create(Main,TweenInfo.new(0.45,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),
-            {Size=UDim2.new(0,vp.X,0,vp.Y), Position=UDim2.new(0,vp.X/2,0,vp.Y/2)}):Play()
-        tweenCorner(0, 0.08)
+            {Size=UDim2.new(0,vp.X,0,vp.Y),Position=UDim2.new(0,vp.X/2,0,vp.Y/2)}):Play()
+        tweenCorner(0,0.08)
     else
         TweenService:Create(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),
-            {Size=NORMAL_SIZE, Position=NORMAL_POS}):Play()
-        tweenCorner(Theme.WinRadius, 0.08)
+            {Size=NORMAL_SIZE,Position=NORMAL_POS}):Play()
+        tweenCorner(Theme.WinRadius,0.08)
     end
 end)
 
@@ -281,32 +246,32 @@ LogoImg.Size=UDim2.new(0,18,0,18); LogoImg.Image="rbxassetid://"..WIN_LOGO
 local NameLbl=Instance.new("TextLabel",Top)
 NameLbl.BackgroundTransparency=1; NameLbl.Position=UDim2.new(0,84,0,0)
 NameLbl.Size=UDim2.new(0,110,1,0); NameLbl.Font=Enum.Font.GothamBold
-NameLbl.Text=WIN_NAME; NameLbl.TextColor3=Theme.Accent
-NameLbl.TextSize=12; NameLbl.TextXAlignment=Enum.TextXAlignment.Left
-onThemeChange("Accent", function(c) NameLbl.TextColor3=c end)
+NameLbl.Text=WIN_NAME; NameLbl.TextColor3=Theme.Accent; NameLbl.TextSize=12
+NameLbl.TextXAlignment=Enum.TextXAlignment.Left
+onThemeChange("Accent",function(c) NameLbl.TextColor3=c end)
 
--- Tab scroll (inside topbar)
+-- Tab scroll
 local TabScroll=Instance.new("ScrollingFrame",Top)
 TabScroll.BackgroundTransparency=1; TabScroll.Position=UDim2.new(0,202,0,2)
 TabScroll.Size=UDim2.new(1,-212,1,-4); TabScroll.CanvasSize=UDim2.new(0,0,0,0)
-TabScroll.ScrollBarThickness=0
+TabScroll.ScrollBarThickness=0; TabScroll.ZIndex=6
 local TabLL=Instance.new("UIListLayout",TabScroll)
 TabLL.FillDirection=Enum.FillDirection.Horizontal
 TabLL.SortOrder=Enum.SortOrder.LayoutOrder; TabLL.Padding=UDim.new(0,3)
 
--- Content area
+-- Content
 local Content=Instance.new("Frame",Main)
 Content.BackgroundTransparency=1; Content.Position=UDim2.new(0,0,0,34)
 Content.Size=UDim2.new(1,0,1,-34); Content.BorderSizePixel=0; Content.ClipsDescendants=true
 
+-- FIX: LeftScroll/RightScroll ไม่มี UIListLayout แล้ว
+-- แต่ละ tab มี lPage/rPage เป็น children ของ scroll โดยตรง
+-- page ที่ไม่ active ต้อง Visible=false เสมอ
 local LeftScroll=Instance.new("ScrollingFrame",Content)
 LeftScroll.BackgroundTransparency=1; LeftScroll.Position=UDim2.new(0,0,0,0)
 LeftScroll.Size=UDim2.new(0.5,-1,1,0); LeftScroll.CanvasSize=UDim2.new(0,0,0,0)
 LeftScroll.ScrollBarThickness=2; LeftScroll.ScrollBarImageColor3=Theme.Accent; LeftScroll.BorderSizePixel=0
-local LL=Instance.new("UIListLayout",LeftScroll); LL.SortOrder=Enum.SortOrder.LayoutOrder; LL.Padding=UDim.new(0,4)
-local LP=Instance.new("UIPadding",LeftScroll)
-LP.PaddingTop=UDim.new(0,6); LP.PaddingBottom=UDim.new(0,6); LP.PaddingLeft=UDim.new(0,6); LP.PaddingRight=UDim.new(0,4)
-onThemeChange("Accent", function(c) LeftScroll.ScrollBarImageColor3=c end)
+onThemeChange("Accent",function(c) LeftScroll.ScrollBarImageColor3=c end)
 
 local Div=Instance.new("Frame",Content)
 Div.AnchorPoint=Vector2.new(0.5,0); Div.BackgroundColor3=Color3.fromRGB(38,38,38)
@@ -316,238 +281,202 @@ local RightScroll=Instance.new("ScrollingFrame",Content)
 RightScroll.BackgroundTransparency=1; RightScroll.Position=UDim2.new(0.5,1,0,0)
 RightScroll.Size=UDim2.new(0.5,-1,1,0); RightScroll.CanvasSize=UDim2.new(0,0,0,0)
 RightScroll.ScrollBarThickness=2; RightScroll.ScrollBarImageColor3=Theme.Accent; RightScroll.BorderSizePixel=0
-local RL=Instance.new("UIListLayout",RightScroll); RL.SortOrder=Enum.SortOrder.LayoutOrder; RL.Padding=UDim.new(0,4)
-local RP=Instance.new("UIPadding",RightScroll)
-RP.PaddingTop=UDim.new(0,6); RP.PaddingBottom=UDim.new(0,6); RP.PaddingLeft=UDim.new(0,4); RP.PaddingRight=UDim.new(0,6)
-onThemeChange("Accent", function(c) RightScroll.ScrollBarImageColor3=c end)
+onThemeChange("Accent",function(c) RightScroll.ScrollBarImageColor3=c end)
 
--- auto canvas
-RunService.Heartbeat:Connect(function()
-    pcall(function()
-        LeftScroll.CanvasSize  = UDim2.new(0,0,0,LL.AbsoluteContentSize.Y+16)
-        RightScroll.CanvasSize = UDim2.new(0,0,0,RL.AbsoluteContentSize.Y+16)
-        TabScroll.CanvasSize   = UDim2.new(0,TabLL.AbsoluteContentSize.X+10,0,0)
-    end)
-end)
-
-MakeDraggable(Top, Main)
+MakeDraggable(Top,Main)
 
 -- keybind
-UserInputService.InputBegan:Connect(function(inp, gp)
+UserInputService.InputBegan:Connect(function(inp,gp)
     if gp then return end
-    if inp.KeyCode == WIN_KEY then
-        uiHidden = not uiHidden
-        TweenService:Create(Main, TweenInfo.new(0.3,Enum.EasingStyle.Sine),
+    if inp.KeyCode==WIN_KEY then
+        uiHidden=not uiHidden
+        TweenService:Create(Main,TweenInfo.new(0.3,Enum.EasingStyle.Sine),
             {Size=uiHidden and UDim2.new(0,0,0,0) or NORMAL_SIZE}):Play()
     end
 end)
 
 -- ══════════════════════════════════════════════════════════════
---  TAB SYSTEM  (with animation)
+--  TAB SYSTEM
 -- ══════════════════════════════════════════════════════════════
-local Pages      = {}
-local firstTab   = true
-local currentTab = nil   -- { btn, left, right }
-
--- ── Tab animation helpers ─────────────────────────────────────
--- Roblox Frame ไม่มี GroupTransparency → ใช้ Visible + Position เท่านั้น
-
-local function tabAnim_out(lPage, rPage, dir)
-    local function hide(p)
-        if not p then return end
-        local anim = Theme.TabAnim
-        if anim == "slide" then
-            -- เลื่อนออกไปทางตรงข้าม
-            TweenService:Create(p, TweenInfo.new(0.18, Enum.EasingStyle.Sine, Enum.EasingDirection.In),
-                {Position = UDim2.new(dir * -0.08, 0, 0, 0)}):Play()
-            task.delay(0.18, function() p.Visible = false; p.Position = UDim2.new(0,0,0,0) end)
-        elseif anim == "wipe" then
-            -- ซ่อนทันที แล้วให้ in-anim ดูเหมือน wipe
-            p.Visible = false
-        elseif anim == "stagger" then
-            -- ซ่อนทีละชิ้นจากล่างขึ้นบน
-            local kids = p:GetChildren()
-            for i = #kids, 1, -1 do
-                local child = kids[i]
-                if child:IsA("Frame") or child:IsA("TextLabel") then
-                    local delay = (#kids - i) * 0.03
-                    task.delay(delay, function() if child and child.Parent then child.Visible = false end end)
-                end
-            end
-            task.delay(0.2, function() p.Visible = false end)
-        else
-            -- scale / flip / fade → ซ่อนทันที
-            p.Visible = false
-        end
-    end
-    hide(lPage); hide(rPage)
-end
+local Pages    = {}
+local firstTab = true
+local activePg = nil  -- pageData ที่กำลัง active
 
 local function tabAnim_in(lPage, rPage, dir)
-    local function show(p)
-        if not p then return end
-        local anim = Theme.TabAnim
-        p.Visible = true
-
-        if anim == "slide" then
-            -- เริ่มจากนอกขอบ แล้ว tween เข้ามา
-            p.Position = UDim2.new(dir * 0.08, 0, 0, 0)
-            TweenService:Create(p, TweenInfo.new(0.3, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-                {Position = UDim2.new(0,0,0,0)}):Play()
-
-        elseif anim == "scale" then
-            -- ขยับจากล่างขึ้นมาเล็กน้อยพร้อม easing back
-            p.Position = UDim2.new(0, 0, 0.04, 0)
-            TweenService:Create(p, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-                {Position = UDim2.new(0,0,0,0)}):Play()
-
-        elseif anim == "wipe" then
-            -- เลื่อนเข้าจากขวา
-            p.Position = UDim2.new(0.1, 0, 0, 0)
-            TweenService:Create(p, TweenInfo.new(0.35, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-                {Position = UDim2.new(0,0,0,0)}):Play()
-
-        elseif anim == "flip" then
-            -- เลื่อนจากด้านบนลงมา
-            p.Position = UDim2.new(0, 0, -0.04, 0)
-            TweenService:Create(p, TweenInfo.new(0.3, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-                {Position = UDim2.new(0,0,0,0)}):Play()
-
-        elseif anim == "stagger" then
-            -- แต่ละ child ปรากฏทีละตัว (ข้าม UIListLayout)
+    for _, p in ipairs({lPage, rPage}) do
+        if Theme.TabAnim == "slide" then
+            p.Position = UDim2.new(dir*0.07,0,0,0)
+            TweenService:Create(p,TweenInfo.new(0.28,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),
+                {Position=UDim2.new(0,0,0,0)}):Play()
+        elseif Theme.TabAnim == "scale" then
+            p.Position = UDim2.new(0,0,0.03,0)
+            TweenService:Create(p,TweenInfo.new(0.3,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
+                {Position=UDim2.new(0,0,0,0)}):Play()
+        elseif Theme.TabAnim == "wipe" then
+            p.Position = UDim2.new(0.08,0,0,0)
+            TweenService:Create(p,TweenInfo.new(0.3,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),
+                {Position=UDim2.new(0,0,0,0)}):Play()
+        elseif Theme.TabAnim == "flip" then
+            p.Position = UDim2.new(0,0,-0.04,0)
+            TweenService:Create(p,TweenInfo.new(0.3,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),
+                {Position=UDim2.new(0,0,0,0)}):Play()
+        elseif Theme.TabAnim == "stagger" then
             p.Position = UDim2.new(0,0,0,0)
-            local kids = {}
-            for _, child in ipairs(p:GetChildren()) do
-                if child:IsA("Frame") then table.insert(kids, child) end
+            local kids={}
+            for _,c in ipairs(p:GetChildren()) do if c:IsA("Frame") then table.insert(kids,c) end end
+            for i,c in ipairs(kids) do
+                c.Visible=false
+                local cc=c
+                task.delay(i*0.045,function() if cc and cc.Parent then cc.Visible=true end end)
             end
-            for i, child in ipairs(kids) do
-                child.Visible = false
-                local capturedChild = child
-                task.delay(i * 0.05, function()
-                    if capturedChild and capturedChild.Parent then
-                        capturedChild.Visible = true
-                    end
-                end)
-            end
-
-        else
-            -- fade → แค่โชว์ทันที (Roblox Frame ไม่มี transparency tween ง่ายๆ)
+        else -- fade / default
             p.Position = UDim2.new(0,0,0,0)
         end
     end
-    show(lPage); show(rPage)
 end
 
+local function selectPage(pageData)
+    if activePg == pageData then return end
+
+    -- ซ่อน page เก่า
+    local dir = 1
+    if activePg then
+        local oldIdx = activePg.idx
+        dir = pageData.idx > oldIdx and 1 or -1
+
+        -- slide: เลื่อนออกก่อน
+        if Theme.TabAnim == "slide" then
+            for _, p in ipairs({activePg.left, activePg.right}) do
+                TweenService:Create(p,TweenInfo.new(0.16,Enum.EasingStyle.Sine,Enum.EasingDirection.In),
+                    {Position=UDim2.new(dir*-0.06,0,0,0)}):Play()
+            end
+            task.delay(0.16,function()
+                if activePg then
+                    activePg.left.Visible=false; activePg.right.Visible=false
+                    activePg.left.Position=UDim2.new(0,0,0,0)
+                    activePg.right.Position=UDim2.new(0,0,0,0)
+                end
+            end)
+        else
+            activePg.left.Visible=false; activePg.right.Visible=false
+        end
+
+        -- tab button ปิด
+        TweenService:Create(activePg.btn,TweenInfo.new(0.15),{
+            BackgroundColor3=Color3.fromRGB(38,38,38),
+            TextColor3=Color3.fromRGB(180,180,180),
+        }):Play()
+    end
+
+    -- เปิด page ใหม่
+    activePg = pageData
+    TweenService:Create(pageData.btn,TweenInfo.new(0.15),{
+        BackgroundColor3=Theme.Accent,
+        TextColor3=Color3.fromRGB(15,15,15),
+    }):Play()
+
+    local delay = (Theme.TabAnim=="slide") and 0.14 or 0
+    task.delay(delay,function()
+        pageData.left.Visible=true; pageData.right.Visible=true
+        tabAnim_in(pageData.left, pageData.right, dir)
+        -- อัพเดต canvas
+        LeftScroll.CanvasSize=UDim2.new(0,0,0,pageData.leftLayout.AbsoluteContentSize.Y+16)
+        RightScroll.CanvasSize=UDim2.new(0,0,0,pageData.rightLayout.AbsoluteContentSize.Y+16)
+    end)
+end
+
+-- auto canvas update ของ active tab
+RunService.Heartbeat:Connect(function()
+    pcall(function()
+        if activePg then
+            LeftScroll.CanvasSize=UDim2.new(0,0,0,activePg.leftLayout.AbsoluteContentSize.Y+16)
+            RightScroll.CanvasSize=UDim2.new(0,0,0,activePg.rightLayout.AbsoluteContentSize.Y+16)
+        end
+        TabScroll.CanvasSize=UDim2.new(0,TabLL.AbsoluteContentSize.X+10,0,0)
+    end)
+end)
+
+-- ══════════════════════════════════════════════════════════════
+--  AddTab
+-- ══════════════════════════════════════════════════════════════
 local function AddTab(tabname)
     local tab = {}
     local isFst = firstTab; firstTab = false
     local tabIdx = #Pages + 1
 
     -- tab button
-    local tabBtn = Instance.new("TextButton", TabScroll)
-    tabBtn.BackgroundColor3 = isFst and Theme.Accent or Color3.fromRGB(38,38,38)
-    tabBtn.Size = UDim2.new(0,0,1,-4); tabBtn.AutomaticSize = Enum.AutomaticSize.X
-    tabBtn.BorderSizePixel = 0; tabBtn.Font = Enum.Font.GothamBold
-    tabBtn.Text = " "..tabname.." "
-    tabBtn.TextColor3 = isFst and Color3.fromRGB(15,15,15) or Color3.fromRGB(180,180,180)
-    tabBtn.TextSize = 11
-    Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0,5)
-    local tbP = Instance.new("UIPadding", tabBtn)
+    local tabBtn=Instance.new("TextButton",TabScroll)
+    tabBtn.BackgroundColor3=isFst and Theme.Accent or Color3.fromRGB(38,38,38)
+    tabBtn.Size=UDim2.new(0,0,1,-4); tabBtn.AutomaticSize=Enum.AutomaticSize.X
+    tabBtn.BorderSizePixel=0; tabBtn.Font=Enum.Font.GothamBold
+    tabBtn.Text=" "..tabname.." "
+    tabBtn.TextColor3=isFst and Color3.fromRGB(15,15,15) or Color3.fromRGB(180,180,180)
+    tabBtn.TextSize=11; tabBtn.ZIndex=6
+    Instance.new("UICorner",tabBtn).CornerRadius=UDim.new(0,5)
+    local tbP=Instance.new("UIPadding",tabBtn)
     tbP.PaddingLeft=UDim.new(0,6); tbP.PaddingRight=UDim.new(0,6)
 
-    onThemeChange("Accent", function(c)
-        if tabBtn == currentTab and currentTab ~= nil then
-            tabBtn.BackgroundColor3 = c
-        end
-    end)
-
-    -- pages (left + right)
-    local lPage = Instance.new("Frame", LeftScroll)
+    -- FIX: lPage/rPage ตรงๆ ใน scroll, ไม่ nested ใน list
+    local lPage=Instance.new("Frame",LeftScroll)
     lPage.BackgroundTransparency=1; lPage.Size=UDim2.new(1,0,0,0)
-    lPage.AutomaticSize=Enum.AutomaticSize.Y; lPage.BorderSizePixel=0; lPage.Visible=isFst
-    local lLL = Instance.new("UIListLayout",lPage); lLL.SortOrder=Enum.SortOrder.LayoutOrder; lLL.Padding=UDim.new(0,4)
+    lPage.AutomaticSize=Enum.AutomaticSize.Y; lPage.BorderSizePixel=0
+    lPage.Visible=isFst; lPage.Position=UDim2.new(0,0,0,0)
+    local lLL=Instance.new("UIListLayout",lPage)
+    lLL.SortOrder=Enum.SortOrder.LayoutOrder; lLL.Padding=UDim.new(0,4)
+    local lPad=Instance.new("UIPadding",lPage)
+    lPad.PaddingTop=UDim.new(0,6); lPad.PaddingBottom=UDim.new(0,6)
+    lPad.PaddingLeft=UDim.new(0,6); lPad.PaddingRight=UDim.new(0,4)
 
-    local rPage = Instance.new("Frame", RightScroll)
+    local rPage=Instance.new("Frame",RightScroll)
     rPage.BackgroundTransparency=1; rPage.Size=UDim2.new(1,0,0,0)
-    rPage.AutomaticSize=Enum.AutomaticSize.Y; rPage.BorderSizePixel=0; rPage.Visible=isFst
-    local rLL = Instance.new("UIListLayout",rPage); rLL.SortOrder=Enum.SortOrder.LayoutOrder; rLL.Padding=UDim.new(0,4)
+    rPage.AutomaticSize=Enum.AutomaticSize.Y; rPage.BorderSizePixel=0
+    rPage.Visible=isFst; rPage.Position=UDim2.new(0,0,0,0)
+    local rLL=Instance.new("UIListLayout",rPage)
+    rLL.SortOrder=Enum.SortOrder.LayoutOrder; rLL.Padding=UDim.new(0,4)
+    local rPad=Instance.new("UIPadding",rPage)
+    rPad.PaddingTop=UDim.new(0,6); rPad.PaddingBottom=UDim.new(0,6)
+    rPad.PaddingLeft=UDim.new(0,4); rPad.PaddingRight=UDim.new(0,6)
 
-    local pageData = {btn=tabBtn, left=lPage, right=rPage, idx=tabIdx}
-    table.insert(Pages, pageData)
-    if isFst then currentTab = tabBtn end
+    local pageData={btn=tabBtn,left=lPage,right=rPage,idx=tabIdx,leftLayout=lLL,rightLayout=rLL}
+    table.insert(Pages,pageData)
+    if isFst then activePg=pageData end
 
-    local function selectTab()
-        local oldPage = nil
-        local dir = 1
-        for _, pg in ipairs(Pages) do
-            if pg.btn == currentTab then
-                dir = tabIdx > pg.idx and 1 or -1
-                oldPage = pg
-            end
-        end
-
-        -- animate out old
-        if oldPage and oldPage.btn ~= tabBtn then
-            tabAnim_out(oldPage.left, oldPage.right, dir)
-        end
-
-        -- update buttons
-        for _, pg in ipairs(Pages) do
-            local on = (pg.btn == tabBtn)
-            TweenService:Create(pg.btn, TweenInfo.new(0.15), {
-                BackgroundColor3 = on and Theme.Accent or Color3.fromRGB(38,38,38),
-                TextColor3       = on and Color3.fromRGB(15,15,15) or Color3.fromRGB(180,180,180),
-            }):Play()
-        end
-        currentTab = tabBtn
-
-        -- animate in new (รอให้ out-anim เสร็จก่อน)
-        local inDelay = (Theme.TabAnim == "slide") and 0.16 or 0.05
-        task.delay(inDelay, function()
-            lPage.Visible = true; rPage.Visible = true
-            tabAnim_in(lPage, rPage, dir)
-        end)
-    end
-
-    tabBtn.MouseButton1Click:Connect(selectTab)
+    tabBtn.MouseButton1Click:Connect(function() selectPage(pageData) end)
     tabBtn.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.Touch then selectTab() end
+        if i.UserInputType==Enum.UserInputType.Touch then selectPage(pageData) end
     end)
 
-    -- ── Component helpers ──────────────────────────────────────
-    local allCards = {}  -- track cards for theme update
-
-    local function mkCard(parent, h)
-        local f = Instance.new("Frame", parent)
-        f.BackgroundColor3 = Theme.CardBg
-        f.Size = UDim2.new(1, 0, 0, h or 38); f.BorderSizePixel = 0
-        local fc = Instance.new("UICorner", f); fc.CornerRadius = UDim.new(0, Theme.CardRadius)
-        local sk = Instance.new("UIStroke", f); sk.Color = Theme.CardStroke; sk.Thickness = 1
-        table.insert(allCards, {frame=f, corner=fc, stroke=sk})
-        onThemeChange("CardBg",     function(c) f.BackgroundColor3 = c end)
-        onThemeChange("CardRadius", function(r) fc.CornerRadius = UDim.new(0,r) end)
-        onThemeChange("CardStroke", function(c) sk.Color = c end)
+    -- ── Component helpers ────────────────────────────────────
+    local function mkCard(parent,h)
+        local f=Instance.new("Frame",parent)
+        f.BackgroundColor3=Theme.CardBg
+        f.Size=UDim2.new(1,0,0,h or 38); f.BorderSizePixel=0
+        local fc=Instance.new("UICorner",f); fc.CornerRadius=UDim.new(0,Theme.CardRadius)
+        local sk=Instance.new("UIStroke",f); sk.Color=Theme.CardStroke; sk.Thickness=1
+        onThemeChange("CardBg",    function(c) if f and f.Parent then f.BackgroundColor3=c end end)
+        onThemeChange("CardRadius",function(r) if fc and fc.Parent then fc.CornerRadius=UDim.new(0,r) end end)
+        onThemeChange("CardStroke",function(c) if sk and sk.Parent then sk.Color=c end end)
         return f
     end
 
-    local function mkTxt(parent, txt, x, sz)
-        local l = Instance.new("TextLabel", parent)
+    local function mkTxt(parent,txt,x,sz)
+        local l=Instance.new("TextLabel",parent)
         l.BackgroundTransparency=1; l.Position=UDim2.new(0,x or 8,0,0)
         l.Size=UDim2.new(1,-(x or 8)-4,1,0); l.Font=Enum.Font.Gotham
         l.Text=txt; l.TextColor3=Theme.Text; l.TextSize=sz or 12
         l.TextXAlignment=Enum.TextXAlignment.Left
-        onThemeChange("Text", function(c) l.TextColor3=c end)
+        onThemeChange("Text",function(c) if l and l.Parent then l.TextColor3=c end end)
         return l
     end
 
-    -- Button
-    local function mkButton(parent, txt, cb)
-        local f = mkCard(parent, 34)
-        local b = Instance.new("TextButton", f)
+    -- ── Button ───────────────────────────────────────────────
+    local function mkButton(parent,txt,cb)
+        local f=mkCard(parent,34)
+        local b=Instance.new("TextButton",f)
         b.BackgroundTransparency=1; b.Size=UDim2.new(1,0,1,0)
         b.Font=Enum.Font.GothamSemibold; b.Text=txt
         b.TextColor3=Theme.Accent; b.TextSize=12; b.AutoButtonColor=false
-        onThemeChange("Accent", function(c) b.TextColor3=c end)
+        onThemeChange("Accent",function(c) if b and b.Parent then b.TextColor3=c end end)
         local function fire() pcall(cb) end
         b.MouseButton1Click:Connect(fire)
         b.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.Touch then fire() end end)
@@ -557,28 +486,28 @@ local function AddTab(tabname)
     function tab:AddButtonL(t,cb) mkButton(lPage,t,cb) end
     function tab:AddButtonR(t,cb) mkButton(rPage,t,cb) end
 
-    -- Toggle
-    local function mkToggle(parent, txt, def, cb)
-        local f = mkCard(parent, 34); mkTxt(f, txt)
-        local on = def or false
-        local pill = Instance.new("TextButton", f)
+    -- ── Toggle ───────────────────────────────────────────────
+    local function mkToggle(parent,txt,def,cb)
+        local f=mkCard(parent,34); mkTxt(f,txt)
+        local on=def or false
+        local pill=Instance.new("TextButton",f)
         pill.AnchorPoint=Vector2.new(1,0.5); pill.Position=UDim2.new(1,-8,0.5,0)
         pill.Size=UDim2.new(0,38,0,20)
-        pill.BackgroundColor3 = on and Theme.Accent or Color3.fromRGB(55,55,55)
+        pill.BackgroundColor3=on and Theme.Accent or Color3.fromRGB(55,55,55)
         pill.BorderSizePixel=0; pill.Text=""; pill.AutoButtonColor=false
         Instance.new("UICorner",pill).CornerRadius=UDim.new(0,10)
-        local knob = Instance.new("Frame", pill)
+        local knob=Instance.new("Frame",pill)
         knob.AnchorPoint=Vector2.new(0.5,0.5)
-        knob.Position = on and UDim2.new(1,-10,0.5,0) or UDim2.new(0,10,0.5,0)
+        knob.Position=on and UDim2.new(1,-10,0.5,0) or UDim2.new(0,10,0.5,0)
         knob.Size=UDim2.new(0,14,0,14); knob.BackgroundColor3=Color3.new(1,1,1); knob.BorderSizePixel=0
         Instance.new("UICorner",knob).CornerRadius=UDim.new(1,0)
-        onThemeChange("Accent", function(c) if on then pill.BackgroundColor3=c end end)
+        onThemeChange("Accent",function(c) if on and pill and pill.Parent then pill.BackgroundColor3=c end end)
         local function toggle()
-            on = not on
+            on=not on
             TweenService:Create(pill,TweenInfo.new(0.2),{BackgroundColor3=on and Theme.Accent or Color3.fromRGB(55,55,55)}):Play()
             TweenService:Create(knob,TweenInfo.new(0.2,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
                 {Position=on and UDim2.new(1,-10,0.5,0) or UDim2.new(0,10,0.5,0)}):Play()
-            pcall(cb, on)
+            pcall(cb,on)
         end
         pill.MouseButton1Click:Connect(toggle)
         pill.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.Touch then toggle() end end)
@@ -586,32 +515,32 @@ local function AddTab(tabname)
     function tab:AddToggleL(t,d,cb) mkToggle(lPage,t,d,cb) end
     function tab:AddToggleR(t,d,cb) mkToggle(rPage,t,d,cb) end
 
-    -- Slider
-    local function mkSlider(parent, txt, mn, mx, def, cb)
-        local f = mkCard(parent, 54)
-        local row = Instance.new("Frame",f)
+    -- ── Slider ───────────────────────────────────────────────
+    local function mkSlider(parent,txt,mn,mx,def,cb)
+        local f=mkCard(parent,54)
+        local row=Instance.new("Frame",f)
         row.BackgroundTransparency=1; row.Size=UDim2.new(1,-16,0,24); row.Position=UDim2.new(0,8,0,4)
-        mkTxt(row, txt, 0, 12)
-        local vb = Instance.new("TextBox",row)
+        mkTxt(row,txt,0,12)
+        local vb=Instance.new("TextBox",row)
         vb.AnchorPoint=Vector2.new(1,0.5); vb.Position=UDim2.new(1,0,0.5,0)
         vb.Size=UDim2.new(0,46,0,20); vb.BackgroundColor3=Color3.fromRGB(38,38,38)
         vb.BorderSizePixel=0; vb.Font=Enum.Font.Code; vb.Text=tostring(def)
         vb.TextColor3=Theme.Accent; vb.TextSize=11; vb.ClearTextOnFocus=true
         Instance.new("UICorner",vb).CornerRadius=UDim.new(0,4)
-        onThemeChange("Accent", function(c) vb.TextColor3=c end)
+        onThemeChange("Accent",function(c) if vb and vb.Parent then vb.TextColor3=c end end)
 
-        local ta = Instance.new("Frame",f)
+        local ta=Instance.new("Frame",f)
         ta.BackgroundTransparency=1; ta.Position=UDim2.new(0,8,0,34); ta.Size=UDim2.new(1,-16,0,16)
-        local track = Instance.new("Frame",ta)
+        local track=Instance.new("Frame",ta)
         track.AnchorPoint=Vector2.new(0,0.5); track.Position=UDim2.new(0,0,0.5,0)
         track.Size=UDim2.new(1,0,0,4); track.BackgroundColor3=Color3.fromRGB(50,50,50); track.BorderSizePixel=0
         Instance.new("UICorner",track).CornerRadius=UDim.new(0,2)
-        local pct = math.clamp((def-mn)/(mx-mn),0,1)
-        local fill = Instance.new("Frame",track)
+        local pct=math.clamp((def-mn)/(mx-mn),0,1)
+        local fill=Instance.new("Frame",track)
         fill.Size=UDim2.new(pct,0,1,0); fill.BackgroundColor3=Theme.Accent; fill.BorderSizePixel=0
         Instance.new("UICorner",fill).CornerRadius=UDim.new(0,2)
-        onThemeChange("Accent", function(c) fill.BackgroundColor3=c end)
-        local knob = Instance.new("Frame",track)
+        onThemeChange("Accent",function(c) if fill and fill.Parent then fill.BackgroundColor3=c end end)
+        local knob=Instance.new("Frame",track)
         knob.AnchorPoint=Vector2.new(0.5,0.5); knob.Position=UDim2.new(pct,0,0.5,0)
         knob.Size=UDim2.new(0,14,0,14); knob.BackgroundColor3=Color3.new(1,1,1); knob.BorderSizePixel=0
         Instance.new("UICorner",knob).CornerRadius=UDim.new(1,0)
@@ -634,8 +563,8 @@ local function AddTab(tabname)
             if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end
         end)
         vb.FocusLost:Connect(function()
-            local v=tonumber(vb.Text); if v then
-                v=math.clamp(math.floor(v),mn,mx); cur=v
+            local v=tonumber(vb.Text)
+            if v then v=math.clamp(math.floor(v),mn,mx); cur=v
                 local rel=(v-mn)/(mx-mn)
                 fill.Size=UDim2.new(rel,0,1,0); knob.Position=UDim2.new(rel,0,0.5,0); pcall(cb,v)
             end; vb.Text=tostring(cur)
@@ -644,8 +573,8 @@ local function AddTab(tabname)
     function tab:AddSliderL(t,mn,mx,d,cb) mkSlider(lPage,t,mn,mx,d,cb) end
     function tab:AddSliderR(t,mn,mx,d,cb) mkSlider(rPage,t,mn,mx,d,cb) end
 
-    -- Dropdown
-    local function mkDropdown(parent, title, list, def, cb)
+    -- ── Dropdown ─────────────────────────────────────────────
+    local function mkDropdown(parent,title,list,def,cb)
         local IH,SH=28,30; local open=false
         local curList=list; local curSel=def or (list[1] or "Select...")
         local iBtns={}
@@ -661,15 +590,14 @@ local function AddTab(tabname)
         arr.BackgroundTransparency=1; arr.AnchorPoint=Vector2.new(1,0.5)
         arr.Position=UDim2.new(1,-6,0.5,0); arr.Size=UDim2.new(0,16,0,16)
         arr.Font=Enum.Font.GothamBold; arr.Text="▼"; arr.TextColor3=Theme.Accent; arr.TextSize=9
-        onThemeChange("Accent",function(c) arr.TextColor3=c end)
+        onThemeChange("Accent",function(c) if arr and arr.Parent then arr.TextColor3=c end end)
 
         local sel=Instance.new("TextLabel",base)
         sel.BackgroundColor3=Color3.fromRGB(38,38,38); sel.BorderSizePixel=0
         sel.Position=UDim2.new(0,4,0,28); sel.Size=UDim2.new(1,-8,0,20)
-        sel.Font=Enum.Font.Gotham; sel.Text=curSel
-        sel.TextColor3=Theme.Accent; sel.TextSize=11
+        sel.Font=Enum.Font.Gotham; sel.Text=curSel; sel.TextColor3=Theme.Accent; sel.TextSize=11
         Instance.new("UICorner",sel).CornerRadius=UDim.new(0,4)
-        onThemeChange("Accent",function(c) sel.TextColor3=c end)
+        onThemeChange("Accent",function(c) if sel and sel.Parent then sel.TextColor3=c end end)
 
         local sb=Instance.new("TextBox",base)
         sb.BackgroundColor3=Color3.fromRGB(38,38,38); sb.BorderSizePixel=0
@@ -686,15 +614,14 @@ local function AddTab(tabname)
 
         local function closeDD()
             open=false; sb.Text=""
-            for _,b in ipairs(iBtns) do b.Visible=true end
+            for _,b in ipairs(iBtns) do if b and b.Parent then b.Visible=true end end
             wrap:TweenSize(UDim2.new(1,0,0,52),"Out","Quad",0.2,true)
             base:TweenSize(UDim2.new(1,0,0,52),"Out","Quad",0.2,true)
             TweenService:Create(arr,TweenInfo.new(0.15),{Rotation=0}):Play()
         end
 
         local function buildItems(lst)
-            -- ลบ items เก่า
-            for _,b in ipairs(iBtns) do b:Destroy() end
+            for _,b in ipairs(iBtns) do if b and b.Parent then b:Destroy() end end
             iBtns={}
             iFrame.Size=UDim2.new(1,0,0,#lst*IH)
             for _,item in ipairs(lst) do
@@ -718,8 +645,10 @@ local function AddTab(tabname)
         sb:GetPropertyChangedSignal("Text"):Connect(function()
             local q=sb.Text:lower(); local vis=0
             for i,ib in ipairs(iBtns) do
-                local show=q=="" or curList[i]:lower():find(q,1,true)~=nil
-                ib.Visible=show; if show then vis=vis+1 end
+                if ib and ib.Parent then
+                    local show=q=="" or curList[i]:lower():find(q,1,true)~=nil
+                    ib.Visible=show; if show then vis=vis+1 end
+                end
             end
             if open then
                 local h=52+SH+8+(vis*IH)
@@ -738,46 +667,36 @@ local function AddTab(tabname)
         hdr.MouseButton1Click:Connect(toggleOpen)
         hdr.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.Touch then toggleOpen() end end)
 
-        local ddObj={}
-        -- :Update(newList)  → เปลี่ยน items ทั้งหมด
-        function ddObj:Update(newList)
-            closeDD()
-            curList=newList
-            -- reset selection ถ้า item เดิมไม่อยู่ใน list ใหม่
+        local obj={}
+        function obj:Update(newList)
+            closeDD(); curList=newList
             local found=false
             for _,v in ipairs(newList) do if v==curSel then found=true; break end end
             if not found then curSel=newList[1] or "Select..."; sel.Text=curSel end
             buildItems(curList)
         end
-        -- :Set(value)  → เซ็ต selected โดยไม่ trigger callback
-        function ddObj:Set(value)
-            curSel=value; sel.Text=value
-        end
-        -- :Get()  → return ค่าปัจจุบัน
-        function ddObj:Get() return curSel end
-
-        return ddObj
+        function obj:Set(value) curSel=value; sel.Text=value end
+        function obj:Get() return curSel end
+        return obj
     end
     function tab:AddDropdownL(t,l,d,cb) return mkDropdown(lPage,t,l,d,cb) end
     function tab:AddDropdownR(t,l,d,cb) return mkDropdown(rPage,t,l,d,cb) end
 
-    -- Multi-select Dropdown
-    local function mkMultiDropdown(parent, title, list, cb)
+    -- ── Multi-select Dropdown ────────────────────────────────
+    local function mkMultiDropdown(parent,title,list,cb)
         local IH,SH=30,30; local open=false
         local selected={}; local curList=list; local rows={}
 
         local wrap=Instance.new("Frame",parent)
         wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,52); wrap.ClipsDescendants=false
-        local base=mkCard(wrap,52); base.Size=UDim2.new(1,0,0,52)
-        local sk=base:FindFirstChildWhichIsA("UIStroke"); if sk then sk.Color=Color3.fromRGB(51,130,130) end
-        base.ClipsDescendants=true
+        local base=mkCard(wrap,52); base.Size=UDim2.new(1,0,0,52); base.ClipsDescendants=true
 
         local hdr=Instance.new("TextButton",base); hdr.BackgroundTransparency=1; hdr.Size=UDim2.new(1,0,0,26); hdr.Text=""
         mkTxt(hdr,"✦ "..title,8,12)
         local arr=Instance.new("TextLabel",hdr); arr.BackgroundTransparency=1; arr.AnchorPoint=Vector2.new(1,0.5)
         arr.Position=UDim2.new(1,-6,0.5,0); arr.Size=UDim2.new(0,16,0,16)
         arr.Font=Enum.Font.GothamBold; arr.Text="▼"; arr.TextColor3=Theme.Accent; arr.TextSize=9
-        onThemeChange("Accent",function(c) arr.TextColor3=c end)
+        onThemeChange("Accent",function(c) if arr and arr.Parent then arr.TextColor3=c end end)
 
         local sel=Instance.new("TextLabel",base)
         sel.BackgroundColor3=Color3.fromRGB(38,38,38); sel.BorderSizePixel=0
@@ -807,35 +726,37 @@ local function AddTab(tabname)
         end
 
         local function buildRows(lst)
-            for _,rd in ipairs(rows) do rd.row:Destroy() end
+            for _,rd in ipairs(rows) do if rd.row and rd.row.Parent then rd.row:Destroy() end end
             rows={}
             iFrame.Size=UDim2.new(1,0,0,#lst*IH)
             for _,item in ipairs(lst) do
-                local row=Instance.new("Frame",iFrame); row.BackgroundColor3=Color3.fromRGB(30,30,30)
+                local row=Instance.new("Frame",iFrame)
+                row.BackgroundColor3=selected[item] and Color3.fromRGB(38,38,38) or Color3.fromRGB(30,30,30)
                 row.BorderSizePixel=0; row.Size=UDim2.new(1,0,0,IH)
                 local chk=Instance.new("Frame",row); chk.AnchorPoint=Vector2.new(0,0.5); chk.Position=UDim2.new(0,8,0.5,0)
-                chk.Size=UDim2.new(0,14,0,14); chk.BackgroundColor3=Color3.fromRGB(50,50,50); chk.BorderSizePixel=0
+                chk.Size=UDim2.new(0,14,0,14)
+                chk.BackgroundColor3=selected[item] and Theme.Accent or Color3.fromRGB(50,50,50)
+                chk.BorderSizePixel=0
                 Instance.new("UICorner",chk).CornerRadius=UDim.new(0,4)
                 local ct=Instance.new("TextLabel",chk); ct.Size=UDim2.new(1,0,1,0); ct.BackgroundTransparency=1
                 ct.Text="✓"; ct.TextColor3=Color3.fromRGB(15,15,15); ct.Font=Enum.Font.GothamBold; ct.TextSize=10
-                ct.Visible = selected[item] == true  -- restore state ถ้า update แล้ว item ยังอยู่
-                if selected[item] then chk.BackgroundColor3=Theme.Accent; row.BackgroundColor3=Color3.fromRGB(38,38,38) end
+                ct.Visible=selected[item]==true
                 local il=Instance.new("TextLabel",row); il.BackgroundTransparency=1; il.Position=UDim2.new(0,28,0,0)
                 il.Size=UDim2.new(1,-32,1,0); il.Font=Enum.Font.Gotham; il.Text=item
                 il.TextColor3=Color3.fromRGB(195,195,195); il.TextSize=11; il.TextXAlignment=Enum.TextXAlignment.Left
                 local btn=Instance.new("TextButton",row); btn.Size=UDim2.new(1,0,1,0); btn.BackgroundTransparency=1; btn.Text=""
-                local captItem,captChk,captCt,captRow=item,chk,ct,row
+                local capI,capC,capCt,capR=item,chk,ct,row
                 local function tog()
-                    if selected[captItem] then
-                        selected[captItem]=nil
-                        TweenService:Create(captChk,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(50,50,50)}):Play()
-                        captCt.Visible=false
-                        TweenService:Create(captRow,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(30,30,30)}):Play()
+                    if selected[capI] then
+                        selected[capI]=nil
+                        TweenService:Create(capC,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(50,50,50)}):Play()
+                        capCt.Visible=false
+                        TweenService:Create(capR,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(30,30,30)}):Play()
                     else
-                        selected[captItem]=true
-                        TweenService:Create(captChk,TweenInfo.new(0.15),{BackgroundColor3=Theme.Accent}):Play()
-                        captCt.Visible=true
-                        TweenService:Create(captRow,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(38,38,38)}):Play()
+                        selected[capI]=true
+                        TweenService:Create(capC,TweenInfo.new(0.15),{BackgroundColor3=Theme.Accent}):Play()
+                        capCt.Visible=true
+                        TweenService:Create(capR,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(38,38,38)}):Play()
                     end
                     updSel()
                 end
@@ -849,8 +770,10 @@ local function AddTab(tabname)
         sb:GetPropertyChangedSignal("Text"):Connect(function()
             local q=sb.Text:lower(); local vis=0
             for _,d in ipairs(rows) do
-                local show=q=="" or d.item:lower():find(q,1,true)~=nil
-                d.row.Visible=show; if show then vis=vis+1 end
+                if d.row and d.row.Parent then
+                    local show=q=="" or d.item:lower():find(q,1,true)~=nil
+                    d.row.Visible=show; if show then vis=vis+1 end
+                end
             end
             if open then
                 local h=52+SH+8+(vis*IH)
@@ -869,52 +792,40 @@ local function AddTab(tabname)
         hdr.MouseButton1Click:Connect(toggleOpen)
         hdr.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.Touch then toggleOpen() end end)
 
-        local mddObj={}
-        -- :Update(newList)  → เปลี่ยน items (keeps selection ที่ยังอยู่ใน list ใหม่)
-        function mddObj:Update(newList)
+        local obj={}
+        function obj:Update(newList)
             open=false; sb.Text=""
             wrap:TweenSize(UDim2.new(1,0,0,52),"Out","Quad",0.15,true)
             base:TweenSize(UDim2.new(1,0,0,52),"Out","Quad",0.15,true)
             TweenService:Create(arr,TweenInfo.new(0.15),{Rotation=0}):Play()
-            -- ลบ selected ที่ไม่อยู่ใน newList
-            local newSet={}; for _,v in ipairs(newList) do newSet[v]=true end
-            for k in pairs(selected) do if not newSet[k] then selected[k]=nil end end
-            curList=newList
-            buildRows(curList)
-            updSel()
+            local ns={}; for _,v in ipairs(newList) do ns[v]=true end
+            for k in pairs(selected) do if not ns[k] then selected[k]=nil end end
+            curList=newList; buildRows(curList); updSel()
         end
-        -- :Set({item1=true, item2=true})  → set selection โดยตรง
-        function mddObj:Set(tbl)
+        function obj:Set(tbl)
             selected={}
             for k,v in pairs(tbl) do if v then selected[k]=v end end
-            buildRows(curList)
-            updSel()
+            buildRows(curList); updSel()
         end
-        -- :Get()  → return selected table
-        function mddObj:Get() return selected end
-        -- :Clear()  → เคลียร์ทุก selection
-        function mddObj:Clear()
-            selected={}
-            buildRows(curList)
-            updSel()
-        end
-
-        return mddObj
+        function obj:Get() return selected end
+        function obj:Clear() selected={}; buildRows(curList); updSel() end
+        return obj
     end
     function tab:AddMultiDropdownL(t,l,cb) return mkMultiDropdown(lPage,t,l,cb) end
     function tab:AddMultiDropdownR(t,l,cb) return mkMultiDropdown(rPage,t,l,cb) end
 
-    -- Separator
+    -- ── Separator ────────────────────────────────────────────
     local function mkSep(parent,txt)
         local f=Instance.new("Frame",parent); f.BackgroundTransparency=1; f.Size=UDim2.new(1,0,0,22)
         local l=Instance.new("TextLabel",f); l.BackgroundTransparency=1; l.Size=UDim2.new(1,0,1,0)
-        l.Font=Enum.Font.GothamBold; l.Text=txt; l.TextColor3=Theme.Accent; l.TextSize=11; l.TextXAlignment=Enum.TextXAlignment.Left
-        onThemeChange("Accent",function(c) l.TextColor3=c end)
+        l.Font=Enum.Font.GothamBold; l.Text=txt; l.TextColor3=Theme.Accent; l.TextSize=11
+        l.TextXAlignment=Enum.TextXAlignment.Left
+        onThemeChange("Accent",function(c) if l and l.Parent then l.TextColor3=c end end)
     end
     function tab:AddSeperatorL(t) mkSep(lPage,t) end
     function tab:AddSeperatorR(t) mkSep(rPage,t) end
 
-    -- Label
+    -- ── Label ────────────────────────────────────────────────
     local function mkLabel(parent,txt)
         local l=Instance.new("TextLabel",parent); l.BackgroundTransparency=1
         l.Size=UDim2.new(1,0,0,0); l.AutomaticSize=Enum.AutomaticSize.Y
@@ -924,14 +835,15 @@ local function AddTab(tabname)
     function tab:AddLabelL(t) mkLabel(lPage,t) end
     function tab:AddLabelR(t) mkLabel(rPage,t) end
 
-    -- Line
+    -- ── Line ─────────────────────────────────────────────────
     local function mkLine(parent)
-        local f=Instance.new("Frame",parent); f.BackgroundColor3=Color3.fromRGB(40,40,40); f.BorderSizePixel=0; f.Size=UDim2.new(1,0,0,1)
+        local f=Instance.new("Frame",parent)
+        f.BackgroundColor3=Color3.fromRGB(40,40,40); f.BorderSizePixel=0; f.Size=UDim2.new(1,0,0,1)
     end
     function tab:AddLineL() mkLine(lPage) end
     function tab:AddLineR() mkLine(rPage) end
 
-    -- Textbox
+    -- ── Textbox ──────────────────────────────────────────────
     local function mkTextbox(parent,title,ph,def,cb)
         local f=mkCard(parent,54); mkTxt(f,title,8,11)
         local tb=Instance.new("TextBox",f); tb.AnchorPoint=Vector2.new(0.5,1); tb.Position=UDim2.new(0.5,0,1,-6)
@@ -943,6 +855,10 @@ local function AddTab(tabname)
     end
     function tab:AddTextboxL(t,ph,d,cb) mkTextbox(lPage,t,ph,d,cb) end
     function tab:AddTextboxR(t,ph,d,cb) mkTextbox(rPage,t,ph,d,cb) end
+
+    -- expose pages สำหรับ UI Settings Tab
+    tab._lPage = lPage
+    tab._rPage = rPage
 
     return tab
 end
@@ -965,90 +881,86 @@ local function AddNotification(txt)
     nd.Font=Enum.Font.Gotham; nd.Text=txt; nd.TextColor3=Color3.fromRGB(175,175,175)
     nd.TextSize=12; nd.ZIndex=201; nd.TextWrapped=true; nd.TextXAlignment=Enum.TextXAlignment.Left
     nf:TweenSize(UDim2.new(0,340,0,88),"Out","Quart",0.4,true)
-    TweenService:Create(nf,TweenInfo.new(0.4,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=UDim2.new(0.5,0,1,-16)}):Play()
+    TweenService:Create(nf,TweenInfo.new(0.4,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
+        {Position=UDim2.new(0.5,0,1,-16)}):Play()
     task.delay(4,function()
-        TweenService:Create(nf,TweenInfo.new(0.3,Enum.EasingStyle.Sine),{Position=UDim2.new(0.5,0,1,90)}):Play()
+        TweenService:Create(nf,TweenInfo.new(0.3,Enum.EasingStyle.Sine),
+            {Position=UDim2.new(0.5,0,1,90)}):Play()
         task.wait(0.35); nf:Destroy()
     end)
 end
 
 -- ══════════════════════════════════════════════════════════════
---  UI SETTINGS TAB  (เพิ่ม Tab ที่กำหนดเองด้วยฟีเจอร์นี้)
+--  UI SETTINGS TAB
 -- ══════════════════════════════════════════════════════════════
 local function AddUISettingsTab()
-    -- สร้าง tab ปกติ แต่ด้วย helper ที่เขียนตรงนี้แยก
     local tab = AddTab("⚙️ UI")
+    -- FIX: ใช้ tab._lPage / tab._rPage โดยตรง ไม่ใช้ getLastPage hack
+    local lPage = tab._lPage
+    local rPage = tab._rPage
 
-    -- ── helper ของ Settings Tab ──────────────────────────────
-    -- หัวข้อ section
-    local function addSection(page, txt)
-        local f = Instance.new("Frame", page)
-        f.BackgroundTransparency=1; f.Size=UDim2.new(1,0,0,24)
-        local l = Instance.new("TextLabel",f); l.BackgroundTransparency=1; l.Size=UDim2.new(1,0,1,0)
+    local function addSection(page,txt)
+        local f=Instance.new("Frame",page); f.BackgroundTransparency=1; f.Size=UDim2.new(1,0,0,22)
+        local l=Instance.new("TextLabel",f); l.BackgroundTransparency=1; l.Size=UDim2.new(1,0,1,0)
         l.Font=Enum.Font.GothamBold; l.Text=txt; l.TextSize=10
-        l.TextColor3=Theme.Accent; l.TextXAlignment=Enum.TextXAlignment.Left; l.RichText=true
-        l.TextColor3=Color3.fromRGB(160,160,160)
-        -- underline
+        l.TextColor3=Color3.fromRGB(155,155,155); l.TextXAlignment=Enum.TextXAlignment.Left
         local ul=Instance.new("Frame",f); ul.AnchorPoint=Vector2.new(0,1); ul.Position=UDim2.new(0,0,1,0)
         ul.Size=UDim2.new(1,0,0,1); ul.BackgroundColor3=Color3.fromRGB(38,38,38); ul.BorderSizePixel=0
     end
 
-    -- color swatch row helper
-    local function addColorGrid(page, colors, onPick)
+    local function addColorGrid(page,colors,onPick)
         local wrap=Instance.new("Frame",page)
         wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,0); wrap.AutomaticSize=Enum.AutomaticSize.Y
         local grid=Instance.new("UIGridLayout",wrap)
         grid.CellSize=UDim2.new(0,22,0,22); grid.CellPadding=UDim2.new(0,5,0,5)
         grid.FillDirection=Enum.FillDirection.Horizontal; grid.SortOrder=Enum.SortOrder.LayoutOrder
         local swatches={}
-        for _, col in ipairs(colors) do
+        for _,col in ipairs(colors) do
             local sw=Instance.new("TextButton",wrap)
             sw.BackgroundColor3=col; sw.BorderSizePixel=0; sw.Text=""; sw.AutoButtonColor=false
             Instance.new("UICorner",sw).CornerRadius=UDim.new(0,5)
             local sk=Instance.new("UIStroke",sw); sk.Color=Color3.new(1,1,1); sk.Thickness=0
+            local capSk=sk
             sw.MouseButton1Click:Connect(function()
                 for _,s in ipairs(swatches) do s:FindFirstChildWhichIsA("UIStroke").Thickness=0 end
-                sk.Thickness=2; onPick(col)
+                capSk.Thickness=2; onPick(col)
             end)
             table.insert(swatches,sw)
         end
-        return swatches, wrap
     end
 
-    -- mini slider helper
-    local function addMiniSlider(page, labelTxt, initVal, mn, mx, onVal)
+    local function addMiniSlider(page,label,init,mn,mx,onVal)
         local wrap=Instance.new("Frame",page)
         wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,28)
         local lbl=Instance.new("TextLabel",wrap); lbl.BackgroundTransparency=1
         lbl.Size=UDim2.new(0,52,1,0); lbl.Font=Enum.Font.Gotham; lbl.TextSize=10
-        lbl.Text=labelTxt; lbl.TextColor3=Color3.fromRGB(130,130,130); lbl.TextXAlignment=Enum.TextXAlignment.Left
-        local valLbl=Instance.new("TextLabel",wrap); valLbl.BackgroundTransparency=1
-        valLbl.AnchorPoint=Vector2.new(1,0.5); valLbl.Position=UDim2.new(1,0,0.5,0)
-        valLbl.Size=UDim2.new(0,38,0,20); valLbl.Font=Enum.Font.Code; valLbl.TextSize=10
-        valLbl.Text=tostring(initVal); valLbl.TextColor3=Theme.Accent; valLbl.TextXAlignment=Enum.TextXAlignment.Right
-        onThemeChange("Accent",function(c) valLbl.TextColor3=c end)
-        local trackF=Instance.new("Frame",wrap)
-        trackF.Position=UDim2.new(0,56,0.5,-2); trackF.Size=UDim2.new(1,-100,0,4)
-        trackF.BackgroundColor3=Color3.fromRGB(45,45,45); trackF.BorderSizePixel=0
-        Instance.new("UICorner",trackF).CornerRadius=UDim.new(0,2)
-        local pct=math.clamp((initVal-mn)/(mx-mn),0,1)
-        local fillF=Instance.new("Frame",trackF); fillF.Size=UDim2.new(pct,0,1,0)
-        fillF.BackgroundColor3=Theme.Accent; fillF.BorderSizePixel=0
-        Instance.new("UICorner",fillF).CornerRadius=UDim.new(0,2)
-        onThemeChange("Accent",function(c) fillF.BackgroundColor3=c end)
-        local knobF=Instance.new("Frame",trackF); knobF.AnchorPoint=Vector2.new(0.5,0.5)
-        knobF.Position=UDim2.new(pct,0,0.5,0); knobF.Size=UDim2.new(0,12,0,12)
-        knobF.BackgroundColor3=Color3.new(1,1,1); knobF.BorderSizePixel=0
-        Instance.new("UICorner",knobF).CornerRadius=UDim.new(1,0)
+        lbl.Text=label; lbl.TextColor3=Color3.fromRGB(130,130,130); lbl.TextXAlignment=Enum.TextXAlignment.Left
+        local vLbl=Instance.new("TextLabel",wrap); vLbl.BackgroundTransparency=1
+        vLbl.AnchorPoint=Vector2.new(1,0.5); vLbl.Position=UDim2.new(1,0,0.5,0)
+        vLbl.Size=UDim2.new(0,38,0,20); vLbl.Font=Enum.Font.Code; vLbl.TextSize=10
+        vLbl.Text=tostring(init); vLbl.TextColor3=Theme.Accent; vLbl.TextXAlignment=Enum.TextXAlignment.Right
+        onThemeChange("Accent",function(c) if vLbl and vLbl.Parent then vLbl.TextColor3=c end end)
+        local tF=Instance.new("Frame",wrap)
+        tF.Position=UDim2.new(0,56,0.5,-2); tF.Size=UDim2.new(1,-100,0,4)
+        tF.BackgroundColor3=Color3.fromRGB(45,45,45); tF.BorderSizePixel=0
+        Instance.new("UICorner",tF).CornerRadius=UDim.new(0,2)
+        local p0=math.clamp((init-mn)/(mx-mn),0,1)
+        local fF=Instance.new("Frame",tF); fF.Size=UDim2.new(p0,0,1,0)
+        fF.BackgroundColor3=Theme.Accent; fF.BorderSizePixel=0
+        Instance.new("UICorner",fF).CornerRadius=UDim.new(0,2)
+        onThemeChange("Accent",function(c) if fF and fF.Parent then fF.BackgroundColor3=c end end)
+        local kF=Instance.new("Frame",tF); kF.AnchorPoint=Vector2.new(0.5,0.5)
+        kF.Position=UDim2.new(p0,0,0.5,0); kF.Size=UDim2.new(0,12,0,12)
+        kF.BackgroundColor3=Color3.new(1,1,1); kF.BorderSizePixel=0
+        Instance.new("UICorner",kF).CornerRadius=UDim.new(1,0)
         local drag=false
         local function setP(x)
-            local r=trackF.AbsolutePosition.X; local w=math.max(trackF.AbsoluteSize.X,1)
-            local p=math.clamp((x-r)/w,0,1)
-            local v=math.floor(mn+(mx-mn)*p)
-            fillF.Size=UDim2.new(p,0,1,0); knobF.Position=UDim2.new(p,0,0.5,0)
-            valLbl.Text=tostring(v); onVal(v)
+            local r=tF.AbsolutePosition.X; local w=math.max(tF.AbsoluteSize.X,1)
+            local p=math.clamp((x-r)/w,0,1); local v=math.floor(mn+(mx-mn)*p)
+            fF.Size=UDim2.new(p,0,1,0); kF.Position=UDim2.new(p,0,0.5,0)
+            vLbl.Text=tostring(v); onVal(v)
         end
-        trackF.InputBegan:Connect(function(i)
+        tF.InputBegan:Connect(function(i)
             if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=true;setP(i.Position.X) end
         end)
         UserInputService.InputChanged:Connect(function(i)
@@ -1059,7 +971,6 @@ local function AddUISettingsTab()
         end)
     end
 
-    -- anim option buttons
     local function addAnimGrid(page)
         local opts={"Slide","Scale","Wipe","Flip","Stagger","Fade"}
         local keys={"slide","scale","wipe","flip","stagger","fade"}
@@ -1069,15 +980,15 @@ local function AddUISettingsTab()
         local grid=Instance.new("UIGridLayout",wrap)
         grid.CellSize=UDim2.new(0.5,-3,0,26); grid.CellPadding=UDim2.new(0,6,0,5)
         grid.FillDirection=Enum.FillDirection.Horizontal; grid.SortOrder=Enum.SortOrder.LayoutOrder
-        for i, opt in ipairs(opts) do
+        for i,opt in ipairs(opts) do
             local b=Instance.new("TextButton",wrap)
-            b.BackgroundColor3=keys[i]=="slide" and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26)
+            local isActive=keys[i]==Theme.TabAnim
+            b.BackgroundColor3=isActive and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26)
             b.BorderSizePixel=0; b.Font=Enum.Font.GothamBold; b.Text=opt; b.TextSize=10
-            b.TextColor3=keys[i]=="slide" and Theme.Accent or Color3.fromRGB(100,100,100)
-            b.AutoButtonColor=false
+            b.TextColor3=isActive and Theme.Accent or Color3.fromRGB(100,100,100); b.AutoButtonColor=false
             Instance.new("UICorner",b).CornerRadius=UDim.new(0,5)
             local bsk=Instance.new("UIStroke",b)
-            bsk.Color=keys[i]=="slide" and Theme.Accent or Color3.fromRGB(40,40,40); bsk.Thickness=1
+            bsk.Color=isActive and Theme.Accent or Color3.fromRGB(40,40,40); bsk.Thickness=1
             table.insert(btns,{btn=b,stroke=bsk,key=keys[i]})
             local k=keys[i]
             b.MouseButton1Click:Connect(function()
@@ -1094,123 +1005,64 @@ local function AddUISettingsTab()
         end
     end
 
-    -- ── LEFT column: สี + พื้นหลัง ────────────────────────────
-    local lP = (function()
-        -- ดึง lPage ออกมาจาก tab methods — ใช้ trick inject
-        -- เราสร้าง dummy frame ให้ AddSeperatorL ใส่ แล้วเอา parent กลับ
-        -- แต่ง่ายกว่าคือ expose lPage จาก AddTab
-        -- (วิธีนี้ใช้ frame ใน LeftScroll)
-        for _,f in ipairs(LeftScroll:GetChildren()) do
-            if f:IsA("Frame") and not f.Visible == false then return f end
-        end
-        -- หา frame ล่าสุดใน LeftScroll
-        local frames=LeftScroll:GetChildren()
-        for i=#frames,1,-1 do if frames[i]:IsA("Frame") then return frames[i] end end
-    end)()
+    -- LEFT: สี + พื้นหลัง + มุม
+    addSection(lPage,"🎨 สีหลัก (Accent)")
+    addColorGrid(lPage,{
+        Color3.fromRGB(51,255,255), Color3.fromRGB(255,59,92),  Color3.fromRGB(168,85,247),
+        Color3.fromRGB(34,197,94),  Color3.fromRGB(245,158,11), Color3.fromRGB(59,130,246),
+        Color3.fromRGB(239,68,68),  Color3.fromRGB(236,72,153), Color3.fromRGB(20,184,166),
+        Color3.fromRGB(249,115,22),
+    },function(c) applyTheme("Accent",c) end)
 
-    -- ใช้ AddSeperatorL/R เพื่อให้ content อยู่ใน lPage/rPage ของ tab นี้
-    tab:AddSeperatorL("🎨 สีหลัก (Accent)")
-
-    -- color swatches ผ่าน AddButtonL trick → สร้าง inline frame
-    -- เรา inject frame ลง lPage โดยตรงโดยดูว่า lPage คือ frame ล่าสุดใน LeftScroll
-    local function getLastPage(scroll)
-        local children = scroll:GetChildren()
-        for i = #children, 1, -1 do
-            if children[i]:IsA("Frame") then return children[i] end
-        end
-    end
-
-    local lPage = getLastPage(LeftScroll)
-    local rPage = getLastPage(RightScroll)
-
-    -- Accent colors
-    local ACCENT_COLORS = {
-        Color3.fromRGB(51,255,255),  -- cyan default
-        Color3.fromRGB(255,59,92),   -- pink
-        Color3.fromRGB(168,85,247),  -- purple
-        Color3.fromRGB(34,197,94),   -- green
-        Color3.fromRGB(245,158,11),  -- amber
-        Color3.fromRGB(59,130,246),  -- blue
-        Color3.fromRGB(239,68,68),   -- red
-        Color3.fromRGB(236,72,153),  -- rose
-        Color3.fromRGB(20,184,166),  -- teal
-        Color3.fromRGB(249,115,22),  -- orange
-    }
-
-    addColorGrid(lPage, ACCENT_COLORS, function(c)
-        applyTheme("Accent", c)
-        -- อัพเดต all toggle pills ที่ on
-    end)
-
-    -- spacer
     local sp1=Instance.new("Frame",lPage); sp1.BackgroundTransparency=1; sp1.Size=UDim2.new(1,0,0,4)
-
-    addSection(lPage, "🌑 พื้นหลัง Window")
-
-    local BG_COLORS = {
-        Color3.fromRGB(17,17,17),
-        Color3.fromRGB(8,8,8),
-        Color3.fromRGB(16,13,28),
-        Color3.fromRGB(10,22,38),
-        Color3.fromRGB(12,22,12),
-        Color3.fromRGB(22,16,9),
-    }
-    local BG_TOP = {
-        Color3.fromRGB(25,25,25), Color3.fromRGB(14,14,14), Color3.fromRGB(24,20,36),
-        Color3.fromRGB(16,30,50), Color3.fromRGB(18,30,18), Color3.fromRGB(30,22,14),
-    }
-    local BG_CARD = {
-        Color3.fromRGB(28,28,28), Color3.fromRGB(18,18,18), Color3.fromRGB(28,24,40),
-        Color3.fromRGB(20,34,52), Color3.fromRGB(22,32,22), Color3.fromRGB(32,24,18),
-    }
-
-    addColorGrid(lPage, BG_COLORS, function(c)
-        -- หา index
-        for i, col in ipairs(BG_COLORS) do
-            if col == c then
-                applyTheme("WinBg", c)
-                applyTheme("TopBg", BG_TOP[i])
-                applyTheme("CardBg", BG_CARD[i])
-                break
+    addSection(lPage,"🌑 พื้นหลัง")
+    local BG={{Color3.fromRGB(17,17,17),Color3.fromRGB(25,25,25),Color3.fromRGB(28,28,28)},
+              {Color3.fromRGB(8,8,8),Color3.fromRGB(14,14,14),Color3.fromRGB(18,18,18)},
+              {Color3.fromRGB(16,13,28),Color3.fromRGB(24,20,36),Color3.fromRGB(28,24,40)},
+              {Color3.fromRGB(10,22,38),Color3.fromRGB(16,30,50),Color3.fromRGB(20,34,52)},
+              {Color3.fromRGB(12,22,12),Color3.fromRGB(18,30,18),Color3.fromRGB(22,32,22)},
+              {Color3.fromRGB(22,16,9),Color3.fromRGB(30,22,14),Color3.fromRGB(32,24,18)}}
+    local bgMain={}; for _,b in ipairs(BG) do table.insert(bgMain,b[1]) end
+    addColorGrid(lPage,bgMain,function(c)
+        for _,b in ipairs(BG) do
+            if b[1]==c then
+                applyTheme("WinBg",b[1]); applyTheme("TopBg",b[2]); applyTheme("CardBg",b[3]); break
             end
         end
     end)
 
     local sp2=Instance.new("Frame",lPage); sp2.BackgroundTransparency=1; sp2.Size=UDim2.new(1,0,0,4)
-    addSection(lPage, "🔘 ความโค้งมุม")
-    addMiniSlider(lPage, "Window", Theme.WinRadius, 0, 24, function(v) applyTheme("WinRadius", v) end)
-    addMiniSlider(lPage, "Cards",  Theme.CardRadius, 0, 16, function(v) applyTheme("CardRadius", v) end)
+    addSection(lPage,"🔘 มุมโค้ง")
+    addMiniSlider(lPage,"Window",Theme.WinRadius,0,24,function(v) applyTheme("WinRadius",v) end)
+    addMiniSlider(lPage,"Cards",Theme.CardRadius,0,16,function(v) applyTheme("CardRadius",v) end)
 
-    -- ── RIGHT column: animation + size + opacity ───────────────
-    addSection(rPage, "✨ อนิเมชั่น Tab")
+    -- RIGHT: animation + opacity + size + reset
+    addSection(rPage,"✨ อนิเมชั่น Tab")
     addAnimGrid(rPage)
 
     local sp3=Instance.new("Frame",rPage); sp3.BackgroundTransparency=1; sp3.Size=UDim2.new(1,0,0,6)
-    addSection(rPage, "💧 ความโปร่งใส")
-    addMiniSlider(rPage, "Opacity", 100, 0, 100, function(v)
-        applyTheme("WinOpacity", 1 - (v/100))
-    end)
+    addSection(rPage,"💧 ความโปร่งใส")
+    addMiniSlider(rPage,"Opacity",100,0,100,function(v) applyTheme("WinOpacity",1-(v/100)) end)
 
     local sp4=Instance.new("Frame",rPage); sp4.BackgroundTransparency=1; sp4.Size=UDim2.new(1,0,0,6)
-    addSection(rPage, "📐 ขนาด Window")
-
-    local SIZE_OPTS = {{"เล็ก",480,340},{"ปกติ",620,400},{"ใหญ่",760,460},{"XL",900,520}}
-    local sizeBtns={}
-    for _, s in ipairs(SIZE_OPTS) do
-        local label,w,h = s[1],s[2],s[3]
-        local sbtn=Instance.new("TextButton",rPage)
-        sbtn.BackgroundColor3=Color3.fromRGB(26,26,26); sbtn.BorderSizePixel=0
-        sbtn.Size=UDim2.new(1,0,0,26); sbtn.Font=Enum.Font.GothamBold; sbtn.Text=label
-        sbtn.TextColor3=Color3.fromRGB(100,100,100); sbtn.TextSize=11; sbtn.AutoButtonColor=false
-        Instance.new("UICorner",sbtn).CornerRadius=UDim.new(0,5)
-        local ssk=Instance.new("UIStroke",sbtn); ssk.Color=Color3.fromRGB(40,40,40); ssk.Thickness=1
-        table.insert(sizeBtns,{btn=sbtn,stroke=ssk})
-        sbtn.MouseButton1Click:Connect(function()
+    addSection(rPage,"📐 ขนาด Window")
+    local sizeOpts={{"เล็ก",480,340},{"ปกติ",620,400},{"ใหญ่",760,460},{"XL",900,520}}
+    local sBtns={}
+    for _,s in ipairs(sizeOpts) do
+        local lbl,w,h=s[1],s[2],s[3]
+        local sb=Instance.new("TextButton",rPage)
+        sb.BackgroundColor3=Color3.fromRGB(26,26,26); sb.BorderSizePixel=0
+        sb.Size=UDim2.new(1,0,0,26); sb.Font=Enum.Font.GothamBold; sb.Text=lbl
+        sb.TextColor3=Color3.fromRGB(100,100,100); sb.TextSize=11; sb.AutoButtonColor=false
+        Instance.new("UICorner",sb).CornerRadius=UDim.new(0,5)
+        local ssk=Instance.new("UIStroke",sb); ssk.Color=Color3.fromRGB(40,40,40); ssk.Thickness=1
+        table.insert(sBtns,{btn=sb,stroke=ssk})
+        sb.MouseButton1Click:Connect(function()
             Theme.WinW=w; Theme.WinH=h
             NORMAL_SIZE=UDim2.new(0,w,0,h)
             TweenService:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=NORMAL_SIZE}):Play()
-            for _,sd in ipairs(sizeBtns) do
-                local on=(sd.btn==sbtn)
+            for _,sd in ipairs(sBtns) do
+                local on=(sd.btn==sb)
                 TweenService:Create(sd.btn,TweenInfo.new(0.15),{
                     BackgroundColor3=on and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26),
                     TextColor3=on and Theme.Accent or Color3.fromRGB(100,100,100),
@@ -1221,32 +1073,31 @@ local function AddUISettingsTab()
     end
 
     local sp5=Instance.new("Frame",rPage); sp5.BackgroundTransparency=1; sp5.Size=UDim2.new(1,0,0,4)
-
-    -- Reset button
     local rbtn=Instance.new("TextButton",rPage)
     rbtn.BackgroundColor3=Color3.fromRGB(22,22,22); rbtn.BorderSizePixel=0
     rbtn.Size=UDim2.new(1,0,0,28); rbtn.Font=Enum.Font.GothamBold; rbtn.Text="↺  รีเซ็ตทุกอย่าง"
     rbtn.TextColor3=Color3.fromRGB(80,80,80); rbtn.TextSize=11; rbtn.AutoButtonColor=false
     Instance.new("UICorner",rbtn).CornerRadius=UDim.new(0,5)
     local rsk=Instance.new("UIStroke",rbtn); rsk.Color=Color3.fromRGB(40,40,40); rsk.Thickness=1
-    rbtn.MouseEnter:Connect(function() TweenService:Create(rbtn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(30,10,10),TextColor3=Color3.fromRGB(255,80,80)}):Play(); rsk.Color=Color3.fromRGB(180,50,50) end)
-    rbtn.MouseLeave:Connect(function() TweenService:Create(rbtn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(22,22,22),TextColor3=Color3.fromRGB(80,80,80)}):Play(); rsk.Color=Color3.fromRGB(40,40,40) end)
+    rbtn.MouseEnter:Connect(function()
+        TweenService:Create(rbtn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(30,10,10),TextColor3=Color3.fromRGB(255,80,80)}):Play()
+        rsk.Color=Color3.fromRGB(180,50,50)
+    end)
+    rbtn.MouseLeave:Connect(function()
+        TweenService:Create(rbtn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(22,22,22),TextColor3=Color3.fromRGB(80,80,80)}):Play()
+        rsk.Color=Color3.fromRGB(40,40,40)
+    end)
     rbtn.MouseButton1Click:Connect(function()
-        applyTheme("Accent",    Color3.fromRGB(51,255,255))
-        applyTheme("WinBg",     Color3.fromRGB(17,17,17))
-        applyTheme("TopBg",     Color3.fromRGB(25,25,25))
-        applyTheme("CardBg",    Color3.fromRGB(28,28,28))
-        applyTheme("WinRadius", 10)
-        applyTheme("CardRadius",6)
-        applyTheme("WinOpacity",0)
-        Theme.TabAnim = "slide"
-        Theme.WinW=620; Theme.WinH=400
+        applyTheme("Accent",Color3.fromRGB(51,255,255))
+        applyTheme("WinBg",Color3.fromRGB(17,17,17))
+        applyTheme("TopBg",Color3.fromRGB(25,25,25))
+        applyTheme("CardBg",Color3.fromRGB(28,28,28))
+        applyTheme("WinRadius",10); applyTheme("CardRadius",6); applyTheme("WinOpacity",0)
+        Theme.TabAnim="slide"; Theme.WinW=620; Theme.WinH=400
         NORMAL_SIZE=UDim2.new(0,620,0,400)
         TweenService:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=NORMAL_SIZE}):Play()
         AddNotification("รีเซ็ต UI เรียบร้อยแล้ว!")
     end)
-
-    return tab
 end
 
 -- ══════════════════════════════════════════════════════════════
@@ -1254,52 +1105,41 @@ end
 -- ══════════════════════════════════════════════════════════════
 local Tab1 = AddTab("Movement")
 Tab1:AddSeperatorL("⚡ Speed")
-Tab1:AddToggleL("Speed Hack", false, function(on)
-    local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-    if h then h.WalkSpeed = on and 60 or 16 end
+Tab1:AddToggleL("Speed Hack",false,function(on)
+    local h=game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if h then h.WalkSpeed=on and 60 or 16 end
 end)
-Tab1:AddSliderL("Walk Speed", 16, 500, 16, function(v)
-    local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-    if h then h.WalkSpeed = v end
+Tab1:AddSliderL("Walk Speed",16,500,16,function(v)
+    local h=game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if h then h.WalkSpeed=v end
 end)
-Tab1:AddSliderL("Jump Power", 50, 500, 50, function(v)
-    local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-    if h then h.JumpPower = v end
+Tab1:AddSliderL("Jump Power",50,500,50,function(v)
+    local h=game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if h then h.JumpPower=v end
 end)
-Tab1:AddDropdownL("Jump Mode", {"Normal","Double Jump","Infinite"}, "Normal", function(v)
-    print("Jump Mode:", v)
-end)
-Tab1:AddButtonL("Reset Character", function()
-    local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-    if h then h.Health = 0 end
+Tab1:AddDropdownL("Jump Mode",{"Normal","Double Jump","Infinite"},"Normal",function(v) print("Jump:",v) end)
+Tab1:AddButtonL("Reset Character",function()
+    local h=game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if h then h.Health=0 end
 end)
 Tab1:AddSeperatorR("👁 Visual")
-Tab1:AddToggleR("ESP", false, function(on) print("ESP:", on) end)
-Tab1:AddToggleR("Fullbright", false, function(on)
-    game.Lighting.Brightness = on and 10 or 1
-end)
-Tab1:AddSliderR("FOV", 30, 120, 70, function(v)
-    workspace.CurrentCamera.FieldOfView = v
-end)
-Tab1:AddMultiDropdownR("Highlight Parts", {"Head","Torso","Left Arm","Right Arm","Left Leg","Right Leg"}, function(sel)
-    print("Selected:", sel)
-end)
+Tab1:AddToggleR("ESP",false,function(on) print("ESP:",on) end)
+Tab1:AddToggleR("Fullbright",false,function(on) game.Lighting.Brightness=on and 10 or 1 end)
+Tab1:AddSliderR("FOV",30,120,70,function(v) workspace.CurrentCamera.FieldOfView=v end)
+Tab1:AddMultiDropdownR("Highlight Parts",{"Head","Torso","Left Arm","Right Arm","Left Leg","Right Leg"},function(s) print("Parts:",s) end)
 Tab1:AddLineR()
-Tab1:AddLabelR("Version: 3.0  |  By IDekhere")
+Tab1:AddLabelR("Version: 4.0  |  By IDekhere")
 
 local Tab2 = AddTab("Combat")
 Tab2:AddSeperatorL("🎯 Aimbot")
-Tab2:AddToggleL("Aimbot", false, function(on) print("Aimbot:", on) end)
-Tab2:AddSliderL("Smooth", 1, 100, 20, function(v) print("Smooth:", v) end)
-Tab2:AddDropdownL("Target Part", {"Head","HumanoidRootPart","Torso"}, "Head", function(v) print("Target:", v) end)
-Tab2:AddMultiDropdownL("Ignore Teams", {"Red","Blue","Green","Yellow"}, function(sel) print("Ignore:", sel) end)
+Tab2:AddToggleL("Aimbot",false,function(on) print("Aimbot:",on) end)
+Tab2:AddSliderL("Smooth",1,100,20,function(v) print("Smooth:",v) end)
+Tab2:AddDropdownL("Target Part",{"Head","HumanoidRootPart","Torso"},"Head",function(v) print("Target:",v) end)
+Tab2:AddMultiDropdownL("Ignore Teams",{"Red","Blue","Green","Yellow"},function(s) print("Ignore:",s) end)
 Tab2:AddSeperatorR("💥 Misc")
-Tab2:AddToggleR("Silent Aim", false, function(on) print("Silent:", on) end)
-Tab2:AddSliderR("FOV Circle", 0, 500, 120, function(v) print("FOV:", v) end)
-Tab2:AddTextboxR("Target Player", "ใส่ชื่อผู้เล่น...", "", function(v) print("Target:", v) end)
+Tab2:AddToggleR("Silent Aim",false,function(on) print("Silent:",on) end)
+Tab2:AddSliderR("FOV Circle",0,500,120,function(v) print("FOV Circle:",v) end)
+Tab2:AddTextboxR("Target Player","ใส่ชื่อผู้เล่น...","",function(v) print("Target:",v) end)
 
--- ── UI Settings Tab (ต้องสร้างหลังสุด) ──────────────────────
 AddUISettingsTab()
-
--- ── Notification ──────────────────────────────────────────────
-AddNotification("ยินดีต้อนรับสู่ IDekhere Hub v3!")
+AddNotification("ยินดีต้อนรับสู่ IDekhere Hub v4!")
