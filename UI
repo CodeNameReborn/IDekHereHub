@@ -1,9 +1,10 @@
 -- ============================================================
---   IDekhere Hub v4  |  Fully Debugged
+--   IDekhere Hub v4  |  Fully Debugged + Dev Panel Enhancements
 -- ============================================================
 local TweenService     = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService       = game:GetService("RunService")
+local GuiService       = game:GetService("GuiService")
 
 -- ── ลบ GUI เก่า ───────────────────────────────────────────────
 local _old = game.CoreGui:FindFirstChild("IDekhere Hub")
@@ -84,10 +85,7 @@ local curLang = "TH"
 local LangCBs = {}
 local function L(k) return LANG[curLang][k] or k end
 local function onLangChange(fn) table.insert(LangCBs, fn) end
-local function setLang(code)
-    curLang = code
-    for _, fn in ipairs(LangCBs) do pcall(fn) end
-end
+local function setLang(code) curLang = code for _, fn in ipairs(LangCBs) do pcall(fn) end end
 
 -- ══════════════════════════════════════════════════════════════
 --  THEME
@@ -107,7 +105,6 @@ local Theme = {
     WinH       = 400,
 }
 
--- FIX: ThemeCallbacks เก็บ list ของ callbacks ไม่ใช่แค่ตัวเดียว
 local ThemeCallbacks = {}
 local function onThemeChange(key, fn)
     if not ThemeCallbacks[key] then ThemeCallbacks[key] = {} end
@@ -121,7 +118,6 @@ local function applyTheme(key, val)
         end
     end
 end
-
 
 -- ══════════════════════════════════════════════════════════════
 --  ScreenGui
@@ -223,12 +219,12 @@ macBtn("CloseBtn",Color3.fromRGB(255,59,48),8,function()
     TweenService:Create(Main,TweenInfo.new(0.12,Enum.EasingStyle.Sine),{Size=UDim2.new(0,650,0,420)}):Play()
     task.wait(0.1); tweenCorner(50)
     TweenService:Create(Main,TweenInfo.new(0.44,Enum.EasingStyle.Back,Enum.EasingDirection.In),
-        {Size=UDim2.new(0,0,0,0),Position=UDim2.new(0,52,0,52),BackgroundTransparency=0.5}):Play()
+        {Size=UDim2.new(0,0,0,0),Position=UDim2.new(0.1,0,0.05,0),BackgroundTransparency=0.5}):Play()
     task.wait(0.47); Main.Visible=false
 
     local mini=Instance.new("Frame",GUI)
     mini.Name="MiniBtn"; mini.AnchorPoint=Vector2.new(0.5,0.5)
-    mini.Position=UDim2.new(0,52,0,52); mini.Size=UDim2.new(0,0,0,0)
+    mini.Position=UDim2.new(0.1,0,0.05,0); mini.Size=UDim2.new(0,0,0,0)
     mini.BackgroundColor3=Color3.fromRGB(16,16,16); mini.BorderSizePixel=0; mini.ZIndex=50
     Instance.new("UICorner",mini).CornerRadius=UDim.new(0,16)
     local msk=Instance.new("UIStroke",mini); msk.Color=Theme.Accent; msk.Thickness=1.5
@@ -250,7 +246,7 @@ macBtn("CloseBtn",Color3.fromRGB(255,59,48),8,function()
         TweenService:Create(mini,TweenInfo.new(0.18,Enum.EasingStyle.Back,Enum.EasingDirection.In),{Size=UDim2.new(0,0,0,0)}):Play()
         task.wait(0.2); mini:Destroy()
         Main.Visible=true; Main.BackgroundTransparency=0.5
-        Main.Size=UDim2.new(0,0,0,0); Main.Position=UDim2.new(0,52,0,52)
+        Main.Size=UDim2.new(0,0,0,0); Main.Position=UDim2.new(0.1,0,0.05,0)
         tweenCorner(Theme.WinRadius)
         TweenService:Create(Main,TweenInfo.new(0.55,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
             {Size=NORMAL_SIZE,Position=NORMAL_POS,BackgroundTransparency=Theme.WinOpacity}):Play()
@@ -259,7 +255,6 @@ macBtn("CloseBtn",Color3.fromRGB(255,59,48),8,function()
 end)
 
 -- 🟡 Island mode
--- FIX: islandClick อยู่ใน Main แต่ Visible=false ตลอด จะไม่บัง content
 local islandClick=Instance.new("TextButton",Main)
 islandClick.Size=UDim2.new(1,0,1,0); islandClick.BackgroundTransparency=1
 islandClick.Text=""; islandClick.ZIndex=3; islandClick.Visible=false
@@ -291,7 +286,7 @@ macBtn("MinimizeBtn",Color3.fromRGB(255,204,0),24,function()
     if GUI:FindFirstChild("MiniBtn") or isIsland then return end
     isIsland=true; Top.Visible=false
     TweenService:Create(Main,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),
-        {Size=UDim2.new(0,180,0,30),Position=UDim2.new(0.5,0,0,10)}):Play()
+        {Size=UDim2.new(0,180,0,30),Position=UDim2.new(0.5,0,0.05,0)}):Play()
     tweenCorner(22)
     task.delay(0.45,function() islandClick.Visible=true end)
 end)
@@ -338,9 +333,6 @@ local Content=Instance.new("Frame",Main)
 Content.BackgroundTransparency=1; Content.Position=UDim2.new(0,0,0,34)
 Content.Size=UDim2.new(1,0,1,-34); Content.BorderSizePixel=0; Content.ClipsDescendants=true
 
--- FIX: LeftScroll/RightScroll ไม่มี UIListLayout แล้ว
--- แต่ละ tab มี lPage/rPage เป็น children ของ scroll โดยตรง
--- page ที่ไม่ active ต้อง Visible=false เสมอ
 local LeftScroll=Instance.new("ScrollingFrame",Content)
 LeftScroll.BackgroundTransparency=1; LeftScroll.Position=UDim2.new(0,0,0,0)
 LeftScroll.Size=UDim2.new(0.5,-1,1,0); LeftScroll.CanvasSize=UDim2.new(0,0,0,0)
@@ -372,8 +364,7 @@ local function goIsland()
     task.delay(0.4,function() islandClick.Visible=true end)
 end
 
--- kbMode อ้างถึงตัวแปรใน BuildUISettings — ใช้ wrapper function แทน
-local kbModeRef = {"island"}  -- default island; BuildUISettings จะ update
+local kbModeRef = {"island"}
 
 UserInputService.InputBegan:Connect(function(inp,gp)
     if gp then return end
@@ -381,7 +372,6 @@ UserInputService.InputBegan:Connect(function(inp,gp)
         if isIsland then
             restoreIsland()
         elseif GUI:FindFirstChild("MiniBtn") then
-            -- restore mini
             local mini=GUI:FindFirstChild("MiniBtn")
             if mini then
                 TweenService:Create(mini,TweenInfo.new(0.18,Enum.EasingStyle.Back,Enum.EasingDirection.In),{Size=UDim2.new(0,0,0,0)}):Play()
@@ -436,7 +426,7 @@ end)
 -- ══════════════════════════════════════════════════════════════
 local Pages    = {}
 local firstTab = true
-local activePg = nil  -- pageData ที่กำลัง active
+local activePg = nil
 
 local function tabAnim_in(lPage, rPage, dir)
     for _, p in ipairs({lPage, rPage}) do
@@ -500,7 +490,6 @@ local isSwitching = false
 local function selectPage(pageData)
     if activePg == pageData then return end
     if isSwitching then
-        -- spam click: reset ทุก page ทันที
         for _, pg in ipairs(Pages) do
             pg.left.Visible  = false
             pg.right.Visible = false
@@ -516,14 +505,12 @@ local function selectPage(pageData)
         isSwitching = false
     end
 
-    -- snapshot oldPage ก่อน set activePg ใหม่
     local oldPg = activePg
     local dir   = 1
     if oldPg then
         dir = pageData.idx > oldPg.idx and 1 or -1
     end
 
-    -- อัพเดต tab buttons ทันที
     if oldPg then
         TweenService:Create(oldPg.btn,TweenInfo.new(0.15),{
             BackgroundColor3=Color3.fromRGB(38,38,38),
@@ -535,7 +522,6 @@ local function selectPage(pageData)
         TextColor3=Color3.fromRGB(15,15,15),
     }):Play()
 
-    -- set activePg ก่อนทุก delay
     activePg = pageData
 
     local ANIM = Theme.TabAnim
@@ -543,7 +529,6 @@ local function selectPage(pageData)
 
     isSwitching = true
 
-    -- ซ่อน page เก่า
     if oldPg then
         if ANIM == "slide" then
             for _, p in ipairs({oldPg.left, oldPg.right}) do
@@ -551,7 +536,6 @@ local function selectPage(pageData)
                     {Position=UDim2.new(dir*-0.07,0,0,0)}):Play()
             end
         end
-        -- snapshot reference ก่อน delay — ไม่อ้างถึง activePg
         local snapLeft  = oldPg.left
         local snapRight = oldPg.right
         task.delay(OUT_TIME, function()
@@ -564,10 +548,8 @@ local function selectPage(pageData)
         end)
     end
 
-    -- โชว์ page ใหม่
-    local snapNew = pageData  -- snapshot ป้องกัน activePg เปลี่ยนก่อน delay
+    local snapNew = pageData
     task.delay(OUT_TIME, function()
-        -- ตรวจว่ายังต้องการ page นี้อยู่ไหม (กัน spam)
         if activePg ~= snapNew then isSwitching=false; return end
         snapNew.left.Visible  = true
         snapNew.right.Visible = true
@@ -578,7 +560,6 @@ local function selectPage(pageData)
     end)
 end
 
--- auto canvas update ของ active tab
 RunService.Heartbeat:Connect(function()
     pcall(function()
         if activePg then
@@ -610,7 +591,6 @@ local function AddTab(tabname)
     local tbP=Instance.new("UIPadding",tabBtn)
     tbP.PaddingLeft=UDim.new(0,6); tbP.PaddingRight=UDim.new(0,6)
 
-    -- FIX: lPage/rPage ตรงๆ ใน scroll, ไม่ nested ใน list
     local lPage=Instance.new("Frame",LeftScroll)
     lPage.BackgroundTransparency=1; lPage.Size=UDim2.new(1,0,0,0)
     lPage.AutomaticSize=Enum.AutomaticSize.Y; lPage.BorderSizePixel=0
@@ -637,7 +617,7 @@ local function AddTab(tabname)
 
     tabBtn.MouseButton1Click:Connect(function() selectPage(pageData) end)
 
-    -- ── Component helpers ────────────────────────────────────
+    -- Component helpers
     local function mkCard(parent,h)
         local f=Instance.new("Frame",parent)
         f.BackgroundColor3=Theme.CardBg
@@ -660,7 +640,6 @@ local function AddTab(tabname)
         return l
     end
 
-    -- ── Button ───────────────────────────────────────────────
     local function mkButton(parent,txt,cb)
         local f=mkCard(parent,34)
         local b=Instance.new("TextButton",f)
@@ -676,7 +655,6 @@ local function AddTab(tabname)
     function tab:AddButtonL(t,cb) mkButton(lPage,t,cb) end
     function tab:AddButtonR(t,cb) mkButton(rPage,t,cb) end
 
-    -- ── Toggle ───────────────────────────────────────────────
     local function mkToggle(parent,txt,def,cb)
         local f=mkCard(parent,34); mkTxt(f,txt)
         local on=def or false
@@ -700,7 +678,6 @@ local function AddTab(tabname)
             pcall(cb,on)
         end
         pill.MouseButton1Click:Connect(toggle)
-        -- ให้ click ที่ card area (ไม่ใช่แค่ pill) ก็ toggle ได้
         local cardBtn=Instance.new("TextButton",f)
         cardBtn.Size=UDim2.new(1,0,1,0); cardBtn.BackgroundTransparency=1
         cardBtn.Text=""; cardBtn.AutoButtonColor=false; cardBtn.ZIndex=f.ZIndex-1
@@ -709,7 +686,6 @@ local function AddTab(tabname)
     function tab:AddToggleL(t,d,cb) mkToggle(lPage,t,d,cb) end
     function tab:AddToggleR(t,d,cb) mkToggle(rPage,t,d,cb) end
 
-    -- ── Slider ───────────────────────────────────────────────
     local function mkSlider(parent,txt,mn,mx,def,cb)
         local f=mkCard(parent,54)
         local row=Instance.new("Frame",f)
@@ -767,36 +743,27 @@ local function AddTab(tabname)
     function tab:AddSliderL(t,mn,mx,d,cb) mkSlider(lPage,t,mn,mx,d,cb) end
     function tab:AddSliderR(t,mn,mx,d,cb) mkSlider(rPage,t,mn,mx,d,cb) end
 
-    -- ── Dropdown ─────────────────────────────────────────────
     local function mkDropdown(parent,title,list,def,cb)
-        -- Layout (ทุกอย่างอยู่ใน wrap ซึ่งไม่ clip):
-        --  [0..52]      base card  (header 26 + sel-label 26)
-        --  [56..82]     search box   ← อยู่ใน wrap โดยตรง ไม่ใน base
-        --  [86..]       item list    ← อยู่ใน wrap โดยตรง
-        local IH      = 28   -- item height
-        local CARD_H  = 52   -- ความสูงตอนปิด
-        local SB_Y    = 56   -- y ของ search box
-        local SB_H    = 26   -- ความสูง search box
-        local ITEMS_Y = SB_Y + SB_H + 4  -- = 86
+        local IH      = 28
+        local CARD_H  = 52
+        local SB_Y    = 56
+        local SB_H    = 26
+        local ITEMS_Y = SB_Y + SB_H + 4
 
         local open    = false
         local curList = list
         local curSel  = def or (list[1] or "Select...")
         local iBtns   = {}
 
-        -- wrap: container หลัก ไม่ clip → item list โผล่ออกมาได้
         local wrap = Instance.new("Frame", parent)
         wrap.BackgroundTransparency = 1
         wrap.Size = UDim2.new(1,0,0,CARD_H)
         wrap.ClipsDescendants = false
 
-        -- base card: แสดงแค่ header + selected label
-        -- ไม่มี ClipsDescendants → ไม่บัง search box ที่ y>52
         local base = mkCard(wrap, CARD_H)
         base.Size = UDim2.new(1,0,0,CARD_H)
         base.ClipsDescendants = false
 
-        -- header (click เพื่อ toggle)
         local hdr = Instance.new("TextButton", base)
         hdr.BackgroundTransparency = 1
         hdr.Size = UDim2.new(1,0,0,26)
@@ -812,7 +779,6 @@ local function AddTab(tabname)
         arr.Text = "▼"; arr.TextColor3 = Theme.Accent; arr.TextSize = 9
         onThemeChange("Accent", function(c) if arr and arr.Parent then arr.TextColor3=c end end)
 
-        -- selected label
         local sel = Instance.new("TextLabel", base)
         sel.BackgroundColor3 = Color3.fromRGB(38,38,38)
         sel.BorderSizePixel = 0
@@ -823,8 +789,6 @@ local function AddTab(tabname)
         Instance.new("UICorner", sel).CornerRadius = UDim.new(0,4)
         onThemeChange("Accent", function(c) if sel and sel.Parent then sel.TextColor3=c end end)
 
-        -- search box อยู่ใน wrap โดยตรง (ไม่ใน base)
-        -- → ไม่โดน ClipsDescendants ของ base → click ได้ปกติ
         local sb = Instance.new("TextBox", wrap)
         sb.BackgroundColor3 = Color3.fromRGB(35,35,35)
         sb.BorderSizePixel = 0
@@ -840,7 +804,6 @@ local function AddTab(tabname)
         local sbStroke = Instance.new("UIStroke", sb)
         sbStroke.Color = Color3.fromRGB(50,50,50)
 
-        -- item container อยู่ใน wrap โดยตรงเช่นกัน
         local iFrame = Instance.new("Frame", wrap)
         iFrame.BackgroundTransparency = 1
         iFrame.Position = UDim2.new(0,0,0,ITEMS_Y)
@@ -848,24 +811,18 @@ local function AddTab(tabname)
         iFrame.Visible = false; iFrame.ZIndex = 3
         Instance.new("UIListLayout", iFrame).SortOrder = Enum.SortOrder.LayoutOrder
 
-        local function calcOpenH(n)
-            return ITEMS_Y + n*IH
-        end
+        local function calcOpenH(n) return ITEMS_Y + n*IH end
 
         local function closeDD()
             open = false
             sb.Text = ""; sb.Visible = false; iFrame.Visible = false
-            for _, b in ipairs(iBtns) do
-                if b and b.Parent then b.Visible = true end
-            end
+            for _, b in ipairs(iBtns) do if b and b.Parent then b.Visible = true end end
             wrap:TweenSize(UDim2.new(1,0,0,CARD_H), "Out","Quad",0.18,true)
             TweenService:Create(arr, TweenInfo.new(0.15), {Rotation=0}):Play()
         end
 
         local function buildItems(lst)
-            for _, b in ipairs(iBtns) do
-                if b and b.Parent then b:Destroy() end
-            end
+            for _, b in ipairs(iBtns) do if b and b.Parent then b:Destroy() end end
             iBtns = {}
             iFrame.Size = UDim2.new(1,0,0,#lst*IH)
             for _, item in ipairs(lst) do
@@ -936,13 +893,12 @@ local function AddTab(tabname)
     function tab:AddDropdownL(t,l,d,cb) return mkDropdown(lPage,t,l,d,cb) end
     function tab:AddDropdownR(t,l,d,cb) return mkDropdown(rPage,t,l,d,cb) end
 
-    -- ── Multi-select Dropdown ────────────────────────────────
     local function mkMultiDropdown(parent,title,list,cb)
         local IH      = 30
         local CARD_H  = 52
         local SB_Y    = 56
         local SB_H    = 26
-        local ITEMS_Y = SB_Y + SB_H + 4   -- 86
+        local ITEMS_Y = SB_Y + SB_H + 4
 
         local open     = false
         local selected = {}
@@ -983,7 +939,6 @@ local function AddTab(tabname)
         sel.TextColor3 = Color3.fromRGB(90,90,90); sel.TextSize = 10
         Instance.new("UICorner", sel).CornerRadius = UDim.new(0,4)
 
-        -- search box ใน wrap โดยตรง (ไม่ใน base → ไม่โดน clip)
         local sb = Instance.new("TextBox", wrap)
         sb.BackgroundColor3 = Color3.fromRGB(35,35,35)
         sb.BorderSizePixel = 0
@@ -1019,9 +974,7 @@ local function AddTab(tabname)
         end
 
         local function buildRows(lst)
-            for _, rd in ipairs(rows) do
-                if rd.row and rd.row.Parent then rd.row:Destroy() end
-            end
+            for _, rd in ipairs(rows) do if rd.row and rd.row.Parent then rd.row:Destroy() end end
             rows = {}
             iFrame.Size = UDim2.new(1,0,0,#lst*IH)
             for _, item in ipairs(lst) do
@@ -1093,9 +1046,7 @@ local function AddTab(tabname)
 
         local function closeDD()
             open = false; sb.Text = ""; sb.Visible = false; iFrame.Visible = false
-            for _, d in ipairs(rows) do
-                if d.row and d.row.Parent then d.row.Visible = true end
-            end
+            for _, d in ipairs(rows) do if d.row and d.row.Parent then d.row.Visible = true end end
             wrap:TweenSize(UDim2.new(1,0,0,CARD_H),"Out","Quad",0.18,true)
             TweenService:Create(arr,TweenInfo.new(0.15),{Rotation=0}):Play()
         end
@@ -1132,21 +1083,17 @@ local function AddTab(tabname)
     function tab:AddMultiDropdownL(t,l,cb) return mkMultiDropdown(lPage,t,l,cb) end
     function tab:AddMultiDropdownR(t,l,cb) return mkMultiDropdown(rPage,t,l,cb) end
 
-    -- ── Separator ────────────────────────────────────────────
     local function mkSep(parent,txt)
         local f=Instance.new("Frame",parent); f.BackgroundTransparency=1; f.Size=UDim2.new(1,0,0,28)
-        -- เส้นบนสุด
         local topLine=Instance.new("Frame",f)
         topLine.BackgroundColor3=Theme.Accent; topLine.BackgroundTransparency=0.7
         topLine.BorderSizePixel=0; topLine.Size=UDim2.new(1,0,0,1); topLine.Position=UDim2.new(0,0,0,0)
         onThemeChange("Accent",function(c) if topLine and topLine.Parent then topLine.BackgroundColor3=c end end)
-        -- pill glow ซ้าย
         local pill=Instance.new("Frame",f)
         pill.BackgroundColor3=Theme.Accent; pill.BackgroundTransparency=0
         pill.BorderSizePixel=0; pill.Size=UDim2.new(0,3,0,18); pill.Position=UDim2.new(0,0,0,5)
         Instance.new("UICorner",pill).CornerRadius=UDim.new(0,2)
         onThemeChange("Accent",function(c) if pill and pill.Parent then pill.BackgroundColor3=c end end)
-        -- text
         local l=Instance.new("TextLabel",f); l.BackgroundTransparency=1
         l.Position=UDim2.new(0,10,0,4); l.Size=UDim2.new(1,-14,0,20)
         l.Font=Enum.Font.GothamBold; l.Text=txt; l.TextColor3=Theme.Accent; l.TextSize=11
@@ -1156,7 +1103,6 @@ local function AddTab(tabname)
     function tab:AddSeperatorL(t) mkSep(lPage,t) end
     function tab:AddSeperatorR(t) mkSep(rPage,t) end
 
-    -- ── Label ────────────────────────────────────────────────
     local function mkLabel(parent,txt)
         local l=Instance.new("TextLabel",parent); l.BackgroundTransparency=1
         l.Size=UDim2.new(1,0,0,0); l.AutomaticSize=Enum.AutomaticSize.Y
@@ -1166,7 +1112,6 @@ local function AddTab(tabname)
     function tab:AddLabelL(t) mkLabel(lPage,t) end
     function tab:AddLabelR(t) mkLabel(rPage,t) end
 
-    -- ── Line ─────────────────────────────────────────────────
     local function mkLine(parent)
         local f=Instance.new("Frame",parent)
         f.BackgroundColor3=Color3.fromRGB(40,40,40); f.BorderSizePixel=0; f.Size=UDim2.new(1,0,0,1)
@@ -1174,10 +1119,8 @@ local function AddTab(tabname)
     function tab:AddLineL() mkLine(lPage) end
     function tab:AddLineR() mkLine(rPage) end
 
-    -- ── Textbox ──────────────────────────────────────────────
     local function mkTextbox(parent,title,ph,def,cb)
         local f=mkCard(parent,56)
-        -- title row
         local lbl=Instance.new("TextLabel",f)
         lbl.BackgroundTransparency=1; lbl.Position=UDim2.new(0,8,0,6)
         lbl.Size=UDim2.new(1,-16,0,18)
@@ -1185,7 +1128,6 @@ local function AddTab(tabname)
         lbl.TextColor3=Theme.Text; lbl.TextSize=11
         lbl.TextXAlignment=Enum.TextXAlignment.Left
         onThemeChange("Text",function(c) if lbl and lbl.Parent then lbl.TextColor3=c end end)
-        -- input box
         local tb=Instance.new("TextBox",f)
         tb.Position=UDim2.new(0,8,0,28); tb.Size=UDim2.new(1,-16,0,22)
         tb.BackgroundColor3=Color3.fromRGB(36,36,36); tb.BorderSizePixel=0
@@ -1199,7 +1141,6 @@ local function AddTab(tabname)
     function tab:AddTextboxL(t,ph,d,cb) mkTextbox(lPage,t,ph,d,cb) end
     function tab:AddTextboxR(t,ph,d,cb) mkTextbox(rPage,t,ph,d,cb) end
 
-    -- expose pages สำหรับ UI Settings Tab
     tab._lPage = lPage
     tab._rPage = rPage
 
@@ -1209,7 +1150,6 @@ end
 -- ══════════════════════════════════════════════════════════════
 --  NOTIFICATION
 -- ══════════════════════════════════════════════════════════════
--- Notification history log
 local NotifLog = {}
 local NotifLogCallbacks = {}
 local function onNotifLog(fn) table.insert(NotifLogCallbacks, fn) end
@@ -1219,14 +1159,12 @@ local function pushLog(txt)
     for _,fn in ipairs(NotifLogCallbacks) do pcall(fn) end
 end
 
--- Notification queue — เรียงซ้อนขึ้นได้หลายอัน
-local NQ = {}       -- { frame=, h= } ที่กำลังแสดงอยู่
-local NQ_GAP = 8    -- ระยะห่างระหว่าง notif
-local NQ_H   = 88   -- ความสูงแต่ละ notif
-local NQ_W   = 320  -- ความกว้าง
+local NQ = {}
+local NQ_GAP = 8
+local NQ_H   = 88
+local NQ_W   = 320
 
 local function nqRestack()
-    -- จัด position ทุก notif ที่ active ให้เรียงจากล่างขึ้นบน
     for i, entry in ipairs(NQ) do
         local offset = 0
         for j = i+1, #NQ do offset = offset + NQ[j].h + NQ_GAP end
@@ -1237,7 +1175,6 @@ end
 
 local function AddNotification(txt)
     pushLog(txt)
-    -- Island mode: แสดงใต้ pill แล้วหายใน 2 วิ
     if isIsland then
         local iw=Instance.new("Frame",GUI); iw.AnchorPoint=Vector2.new(0.5,0)
         iw.BackgroundColor3=Color3.fromRGB(18,18,18); iw.BorderSizePixel=0
@@ -1273,37 +1210,31 @@ local function AddNotification(txt)
     nd.Position=UDim2.new(0,12,0,30); nd.Size=UDim2.new(1,-24,0,46)
     nd.Font=Enum.Font.Gotham; nd.Text=txt; nd.TextColor3=Color3.fromRGB(175,175,175)
     nd.TextSize=12; nd.ZIndex=201; nd.TextWrapped=true; nd.TextXAlignment=Enum.TextXAlignment.Left
-    -- progress bar ด้านล่าง
     local pb=Instance.new("Frame",nf); pb.BorderSizePixel=0
     pb.BackgroundColor3=Theme.Accent; pb.BackgroundTransparency=0.5
     pb.Position=UDim2.new(0,0,1,-3); pb.Size=UDim2.new(1,0,0,3)
     pb.ZIndex=202
     Instance.new("UICorner",pb).CornerRadius=UDim.new(0,2)
     onThemeChange("Accent",function(c) if pb and pb.Parent then pb.BackgroundColor3=c end end)
-    -- เพิ่มใน queue
     local entry = {frame=nf, h=NQ_H}
-    table.insert(NQ, 1, entry)  -- ใส่หน้าสุด (ล่างสุด)
-    -- เปิด frame ก่อน tween ขนาด
+    table.insert(NQ, 1, entry)
     nf:TweenSize(UDim2.new(0,NQ_W,0,NQ_H),"Out","Quart",0.3,true)
     nqRestack()
-    -- progress bar shrink
     task.delay(0.3,function()
         TweenService:Create(pb,TweenInfo.new(3.7,Enum.EasingStyle.Linear),{Size=UDim2.new(0,0,0,3)}):Play()
     end)
     task.delay(4,function()
-        -- slide ออก
         TweenService:Create(nf,TweenInfo.new(0.28,Enum.EasingStyle.Sine),
             {Position=UDim2.new(0.5,0,1,NQ_H+20)}):Play()
         task.wait(0.3)
         nf:Destroy()
-        -- ลบออกจาก queue
         for i,e in ipairs(NQ) do if e==entry then table.remove(NQ,i); break end end
         nqRestack()
     end)
 end
 
 -- ══════════════════════════════════════════════════════════════
---  UI SETTINGS WINDOW (แยกออกมา ไม่ใช่ tab)
+--  UI SETTINGS WINDOW
 -- ══════════════════════════════════════════════════════════════
 local SettingsWin=Instance.new("Frame",GUI)
 SettingsWin.Name="SettingsWin"
@@ -1321,13 +1252,12 @@ onThemeChange("WinBg",function(c) if SettingsWin and SettingsWin.Parent then Set
 onThemeChange("WinRadius",function(r) if SwCorner and SwCorner.Parent then SwCorner.CornerRadius=UDim.new(0,r) end end)
 onThemeChange("Accent",function(c) local sk=SettingsWin:FindFirstChildWhichIsA("UIStroke"); if sk then sk.Color=c end end)
 
--- Top bar ของ settings window
 local SwTop=Instance.new("Frame",SettingsWin)
 SwTop.BackgroundColor3=Theme.TopBg; SwTop.BorderSizePixel=0
 SwTop.Size=UDim2.new(1,0,0,32); SwTop.ZIndex=51
 local SwTopCorner=Instance.new("UICorner",SwTop)
 SwTopCorner.CornerRadius=UDim.new(0,Theme.WinRadius)
-local SwTopFix=Instance.new("Frame",SwTop) -- ปิดมุมล่าง
+local SwTopFix=Instance.new("Frame",SwTop)
 SwTopFix.BackgroundColor3=Theme.TopBg; SwTopFix.Position=UDim2.new(0,0,0.5,0)
 SwTopFix.Size=UDim2.new(1,0,0.5,0); SwTopFix.BorderSizePixel=0; SwTopFix.ZIndex=51
 onThemeChange("TopBg",function(c)
@@ -1344,7 +1274,6 @@ local function updSwTitle() SwTitle.Text="⚙️  "..(curLang=="TH" and "ตั�
 updSwTitle(); onLangChange(updSwTitle)
 onThemeChange("Accent",function(c) if SwTitle and SwTitle.Parent then SwTitle.TextColor3=c end end)
 
--- ปุ่มปิด settings window
 local SwClose=Instance.new("TextButton",SwTop)
 SwClose.AnchorPoint=Vector2.new(1,0.5); SwClose.Position=UDim2.new(1,-8,0.5,0)
 SwClose.Size=UDim2.new(0,22,0,22); SwClose.BackgroundColor3=Color3.fromRGB(255,59,48)
@@ -1358,7 +1287,6 @@ end)
 
 MakeDraggable(SwTop,SettingsWin)
 
--- Tab bar ของ Settings window (Settings | Dev)
 local SwTabBar=Instance.new("Frame",SettingsWin)
 SwTabBar.BackgroundColor3=Theme.WinBg; SwTabBar.BorderSizePixel=0
 SwTabBar.Position=UDim2.new(0,0,0,32); SwTabBar.Size=UDim2.new(1,0,0,28); SwTabBar.ZIndex=52
@@ -1390,7 +1318,6 @@ local function makeSwTab(lbl, x, active)
     return b, und
 end
 
--- Content: Left + Divider + Right
 local SwContent=Instance.new("Frame",SettingsWin)
 SwContent.BackgroundTransparency=1; SwContent.Position=UDim2.new(0,0,0,60)
 SwContent.Size=UDim2.new(1,0,1,-60); SwContent.BorderSizePixel=0; SwContent.ClipsDescendants=true; SwContent.ZIndex=51
@@ -1421,7 +1348,6 @@ SwRPad.PaddingTop=UDim.new(0,6); SwRPad.PaddingBottom=UDim.new(0,6)
 SwRPad.PaddingLeft=UDim.new(0,4); SwRPad.PaddingRight=UDim.new(0,6)
 onThemeChange("Accent",function(c) if SwR and SwR.Parent then SwR.ScrollBarImageColor3=c end end)
 
--- อัพเดต canvas ของ Settings window
 RunService.Heartbeat:Connect(function()
     pcall(function()
         SwL.CanvasSize=UDim2.new(0,0,0,SwLL.AbsoluteContentSize.Y+16)
@@ -1429,7 +1355,6 @@ RunService.Heartbeat:Connect(function()
     end)
 end)
 
--- toggle เปิด/ปิด Settings window
 local settingsOpen=false
 local function toggleSettings()
     settingsOpen=not settingsOpen
@@ -1445,7 +1370,6 @@ local function toggleSettings()
     end
 end
 
--- ปุ่ม ⚙️ ใน Top bar หลัก
 local settingsBtn=Instance.new("TextButton",Top)
 settingsBtn.AnchorPoint=Vector2.new(1,0.5); settingsBtn.Position=UDim2.new(1,-8,0.5,0)
 settingsBtn.Size=UDim2.new(0,26,0,22); settingsBtn.BackgroundColor3=Color3.fromRGB(35,35,35)
@@ -1467,75 +1391,111 @@ settingsBtn.MouseLeave:Connect(function()
     TweenService:Create(settingsBtn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(35,35,35)}):Play()
 end)
 
+-- ============================================================
+--  ENHANCED BuildUISettings (with Dev Panel, Script Folder, Copy Buttons, Spy Scripts)
+-- ============================================================
 local function BuildUISettings()
 
 -- ══ DEV PANEL ════════════════════════════════════════════════
 local DEV_PASSWORD = "idk"   -- เปลี่ยนรหัสได้ที่นี่
 local devUnlocked  = false
 
--- Dev panel frame (ซ้อนกับ SwContent)
-local DevPanel=Instance.new("Frame",SettingsWin)
-DevPanel.BackgroundTransparency=1; DevPanel.Position=UDim2.new(0,0,0,60)
-DevPanel.Size=UDim2.new(1,0,1,-60); DevPanel.BorderSizePixel=0
-DevPanel.ClipsDescendants=true; DevPanel.Visible=false; DevPanel.ZIndex=51
+-- Dev panel frame
+local DevPanel = Instance.new("Frame", SettingsWin)
+DevPanel.BackgroundTransparency = 1
+DevPanel.Position = UDim2.new(0, 0, 0, 60)
+DevPanel.Size = UDim2.new(1, 0, 1, -60)
+DevPanel.BorderSizePixel = 0
+DevPanel.ClipsDescendants = true
+DevPanel.Visible = false
+DevPanel.ZIndex = 51
 
 -- ── Lock screen (ก่อน unlock) ──
-local LockScreen=Instance.new("Frame",DevPanel)
-LockScreen.BackgroundColor3=Theme.WinBg; LockScreen.BorderSizePixel=0
-LockScreen.Size=UDim2.new(1,0,1,0); LockScreen.ZIndex=52
-onThemeChange("WinBg",function(c) if LockScreen and LockScreen.Parent then LockScreen.BackgroundColor3=c end end)
+local LockScreen = Instance.new("Frame", DevPanel)
+LockScreen.BackgroundColor3 = Theme.WinBg
+LockScreen.BorderSizePixel = 0
+LockScreen.Size = UDim2.new(1, 0, 1, 0)
+LockScreen.ZIndex = 52
+onThemeChange("WinBg", function(c) if LockScreen and LockScreen.Parent then LockScreen.BackgroundColor3 = c end end)
 
-local lockIcon=Instance.new("TextLabel",LockScreen)
-lockIcon.BackgroundTransparency=1; lockIcon.AnchorPoint=Vector2.new(0.5,0)
-lockIcon.Position=UDim2.new(0.5,0,0,30); lockIcon.Size=UDim2.new(0,60,0,60)
-lockIcon.Font=Enum.Font.GothamBold; lockIcon.Text="🔒"; lockIcon.TextSize=36; lockIcon.ZIndex=53
+local lockIcon = Instance.new("TextLabel", LockScreen)
+lockIcon.BackgroundTransparency = 1
+lockIcon.AnchorPoint = Vector2.new(0.5, 0)
+lockIcon.Position = UDim2.new(0.5, 0, 0, 30)
+lockIcon.Size = UDim2.new(0, 60, 0, 60)
+lockIcon.Font = Enum.Font.GothamBold
+lockIcon.Text = "🔒"
+lockIcon.TextSize = 36
+lockIcon.ZIndex = 53
 
-local lockHint=Instance.new("TextLabel",LockScreen)
-lockHint.BackgroundTransparency=1; lockHint.AnchorPoint=Vector2.new(0.5,0)
-lockHint.Position=UDim2.new(0.5,0,0,95); lockHint.Size=UDim2.new(0.7,0,0,20)
-lockHint.Font=Enum.Font.Gotham; lockHint.Text="Enter password"; lockHint.TextSize=11
-lockHint.TextColor3=Color3.fromRGB(120,120,120); lockHint.ZIndex=53
+local lockHint = Instance.new("TextLabel", LockScreen)
+lockHint.BackgroundTransparency = 1
+lockHint.AnchorPoint = Vector2.new(0.5, 0)
+lockHint.Position = UDim2.new(0.5, 0, 0, 95)
+lockHint.Size = UDim2.new(0.7, 0, 0, 20)
+lockHint.Font = Enum.Font.Gotham
+lockHint.Text = "Enter password"
+lockHint.TextSize = 11
+lockHint.TextColor3 = Color3.fromRGB(120, 120, 120)
+lockHint.ZIndex = 53
 
-local pwBox=Instance.new("TextBox",LockScreen)
-pwBox.AnchorPoint=Vector2.new(0.5,0); pwBox.Position=UDim2.new(0.5,0,0,122)
-pwBox.Size=UDim2.new(0,180,0,28); pwBox.BackgroundColor3=Color3.fromRGB(28,28,28)
-pwBox.BorderSizePixel=0; pwBox.Font=Enum.Font.Code; pwBox.PlaceholderText="••••••"
-pwBox.PlaceholderColor3=Color3.fromRGB(80,80,80); pwBox.Text=""
-pwBox.TextColor3=Color3.fromRGB(200,200,200); pwBox.TextSize=13
-pwBox.ClearTextOnFocus=true; pwBox.ZIndex=53
-Instance.new("UICorner",pwBox).CornerRadius=UDim.new(0,6)
-Instance.new("UIStroke",pwBox).Color=Color3.fromRGB(50,50,50)
+local pwBox = Instance.new("TextBox", LockScreen)
+pwBox.AnchorPoint = Vector2.new(0.5, 0)
+pwBox.Position = UDim2.new(0.5, 0, 0, 122)
+pwBox.Size = UDim2.new(0, 180, 0, 28)
+pwBox.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+pwBox.BorderSizePixel = 0
+pwBox.Font = Enum.Font.Code
+pwBox.PlaceholderText = "••••••"
+pwBox.PlaceholderColor3 = Color3.fromRGB(80, 80, 80)
+pwBox.Text = ""
+pwBox.TextColor3 = Color3.fromRGB(200, 200, 200)
+pwBox.TextSize = 13
+pwBox.ClearTextOnFocus = true
+pwBox.ZIndex = 53
+Instance.new("UICorner", pwBox).CornerRadius = UDim.new(0, 6)
+Instance.new("UIStroke", pwBox).Color = Color3.fromRGB(50, 50, 50)
 
-local pwErr=Instance.new("TextLabel",LockScreen)
-pwErr.BackgroundTransparency=1; pwErr.AnchorPoint=Vector2.new(0.5,0)
-pwErr.Position=UDim2.new(0.5,0,0,156); pwErr.Size=UDim2.new(0.8,0,0,16)
-pwErr.Font=Enum.Font.Gotham; pwErr.Text=""; pwErr.TextSize=10
-pwErr.TextColor3=Color3.fromRGB(255,80,80); pwErr.ZIndex=53
+local pwErr = Instance.new("TextLabel", LockScreen)
+pwErr.BackgroundTransparency = 1
+pwErr.AnchorPoint = Vector2.new(0.5, 0)
+pwErr.Position = UDim2.new(0.5, 0, 0, 156)
+pwErr.Size = UDim2.new(0.8, 0, 0, 16)
+pwErr.Font = Enum.Font.Gotham
+pwErr.Text = ""
+pwErr.TextSize = 10
+pwErr.TextColor3 = Color3.fromRGB(255, 80, 80)
+pwErr.ZIndex = 53
 
-local unlockBtn=Instance.new("TextButton",LockScreen)
-unlockBtn.AnchorPoint=Vector2.new(0.5,0); unlockBtn.Position=UDim2.new(0.5,0,0,176)
-unlockBtn.Size=UDim2.new(0,100,0,26); unlockBtn.BackgroundColor3=Theme.Accent
-unlockBtn.BorderSizePixel=0; unlockBtn.Font=Enum.Font.GothamBold
-unlockBtn.Text="Unlock"; unlockBtn.TextColor3=Color3.fromRGB(15,15,15); unlockBtn.TextSize=11
-unlockBtn.AutoButtonColor=false; unlockBtn.ZIndex=53
-Instance.new("UICorner",unlockBtn).CornerRadius=UDim.new(0,6)
-onThemeChange("Accent",function(c) if unlockBtn and unlockBtn.Parent then unlockBtn.BackgroundColor3=c end end)
+local unlockBtn = Instance.new("TextButton", LockScreen)
+unlockBtn.AnchorPoint = Vector2.new(0.5, 0)
+unlockBtn.Position = UDim2.new(0.5, 0, 0, 176)
+unlockBtn.Size = UDim2.new(0, 100, 0, 26)
+unlockBtn.BackgroundColor3 = Theme.Accent
+unlockBtn.BorderSizePixel = 0
+unlockBtn.Font = Enum.Font.GothamBold
+unlockBtn.Text = "Unlock"
+unlockBtn.TextColor3 = Color3.fromRGB(15, 15, 15)
+unlockBtn.TextSize = 11
+unlockBtn.AutoButtonColor = false
+unlockBtn.ZIndex = 53
+Instance.new("UICorner", unlockBtn).CornerRadius = UDim.new(0, 6)
+onThemeChange("Accent", function(c) if unlockBtn and unlockBtn.Parent then unlockBtn.BackgroundColor3 = c end end)
 
 local function tryUnlock()
-    if pwBox.Text==DEV_PASSWORD then
-        devUnlocked=true
-        lockIcon.Text="🔓"
-        TweenService:Create(LockScreen,TweenInfo.new(0.3,Enum.EasingStyle.Sine),
-            {BackgroundTransparency=1}):Play()
-        task.delay(0.3,function() LockScreen.Visible=false end)
+    if pwBox.Text == DEV_PASSWORD then
+        devUnlocked = true
+        lockIcon.Text = "🔓"
+        TweenService:Create(LockScreen, TweenInfo.new(0.3, Enum.EasingStyle.Sine), { BackgroundTransparency = 1 }):Play()
+        task.delay(0.3, function() LockScreen.Visible = false end)
         AddNotification("Dev mode unlocked!")
     else
-        pwErr.Text="Incorrect password"
-        pwBox.Text=""
-        TweenService:Create(pwBox,TweenInfo.new(0.05),{BackgroundColor3=Color3.fromRGB(50,20,20)}):Play()
-        task.delay(0.5,function()
-            TweenService:Create(pwBox,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(28,28,28)}):Play()
-            task.delay(2,function() pwErr.Text="" end)
+        pwErr.Text = "Incorrect password"
+        pwBox.Text = ""
+        TweenService:Create(pwBox, TweenInfo.new(0.05), { BackgroundColor3 = Color3.fromRGB(50, 20, 20) }):Play()
+        task.delay(0.5, function()
+            TweenService:Create(pwBox, TweenInfo.new(0.2), { BackgroundColor3 = Color3.fromRGB(28, 28, 28) }):Play()
+            task.delay(2, function() pwErr.Text = "" end)
         end)
     end
 end
@@ -1543,169 +1503,585 @@ unlockBtn.MouseButton1Click:Connect(tryUnlock)
 pwBox.FocusLost:Connect(function(e) if e then tryUnlock() end end)
 
 -- ── Dev content (หลัง unlock) ──
-local DevContent=Instance.new("Frame",DevPanel)
-DevContent.BackgroundTransparency=1; DevContent.Size=UDim2.new(1,0,1,0)
-DevContent.BorderSizePixel=0; DevContent.ZIndex=51
+local DevContent = Instance.new("Frame", DevPanel)
+DevContent.BackgroundTransparency = 1
+DevContent.Size = UDim2.new(1, 0, 1, 0)
+DevContent.BorderSizePixel = 0
+DevContent.ZIndex = 51
 
--- LEFT: Error Log
-local DevL=Instance.new("ScrollingFrame",DevContent)
-DevL.BackgroundTransparency=1; DevL.Position=UDim2.new(0,0,0,0)
-DevL.Size=UDim2.new(0.5,-1,1,0); DevL.CanvasSize=UDim2.new(0,0,0,0)
-DevL.ScrollBarThickness=2; DevL.ScrollBarImageColor3=Theme.Accent; DevL.BorderSizePixel=0; DevL.ZIndex=51
-local DevLLL=Instance.new("UIListLayout",DevL); DevLLL.SortOrder=Enum.SortOrder.LayoutOrder; DevLLL.Padding=UDim.new(0,2)
-local DevLPad=Instance.new("UIPadding",DevL)
-DevLPad.PaddingTop=UDim.new(0,6); DevLPad.PaddingBottom=UDim.new(0,6)
-DevLPad.PaddingLeft=UDim.new(0,6); DevLPad.PaddingRight=UDim.new(0,4)
-onThemeChange("Accent",function(c) if DevL and DevL.Parent then DevL.ScrollBarImageColor3=c end end)
+-- ========== RIGHT SIDE (Script Runner + Output with Copy) ==========
+local DevR = Instance.new("Frame", DevContent)
+DevR.BackgroundTransparency = 1
+DevR.Position = UDim2.new(0.5, 1, 0, 0)
+DevR.Size = UDim2.new(0.5, -1, 1, 0)
+DevR.BorderSizePixel = 0
+DevR.ZIndex = 51
 
-local DevDiv=Instance.new("Frame",DevContent)
-DevDiv.AnchorPoint=Vector2.new(0.5,0); DevDiv.BackgroundColor3=Color3.fromRGB(38,38,38)
-DevDiv.BorderSizePixel=0; DevDiv.Position=UDim2.new(0.5,0,0,0); DevDiv.Size=UDim2.new(0,1,1,0); DevDiv.ZIndex=51
+local runPad = Instance.new("UIPadding", DevR)
+runPad.PaddingTop = UDim.new(0, 6)
+runPad.PaddingBottom = UDim.new(0, 6)
+runPad.PaddingLeft = UDim.new(0, 4)
+runPad.PaddingRight = UDim.new(0, 6)
 
--- RIGHT: Script Runner
-local DevR=Instance.new("Frame",DevContent)
-DevR.BackgroundTransparency=1; DevR.Position=UDim2.new(0.5,1,0,0)
-DevR.Size=UDim2.new(0.5,-1,1,0); DevR.BorderSizePixel=0; DevR.ZIndex=51
-
--- เพิ่ม canvas update สำหรับ Dev
-RunService.Heartbeat:Connect(function()
-    pcall(function()
-        DevL.CanvasSize=UDim2.new(0,0,0,DevLLL.AbsoluteContentSize.Y+16)
-    end)
-end)
-
--- ── Error Log ──────────────────────────────────────
-local errCount=0
-local errItems={}
-
--- header
-local errHeader=Instance.new("Frame",DevL); errHeader.BackgroundTransparency=1; errHeader.Size=UDim2.new(1,0,0,20)
-local errTitle=Instance.new("TextLabel",errHeader); errTitle.BackgroundTransparency=1
-errTitle.Size=UDim2.new(1,0,1,0); errTitle.Font=Enum.Font.GothamBold; errTitle.TextSize=10
-errTitle.TextColor3=Color3.fromRGB(155,155,155); errTitle.TextXAlignment=Enum.TextXAlignment.Left
-errTitle.Text="🐛 Error Log"
-
-local clearErrBtn=Instance.new("TextButton",DevL)
-clearErrBtn.BackgroundColor3=Color3.fromRGB(26,26,26); clearErrBtn.BorderSizePixel=0
-clearErrBtn.Size=UDim2.new(1,0,0,20); clearErrBtn.Font=Enum.Font.GothamBold
-clearErrBtn.Text="Clear Errors"; clearErrBtn.TextSize=10
-clearErrBtn.TextColor3=Color3.fromRGB(100,100,100); clearErrBtn.AutoButtonColor=false
-Instance.new("UICorner",clearErrBtn).CornerRadius=UDim.new(0,4)
-
-local emptyErr=Instance.new("TextLabel",DevL); emptyErr.BackgroundTransparency=1
-emptyErr.Size=UDim2.new(1,0,0,24); emptyErr.Font=Enum.Font.Gotham; emptyErr.TextSize=10
-emptyErr.TextColor3=Color3.fromRGB(60,60,60); emptyErr.Text="No errors 🎉"
-emptyErr.TextXAlignment=Enum.TextXAlignment.Center
-
-local function logError(msg, source, line)
-    emptyErr.Visible=false
-    errCount=errCount+1
-    local row=Instance.new("Frame",DevL)
-    row.BackgroundColor3=Color3.fromRGB(26,10,10); row.BorderSizePixel=0
-    row.Size=UDim2.new(1,0,0,0); row.AutomaticSize=Enum.AutomaticSize.Y
-    Instance.new("UICorner",row).CornerRadius=UDim.new(0,4)
-    Instance.new("UIStroke",row).Color=Color3.fromRGB(80,30,30)
-    local pad=Instance.new("UIPadding",row)
-    pad.PaddingLeft=UDim.new(0,6); pad.PaddingRight=UDim.new(0,6)
-    pad.PaddingTop=UDim.new(0,4); pad.PaddingBottom=UDim.new(0,4)
-    local ll=Instance.new("UIListLayout",row); ll.Padding=UDim.new(0,2)
-    -- badge + source
-    local topRow=Instance.new("Frame",row); topRow.BackgroundTransparency=1; topRow.Size=UDim2.new(1,0,0,14)
-    local badge=Instance.new("TextLabel",topRow); badge.BackgroundColor3=Color3.fromRGB(200,50,50)
-    badge.Size=UDim2.new(0,40,1,0); badge.BorderSizePixel=0
-    badge.Font=Enum.Font.GothamBold; badge.Text="ERROR"; badge.TextSize=8
-    badge.TextColor3=Color3.new(1,1,1)
-    Instance.new("UICorner",badge).CornerRadius=UDim.new(0,3)
-    local srcLbl=Instance.new("TextLabel",topRow); srcLbl.BackgroundTransparency=1
-    srcLbl.Position=UDim2.new(0,46,0,0); srcLbl.Size=UDim2.new(1,-46,1,0)
-    srcLbl.Font=Enum.Font.Code; srcLbl.TextSize=9
-    srcLbl.TextColor3=Color3.fromRGB(140,100,100); srcLbl.TextXAlignment=Enum.TextXAlignment.Left
-    srcLbl.Text=(source or "?")..":"..(line or "?")
-    -- message
-    local msgLbl=Instance.new("TextLabel",row); msgLbl.BackgroundTransparency=1
-    msgLbl.Size=UDim2.new(1,0,0,0); msgLbl.AutomaticSize=Enum.AutomaticSize.Y
-    msgLbl.Font=Enum.Font.Code; msgLbl.TextSize=9; msgLbl.TextWrapped=true
-    msgLbl.TextColor3=Color3.fromRGB(255,160,160); msgLbl.TextXAlignment=Enum.TextXAlignment.Left
-    msgLbl.Text=tostring(msg)
-    table.insert(errItems,row)
-end
-
-clearErrBtn.MouseButton1Click:Connect(function()
-    for _,r in ipairs(errItems) do if r and r.Parent then r:Destroy() end end
-    errItems={}; errCount=0; emptyErr.Visible=true
-end)
-
--- Hook pcall errors ด้วย ScriptContext
-pcall(function()
-    game:GetService("ScriptContext").Error:Connect(function(msg,stack,script2)
-        logError(msg, script2 and script2.Name or "Unknown", "—")
-    end)
-end)
-
--- ── Script Runner ───────────────────────────────────
-local runPad=Instance.new("UIPadding",DevR)
-runPad.PaddingTop=UDim.new(0,6); runPad.PaddingBottom=UDim.new(0,6)
-runPad.PaddingLeft=UDim.new(0,4); runPad.PaddingRight=UDim.new(0,6)
-
-local runTitle=Instance.new("TextLabel",DevR); runTitle.BackgroundTransparency=1
-runTitle.Position=UDim2.new(0,0,0,0); runTitle.Size=UDim2.new(1,0,0,18)
-runTitle.Font=Enum.Font.GothamBold; runTitle.Text="▶  Script Runner"; runTitle.TextSize=10
-runTitle.TextColor3=Color3.fromRGB(155,155,155); runTitle.TextXAlignment=Enum.TextXAlignment.Left
+local runTitle = Instance.new("TextLabel", DevR)
+runTitle.BackgroundTransparency = 1
+runTitle.Position = UDim2.new(0, 0, 0, 0)
+runTitle.Size = UDim2.new(1, 0, 0, 18)
+runTitle.Font = Enum.Font.GothamBold
+runTitle.Text = "▶ Script Runner"
+runTitle.TextSize = 10
+runTitle.TextColor3 = Color3.fromRGB(155, 155, 155)
+runTitle.TextXAlignment = Enum.TextXAlignment.Left
 
 -- text editor
-local editorBg=Instance.new("Frame",DevR)
-editorBg.BackgroundColor3=Color3.fromRGB(16,16,16); editorBg.BorderSizePixel=0
-editorBg.Position=UDim2.new(0,0,0,22); editorBg.Size=UDim2.new(1,0,1,-66)
-Instance.new("UICorner",editorBg).CornerRadius=UDim.new(0,6)
-Instance.new("UIStroke",editorBg).Color=Color3.fromRGB(40,40,40)
+local editorBg = Instance.new("Frame", DevR)
+editorBg.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
+editorBg.BorderSizePixel = 0
+editorBg.Position = UDim2.new(0, 0, 0, 22)
+editorBg.Size = UDim2.new(1, 0, 1, -92)  -- leave space for output and run button
+Instance.new("UICorner", editorBg).CornerRadius = UDim.new(0, 6)
+Instance.new("UIStroke", editorBg).Color = Color3.fromRGB(40, 40, 40)
 
-local codeBox=Instance.new("TextBox",editorBg)
-codeBox.BackgroundTransparency=1; codeBox.Position=UDim2.new(0,8,0,6)
-codeBox.Size=UDim2.new(1,-16,1,-12); codeBox.Font=Enum.Font.Code
-codeBox.PlaceholderText="-- เขียน script ที่นี่\nprint('Hello World')"
-codeBox.PlaceholderColor3=Color3.fromRGB(60,60,60)
-codeBox.Text=""; codeBox.TextColor3=Color3.fromRGB(180,220,180)
-codeBox.TextSize=11; codeBox.MultiLine=true; codeBox.ClearTextOnFocus=false
-codeBox.TextXAlignment=Enum.TextXAlignment.Left; codeBox.TextYAlignment=Enum.TextYAlignment.Top
+local codeBox = Instance.new("TextBox", editorBg)
+codeBox.BackgroundTransparency = 1
+codeBox.Position = UDim2.new(0, 8, 0, 6)
+codeBox.Size = UDim2.new(1, -16, 1, -12)
+codeBox.Font = Enum.Font.Code
+codeBox.PlaceholderText = "-- เขียน script ที่นี่\nprint('Hello World')"
+codeBox.PlaceholderColor3 = Color3.fromRGB(60, 60, 60)
+codeBox.Text = ""
+codeBox.TextColor3 = Color3.fromRGB(180, 220, 180)
+codeBox.TextSize = 11
+codeBox.MultiLine = true
+codeBox.ClearTextOnFocus = false
+codeBox.TextXAlignment = Enum.TextXAlignment.Left
+codeBox.TextYAlignment = Enum.TextYAlignment.Top
 
--- output area
-local outputBg=Instance.new("Frame",DevR)
-outputBg.BackgroundColor3=Color3.fromRGB(12,12,12); outputBg.BorderSizePixel=0
-outputBg.Position=UDim2.new(0,0,1,-60); outputBg.Size=UDim2.new(1,0,0,34)
-Instance.new("UICorner",outputBg).CornerRadius=UDim.new(0,5)
-Instance.new("UIStroke",outputBg).Color=Color3.fromRGB(35,35,35)
+-- output area with copy button
+local outputBg = Instance.new("Frame", DevR)
+outputBg.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+outputBg.BorderSizePixel = 0
+outputBg.Position = UDim2.new(0, 0, 1, -60)
+outputBg.Size = UDim2.new(1, 0, 0, 34)
+Instance.new("UICorner", outputBg).CornerRadius = UDim.new(0, 5)
+Instance.new("UIStroke", outputBg).Color = Color3.fromRGB(35, 35, 35)
 
-local outputLbl=Instance.new("TextLabel",outputBg); outputLbl.BackgroundTransparency=1
-outputLbl.Position=UDim2.new(0,8,0,4); outputLbl.Size=UDim2.new(1,-16,1,-8)
-outputLbl.Font=Enum.Font.Code; outputLbl.Text="> ready"
-outputLbl.TextColor3=Color3.fromRGB(100,180,100); outputLbl.TextSize=10
-outputLbl.TextXAlignment=Enum.TextXAlignment.Left; outputLbl.TextYAlignment=Enum.TextYAlignment.Top
-outputLbl.TextWrapped=true
+local outputLbl = Instance.new("TextLabel", outputBg)
+outputLbl.BackgroundTransparency = 1
+outputLbl.Position = UDim2.new(0, 8, 0, 4)
+outputLbl.Size = UDim2.new(1, -40, 1, -8)  -- leave space for copy button
+outputLbl.Font = Enum.Font.Code
+outputLbl.Text = "> ready"
+outputLbl.TextColor3 = Color3.fromRGB(100, 180, 100)
+outputLbl.TextSize = 10
+outputLbl.TextXAlignment = Enum.TextXAlignment.Left
+outputLbl.TextYAlignment = Enum.TextYAlignment.Top
+outputLbl.TextWrapped = true
+
+-- Copy output button
+local copyOutputBtn = Instance.new("TextButton", outputBg)
+copyOutputBtn.AnchorPoint = Vector2.new(1, 0.5)
+copyOutputBtn.Position = UDim2.new(1, -6, 0.5, 0)
+copyOutputBtn.Size = UDim2.new(0, 26, 0, 26)
+copyOutputBtn.BackgroundColor3 = Theme.Accent
+copyOutputBtn.BorderSizePixel = 0
+copyOutputBtn.Font = Enum.Font.GothamBold
+copyOutputBtn.Text = "📋"
+copyOutputBtn.TextSize = 12
+copyOutputBtn.TextColor3 = Color3.fromRGB(15, 15, 15)
+copyOutputBtn.AutoButtonColor = false
+Instance.new("UICorner", copyOutputBtn).CornerRadius = UDim.new(0, 5)
+copyOutputBtn.MouseButton1Click:Connect(function()
+    GuiService:SetClipboard(outputLbl.Text)
+    copyOutputBtn.Text = "✓"
+    task.delay(1, function() copyOutputBtn.Text = "📋" end)
+end)
+onThemeChange("Accent", function(c) copyOutputBtn.BackgroundColor3 = c end)
 
 -- run button
-local runBtn=Instance.new("TextButton",DevR)
-runBtn.Position=UDim2.new(0,0,1,-22); runBtn.Size=UDim2.new(1,0,0,20)
-runBtn.BackgroundColor3=Theme.Accent; runBtn.BorderSizePixel=0
-runBtn.Font=Enum.Font.GothamBold; runBtn.Text="▶  Run"; runBtn.TextSize=11
-runBtn.TextColor3=Color3.fromRGB(15,15,15); runBtn.AutoButtonColor=false
-Instance.new("UICorner",runBtn).CornerRadius=UDim.new(0,5)
-onThemeChange("Accent",function(c) if runBtn and runBtn.Parent then runBtn.BackgroundColor3=c end end)
+local runBtn = Instance.new("TextButton", DevR)
+runBtn.Position = UDim2.new(0, 0, 1, -22)
+runBtn.Size = UDim2.new(1, 0, 0, 20)
+runBtn.BackgroundColor3 = Theme.Accent
+runBtn.BorderSizePixel = 0
+runBtn.Font = Enum.Font.GothamBold
+runBtn.Text = "▶ Run"
+runBtn.TextSize = 11
+runBtn.TextColor3 = Color3.fromRGB(15, 15, 15)
+runBtn.AutoButtonColor = false
+Instance.new("UICorner", runBtn).CornerRadius = UDim.new(0, 5)
+onThemeChange("Accent", function(c) if runBtn and runBtn.Parent then runBtn.BackgroundColor3 = c end end)
 
 runBtn.MouseButton1Click:Connect(function()
-    local code=codeBox.Text
-    if code=="" then outputLbl.Text="> (empty)"; outputLbl.TextColor3=Color3.fromRGB(120,120,120); return end
-    outputLbl.Text="> running..."; outputLbl.TextColor3=Color3.fromRGB(200,200,100)
-    local ok,err=pcall(function()
-        local fn,compErr=loadstring(code)
+    local code = codeBox.Text
+    if code == "" then
+        outputLbl.Text = "> (empty)"
+        outputLbl.TextColor3 = Color3.fromRGB(120, 120, 120)
+        return
+    end
+    outputLbl.Text = "> running..."
+    outputLbl.TextColor3 = Color3.fromRGB(200, 200, 100)
+    local ok, err = pcall(function()
+        local fn, compErr = loadstring(code)
         if not fn then error(compErr) end
         fn()
     end)
     if ok then
-        outputLbl.Text="> OK ✓"; outputLbl.TextColor3=Color3.fromRGB(100,220,100)
+        outputLbl.Text = "> OK ✓"
+        outputLbl.TextColor3 = Color3.fromRGB(100, 220, 100)
     else
-        outputLbl.Text="> "..tostring(err); outputLbl.TextColor3=Color3.fromRGB(255,100,100)
-        logError(tostring(err),"ScriptRunner","—")
+        outputLbl.Text = "> " .. tostring(err)
+        outputLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
+        logError(tostring(err), "ScriptRunner", "—")
     end
+end)
+
+-- ========== LEFT SIDE (Script Folder + Error Log) ==========
+local DevL = Instance.new("ScrollingFrame", DevContent)
+DevL.BackgroundTransparency = 1
+DevL.Position = UDim2.new(0, 0, 0, 0)
+DevL.Size = UDim2.new(0.5, -1, 1, 0)
+DevL.CanvasSize = UDim2.new(0, 0, 0, 0)
+DevL.ScrollBarThickness = 2
+DevL.ScrollBarImageColor3 = Theme.Accent
+DevL.BorderSizePixel = 0
+DevL.ZIndex = 51
+
+local DevLLL = Instance.new("UIListLayout", DevL)
+DevLLL.SortOrder = Enum.SortOrder.LayoutOrder
+DevLLL.Padding = UDim.new(0, 6)
+
+local DevLPad = Instance.new("UIPadding", DevL)
+DevLPad.PaddingTop = UDim.new(0, 6)
+DevLPad.PaddingBottom = UDim.new(0, 6)
+DevLPad.PaddingLeft = UDim.new(0, 6)
+DevLPad.PaddingRight = UDim.new(0, 4)
+
+onThemeChange("Accent", function(c) if DevL and DevL.Parent then DevL.ScrollBarImageColor3 = c end end)
+
+-- === Script Folder Section ===
+local scriptFolderHeader = Instance.new("Frame", DevL)
+scriptFolderHeader.BackgroundTransparency = 1
+scriptFolderHeader.Size = UDim2.new(1, 0, 0, 20)
+
+local sfTitle = Instance.new("TextLabel", scriptFolderHeader)
+sfTitle.BackgroundTransparency = 1
+sfTitle.Size = UDim2.new(1, 0, 1, 0)
+sfTitle.Font = Enum.Font.GothamBold
+sfTitle.TextSize = 10
+sfTitle.TextColor3 = Color3.fromRGB(155, 155, 155)
+sfTitle.TextXAlignment = Enum.TextXAlignment.Left
+sfTitle.Text = "📁 Script Folder"
+
+-- Container for script list (scrollable)
+local scriptList = Instance.new("ScrollingFrame", DevL)
+scriptList.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+scriptList.BorderSizePixel = 0
+scriptList.Size = UDim2.new(1, 0, 0, 120)
+scriptList.CanvasSize = UDim2.new(0, 0, 0, 0)
+scriptList.ScrollBarThickness = 2
+scriptList.ScrollBarImageColor3 = Theme.Accent
+Instance.new("UICorner", scriptList).CornerRadius = UDim.new(0, 6)
+onThemeChange("Accent", function(c) if scriptList and scriptList.Parent then scriptList.ScrollBarImageColor3 = c end end)
+
+local scriptListLayout = Instance.new("UIListLayout", scriptList)
+scriptListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+scriptListLayout.Padding = UDim.new(0, 2)
+
+-- Script storage (in-memory)
+local savedScripts = {}  -- { {name="...", code="..."} }
+
+-- ฟังก์ชันเพิ่มสคริปต์เริ่มต้น (Remote Spy และ HTTP Spy)
+local function addDefaultScripts()
+    -- Remote Spy
+    local remoteSpyCode = [[
+-- Remote Spy by IDekhere
+local function startRemoteSpy()
+    local connections = {}
+    local output = function(...) print("REMOTE:", ...) end
+
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+            local conn
+            if v:IsA("RemoteEvent") then
+                conn = v.OnClientEvent:Connect(function(...)
+                    output("📡 RemoteEvent", v.Name, ...)
+                end)
+            else
+                conn = v.OnClientInvoke:Connect(function(...)
+                    output("📞 RemoteFunction", v.Name, ...)
+                    return
+                end)
+            end
+            table.insert(connections, conn)
+        end
+    end
+
+    game.DescendantAdded:Connect(function(v)
+        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+            local conn
+            if v:IsA("RemoteEvent") then
+                conn = v.OnClientEvent:Connect(function(...)
+                    output("📡 RemoteEvent", v.Name, ...)
+                end)
+            else
+                conn = v.OnClientInvoke:Connect(function(...)
+                    output("📞 RemoteFunction", v.Name, ...)
+                    return
+                end)
+            end
+            table.insert(connections, conn)
+        end
+    end)
+
+    return connections
+end
+
+local conns = startRemoteSpy()
+print("Remote Spy started. Check output for intercepted calls.")]]
+    table.insert(savedScripts, { name = "🔍 Remote Spy", code = remoteSpyCode })
+
+    -- HTTP Spy
+    local httpSpyCode = [[
+-- HTTP Spy by IDekhere
+local http = game:GetService("HttpService")
+local oldRequest = http.RequestAsync
+http.RequestAsync = function(self, options)
+    print("🌐 HTTP Request:", options)
+    if options.Headers then
+        for k, v in pairs(options.Headers) do
+            print("   Header:", k, "=", v)
+        end
+    end
+    if options.Body then
+        print("   Body:", options.Body)
+    end
+    local success, result = pcall(oldRequest, self, options)
+    if success then
+        print("✅ HTTP Response:", result)
+    else
+        print("❌ HTTP Error:", result)
+    end
+    return result
+end
+print("HTTP Spy active. All HttpService requests are logged.")]]
+    table.insert(savedScripts, { name = "🌐 HTTP Spy", code = httpSpyCode })
+end
+
+-- เรียกเพิ่มสคริปต์เริ่มต้น
+addDefaultScripts()
+
+-- Function to refresh the script list UI
+local function refreshScriptList()
+    for _, child in ipairs(scriptList:GetChildren()) do
+        if child:IsA("Frame") then child:Destroy() end
+    end
+    for i, scr in ipairs(savedScripts) do
+        local row = Instance.new("Frame", scriptList)
+        row.BackgroundColor3 = i % 2 == 0 and Color3.fromRGB(28, 28, 28) or Color3.fromRGB(22, 22, 22)
+        row.BorderSizePixel = 0
+        row.Size = UDim2.new(1, 0, 0, 24)
+
+        local nameLabel = Instance.new("TextLabel", row)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Position = UDim2.new(0, 6, 0, 0)
+        nameLabel.Size = UDim2.new(1, -50, 1, 0)
+        nameLabel.Font = Enum.Font.Gotham
+        nameLabel.Text = scr.name
+        nameLabel.TextSize = 10
+        nameLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+        local loadBtn = Instance.new("TextButton", row)
+        loadBtn.AnchorPoint = Vector2.new(1, 0.5)
+        loadBtn.Position = UDim2.new(1, -24, 0.5, 0)
+        loadBtn.Size = UDim2.new(0, 20, 0, 20)
+        loadBtn.BackgroundColor3 = Theme.Accent
+        loadBtn.BorderSizePixel = 0
+        loadBtn.Font = Enum.Font.GothamBold
+        loadBtn.Text = "▶"
+        loadBtn.TextSize = 10
+        loadBtn.TextColor3 = Color3.fromRGB(15, 15, 15)
+        loadBtn.AutoButtonColor = false
+        Instance.new("UICorner", loadBtn).CornerRadius = UDim.new(0, 4)
+        loadBtn.MouseButton1Click:Connect(function()
+            codeBox.Text = scr.code
+            outputLbl.Text = "> loaded: " .. scr.name
+            outputLbl.TextColor3 = Color3.fromRGB(100, 220, 100)
+        end)
+
+        local deleteBtn = Instance.new("TextButton", row)
+        deleteBtn.AnchorPoint = Vector2.new(1, 0.5)
+        deleteBtn.Position = UDim2.new(1, -2, 0.5, 0)
+        deleteBtn.Size = UDim2.new(0, 20, 0, 20)
+        deleteBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        deleteBtn.BorderSizePixel = 0
+        deleteBtn.Font = Enum.Font.GothamBold
+        deleteBtn.Text = "✕"
+        deleteBtn.TextSize = 10
+        deleteBtn.TextColor3 = Color3.new(1, 1, 1)
+        deleteBtn.AutoButtonColor = false
+        Instance.new("UICorner", deleteBtn).CornerRadius = UDim.new(0, 4)
+        deleteBtn.MouseButton1Click:Connect(function()
+            table.remove(savedScripts, i)
+            refreshScriptList()
+        end)
+    end
+    scriptList.CanvasSize = UDim2.new(0, 0, 0, scriptListLayout.AbsoluteContentSize.Y + 4)
+end
+
+-- Simple popup for naming script
+local namePopup = Instance.new("Frame", GUI)
+namePopup.Name = "ScriptNamePopup"
+namePopup.AnchorPoint = Vector2.new(0.5, 0.5)
+namePopup.Position = UDim2.new(0.5, 0, 0.5, 0)
+namePopup.Size = UDim2.new(0, 200, 0, 100)
+namePopup.BackgroundColor3 = Theme.WinBg
+namePopup.BorderSizePixel = 0
+namePopup.Visible = false
+namePopup.ZIndex = 100
+Instance.new("UICorner", namePopup).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", namePopup).Color = Theme.Accent
+
+local nameTitle = Instance.new("TextLabel", namePopup)
+nameTitle.BackgroundTransparency = 1
+nameTitle.Position = UDim2.new(0, 8, 0, 6)
+nameTitle.Size = UDim2.new(1, -16, 0, 20)
+nameTitle.Font = Enum.Font.GothamBold
+nameTitle.Text = "Script Name"
+nameTitle.TextColor3 = Theme.Accent
+nameTitle.TextSize = 12
+nameTitle.ZIndex = 101
+
+local nameBox = Instance.new("TextBox", namePopup)
+nameBox.Position = UDim2.new(0, 8, 0, 30)
+nameBox.Size = UDim2.new(1, -16, 0, 24)
+nameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+nameBox.BorderSizePixel = 0
+nameBox.Font = Enum.Font.Gotham
+nameBox.PlaceholderText = "MyScript"
+nameBox.Text = ""
+nameBox.TextColor3 = Color3.fromRGB(200, 200, 200)
+nameBox.TextSize = 11
+nameBox.ZIndex = 101
+Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0, 4)
+
+local nameConfirm = Instance.new("TextButton", namePopup)
+nameConfirm.Position = UDim2.new(0.5, -45, 0, 62)
+nameConfirm.Size = UDim2.new(0, 40, 0, 24)
+nameConfirm.BackgroundColor3 = Theme.Accent
+nameConfirm.BorderSizePixel = 0
+nameConfirm.Font = Enum.Font.GothamBold
+nameConfirm.Text = "OK"
+nameConfirm.TextColor3 = Color3.fromRGB(15, 15, 15)
+nameConfirm.TextSize = 11
+nameConfirm.AutoButtonColor = false
+nameConfirm.ZIndex = 101
+Instance.new("UICorner", nameConfirm).CornerRadius = UDim.new(0, 4)
+
+local nameCancel = Instance.new("TextButton", namePopup)
+nameCancel.Position = UDim2.new(0.5, 5, 0, 62)
+nameCancel.Size = UDim2.new(0, 40, 0, 24)
+nameCancel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+nameCancel.BorderSizePixel = 0
+nameCancel.Font = Enum.Font.GothamBold
+nameCancel.Text = "Cancel"
+nameCancel.TextColor3 = Color3.fromRGB(150, 150, 150)
+nameCancel.TextSize = 11
+nameCancel.AutoButtonColor = false
+nameCancel.ZIndex = 101
+Instance.new("UICorner", nameCancel).CornerRadius = UDim.new(0, 4)
+
+-- Save button
+local saveScriptBtn = Instance.new("TextButton", DevL)
+saveScriptBtn.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+saveScriptBtn.BorderSizePixel = 0
+saveScriptBtn.Size = UDim2.new(1, 0, 0, 24)
+saveScriptBtn.Font = Enum.Font.GothamBold
+saveScriptBtn.Text = "💾 Save Current Script"
+saveScriptBtn.TextSize = 10
+saveScriptBtn.TextColor3 = Color3.fromRGB(100, 100, 100)
+saveScriptBtn.AutoButtonColor = false
+Instance.new("UICorner", saveScriptBtn).CornerRadius = UDim.new(0, 5)
+Instance.new("UIStroke", saveScriptBtn).Color = Color3.fromRGB(40, 40, 40)
+
+saveScriptBtn.MouseButton1Click:Connect(function()
+    local code = codeBox.Text
+    if code == "" then
+        outputLbl.Text = "> nothing to save"
+        outputLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    -- Show name popup
+    namePopup.Visible = true
+    nameBox.Text = ""
+    nameBox:CaptureFocus()
+    local confirmConn, cancelConn
+    confirmConn = nameConfirm.MouseButton1Click:Connect(function()
+        local name = nameBox.Text
+        if name == "" then name = "Script " .. (#savedScripts + 1) end
+        table.insert(savedScripts, { name = name, code = code })
+        refreshScriptList()
+        namePopup.Visible = false
+        outputLbl.Text = "> saved as " .. name
+        outputLbl.TextColor3 = Color3.fromRGB(100, 220, 100)
+        confirmConn:Disconnect()
+        cancelConn:Disconnect()
+    end)
+    cancelConn = nameCancel.MouseButton1Click:Connect(function()
+        namePopup.Visible = false
+        confirmConn:Disconnect()
+        cancelConn:Disconnect()
+    end)
+end)
+
+-- Separator
+local sep1 = Instance.new("Frame", DevL)
+sep1.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+sep1.BorderSizePixel = 0
+sep1.Size = UDim2.new(1, 0, 0, 1)
+
+-- === Error Log Section (with copy button) ===
+local errHeader = Instance.new("Frame", DevL)
+errHeader.BackgroundTransparency = 1
+errHeader.Size = UDim2.new(1, 0, 0, 20)
+
+local errTitle = Instance.new("TextLabel", errHeader)
+errTitle.BackgroundTransparency = 1
+errTitle.Size = UDim2.new(1, 0, 1, 0)
+errTitle.Font = Enum.Font.GothamBold
+errTitle.TextSize = 10
+errTitle.TextColor3 = Color3.fromRGB(155, 155, 155)
+errTitle.TextXAlignment = Enum.TextXAlignment.Left
+errTitle.Text = "🐛 Error Log"
+
+local clearErrBtn = Instance.new("TextButton", DevL)
+clearErrBtn.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+clearErrBtn.BorderSizePixel = 0
+clearErrBtn.Size = UDim2.new(1, 0, 0, 20)
+clearErrBtn.Font = Enum.Font.GothamBold
+clearErrBtn.Text = "Clear Errors"
+clearErrBtn.TextSize = 10
+clearErrBtn.TextColor3 = Color3.fromRGB(100, 100, 100)
+clearErrBtn.AutoButtonColor = false
+Instance.new("UICorner", clearErrBtn).CornerRadius = UDim.new(0, 4)
+
+local emptyErr = Instance.new("TextLabel", DevL)
+emptyErr.BackgroundTransparency = 1
+emptyErr.Size = UDim2.new(1, 0, 0, 24)
+emptyErr.Font = Enum.Font.Gotham
+emptyErr.TextSize = 10
+emptyErr.TextColor3 = Color3.fromRGB(60, 60, 60)
+emptyErr.Text = "No errors 🎉"
+emptyErr.TextXAlignment = Enum.TextXAlignment.Center
+
+local errItems = {}
+
+local function logError(msg, source, line)
+    emptyErr.Visible = false
+    local row = Instance.new("Frame", DevL)
+    row.BackgroundColor3 = Color3.fromRGB(26, 10, 10)
+    row.BorderSizePixel = 0
+    row.Size = UDim2.new(1, 0, 0, 0)
+    row.AutomaticSize = Enum.AutomaticSize.Y
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
+    Instance.new("UIStroke", row).Color = Color3.fromRGB(80, 30, 30)
+
+    local pad = Instance.new("UIPadding", row)
+    pad.PaddingLeft = UDim.new(0, 6)
+    pad.PaddingRight = UDim.new(0, 6)
+    pad.PaddingTop = UDim.new(0, 4)
+    pad.PaddingBottom = UDim.new(0, 4)
+
+    local ll = Instance.new("UIListLayout", row)
+    ll.Padding = UDim.new(0, 2)
+
+    -- Top row: badge + source + copy button
+    local topRow = Instance.new("Frame", row)
+    topRow.BackgroundTransparency = 1
+    topRow.Size = UDim2.new(1, 0, 0, 14)
+
+    local badge = Instance.new("TextLabel", topRow)
+    badge.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    badge.Size = UDim2.new(0, 40, 1, 0)
+    badge.BorderSizePixel = 0
+    badge.Font = Enum.Font.GothamBold
+    badge.Text = "ERROR"
+    badge.TextSize = 8
+    badge.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 3)
+
+    local srcLbl = Instance.new("TextLabel", topRow)
+    srcLbl.BackgroundTransparency = 1
+    srcLbl.Position = UDim2.new(0, 46, 0, 0)
+    srcLbl.Size = UDim2.new(1, -70, 1, 0)  -- leave space for copy button
+    srcLbl.Font = Enum.Font.Code
+    srcLbl.TextSize = 9
+    srcLbl.TextColor3 = Color3.fromRGB(140, 100, 100)
+    srcLbl.TextXAlignment = Enum.TextXAlignment.Left
+    srcLbl.Text = (source or "?") .. ":" .. (line or "?")
+
+    -- Copy error button
+    local copyErrBtn = Instance.new("TextButton", topRow)
+    copyErrBtn.AnchorPoint = Vector2.new(1, 0.5)
+    copyErrBtn.Position = UDim2.new(1, -2, 0.5, 0)
+    copyErrBtn.Size = UDim2.new(0, 22, 0, 22)
+    copyErrBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    copyErrBtn.BorderSizePixel = 0
+    copyErrBtn.Font = Enum.Font.GothamBold
+    copyErrBtn.Text = "📋"
+    copyErrBtn.TextSize = 10
+    copyErrBtn.TextColor3 = Color3.new(1, 1, 1)
+    copyErrBtn.AutoButtonColor = false
+    Instance.new("UICorner", copyErrBtn).CornerRadius = UDim.new(0, 4)
+    copyErrBtn.MouseButton1Click:Connect(function()
+        GuiService:SetClipboard(msg)
+        copyErrBtn.Text = "✓"
+        task.delay(1, function() copyErrBtn.Text = "📋" end)
+    end)
+
+    -- Message label
+    local msgLbl = Instance.new("TextLabel", row)
+    msgLbl.BackgroundTransparency = 1
+    msgLbl.Size = UDim2.new(1, 0, 0, 0)
+    msgLbl.AutomaticSize = Enum.AutomaticSize.Y
+    msgLbl.Font = Enum.Font.Code
+    msgLbl.TextSize = 9
+    msgLbl.TextWrapped = true
+    msgLbl.TextColor3 = Color3.fromRGB(255, 160, 160)
+    msgLbl.TextXAlignment = Enum.TextXAlignment.Left
+    msgLbl.Text = tostring(msg)
+
+    table.insert(errItems, row)
+end
+
+clearErrBtn.MouseButton1Click:Connect(function()
+    for _, r in ipairs(errItems) do if r and r.Parent then r:Destroy() end end
+    errItems = {}
+    emptyErr.Visible = true
+end)
+
+-- Hook pcall errors ด้วย ScriptContext
+pcall(function()
+    game:GetService("ScriptContext").Error:Connect(function(msg, stack, script2)
+        logError(msg, script2 and script2.Name or "Unknown", "—")
+    end)
+end)
+
+-- ========== Divider ==========
+local DevDiv = Instance.new("Frame", DevContent)
+DevDiv.AnchorPoint = Vector2.new(0.5, 0)
+DevDiv.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+DevDiv.BorderSizePixel = 0
+DevDiv.Position = UDim2.new(0.5, 0, 0, 0)
+DevDiv.Size = UDim2.new(0, 1, 1, 0)
+DevDiv.ZIndex = 51
+
+-- Canvas updater for left side
+RunService.Heartbeat:Connect(function()
+    pcall(function()
+        DevL.CanvasSize = UDim2.new(0, 0, 0, DevLLL.AbsoluteContentSize.Y + 16)
+    end)
 end)
 
 -- ── Tab switching ──────────────────────────────────
@@ -1721,459 +2097,454 @@ local function switchSwTab(toDev)
     swTabDev.TextColor3 = toDev and Theme.Accent or Color3.fromRGB(120,120,120)
     swTabDevUnd.BackgroundTransparency = toDev and 0 or 1
     swTabDev.Text = devUnlocked and "🔓 Dev" or "🔒 Dev"
-    if toDev and not devUnlocked then LockScreen.Visible=true end
+    if toDev and not devUnlocked then LockScreen.Visible = true end
 end
 
 swTabSetting.MouseButton1Click:Connect(function() switchSwTab(false) end)
-swTabDev.MouseButton1Click:Connect(function() switchSwTab(true) end)-- ══════════════════════════════════════════════════════════════
---  UI SETTINGS TAB
--- ══════════════════════════════════════════════════════════════
+swTabDev.MouseButton1Click:Connect(function() switchSwTab(true) end)
 
+-- ========== UI SETTINGS (Left & Right) ==========
+-- (Original UI settings code – unchanged)
 
-    -- addSection รับได้ทั้ง key (string สั้น) หรือ text โดยตรง
-    local function addSection(page, keyOrTxt)
-        local f=Instance.new("Frame",page); f.BackgroundTransparency=1; f.Size=UDim2.new(1,0,0,22)
-        local l=Instance.new("TextLabel",f); l.BackgroundTransparency=1; l.Size=UDim2.new(1,0,1,0)
-        l.Font=Enum.Font.GothamBold; l.TextSize=10
-        l.TextColor3=Color3.fromRGB(155,155,155); l.TextXAlignment=Enum.TextXAlignment.Left
-        local ul=Instance.new("Frame",f); ul.AnchorPoint=Vector2.new(0,1); ul.Position=UDim2.new(0,0,1,0)
-        ul.Size=UDim2.new(1,0,0,1); ul.BackgroundColor3=Color3.fromRGB(38,38,38); ul.BorderSizePixel=0
-        local function upd()
-            l.Text = LANG[curLang][keyOrTxt] or keyOrTxt  -- ถ้าไม่ใช่ key ก็ใช้ตรงๆ
-        end
-        upd(); onLangChange(upd)
-        return l
+-- addSection รับได้ทั้ง key (string สั้น) หรือ text โดยตรง
+local function addSection(page, keyOrTxt)
+    local f=Instance.new("Frame",page); f.BackgroundTransparency=1; f.Size=UDim2.new(1,0,0,22)
+    local l=Instance.new("TextLabel",f); l.BackgroundTransparency=1; l.Size=UDim2.new(1,0,1,0)
+    l.Font=Enum.Font.GothamBold; l.TextSize=10
+    l.TextColor3=Color3.fromRGB(155,155,155); l.TextXAlignment=Enum.TextXAlignment.Left
+    local ul=Instance.new("Frame",f); ul.AnchorPoint=Vector2.new(0,1); ul.Position=UDim2.new(0,0,1,0)
+    ul.Size=UDim2.new(1,0,0,1); ul.BackgroundColor3=Color3.fromRGB(38,38,38); ul.BorderSizePixel=0
+    local function upd()
+        l.Text = LANG[curLang][keyOrTxt] or keyOrTxt
     end
+    upd(); onLangChange(upd)
+    return l
+end
 
-    -- mini toggle สำหรับ Language row
-    local function addLangToggle(page)
-        local row=Instance.new("Frame",page); row.BackgroundTransparency=1; row.Size=UDim2.new(1,0,0,30)
-        -- ปุ่ม TH
-        local bTH=Instance.new("TextButton",row)
-        bTH.Size=UDim2.new(0.5,-3,1,0); bTH.Position=UDim2.new(0,0,0,0)
-        bTH.BackgroundColor3=curLang=="TH" and Theme.Accent or Color3.fromRGB(30,30,30)
-        bTH.BorderSizePixel=0; bTH.Font=Enum.Font.GothamBold; bTH.TextSize=11; bTH.AutoButtonColor=false
-        bTH.TextColor3=curLang=="TH" and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140)
-        Instance.new("UICorner",bTH).CornerRadius=UDim.new(0,6)
-        local skTH=Instance.new("UIStroke",bTH)
-        skTH.Color=curLang=="TH" and Theme.Accent or Color3.fromRGB(40,40,40); skTH.Thickness=1
-        -- ปุ่ม EN
-        local bEN=Instance.new("TextButton",row)
-        bEN.Size=UDim2.new(0.5,-3,1,0); bEN.Position=UDim2.new(0.5,3,0,0)
-        bEN.BackgroundColor3=curLang=="EN" and Theme.Accent or Color3.fromRGB(30,30,30)
-        bEN.BorderSizePixel=0; bEN.Font=Enum.Font.GothamBold; bEN.TextSize=11; bEN.AutoButtonColor=false
-        bEN.TextColor3=curLang=="EN" and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140)
-        Instance.new("UICorner",bEN).CornerRadius=UDim.new(0,6)
-        local skEN=Instance.new("UIStroke",bEN)
-        skEN.Color=curLang=="EN" and Theme.Accent or Color3.fromRGB(40,40,40); skEN.Thickness=1
-        -- อัพเดต text ตาม lang
-        local function updTxt()
-            bTH.Text=L("btn_th"); bEN.Text=L("btn_en")
-        end
-        updTxt(); onLangChange(updTxt)
-        -- อัพเดต accent
-        onThemeChange("Accent",function(c)
-            if curLang=="TH" then bTH.BackgroundColor3=c; skTH.Color=c
-            else bEN.BackgroundColor3=c; skEN.Color=c end
-        end)
-        local function pick(code)
-            setLang(code)
-            local isTH=code=="TH"
-            TweenService:Create(bTH,TweenInfo.new(0.15),{
-                BackgroundColor3=isTH and Theme.Accent or Color3.fromRGB(30,30,30),
-                TextColor3=isTH and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140),
-            }):Play()
-            skTH.Color=isTH and Theme.Accent or Color3.fromRGB(40,40,40)
-            TweenService:Create(bEN,TweenInfo.new(0.15),{
-                BackgroundColor3=(not isTH) and Theme.Accent or Color3.fromRGB(30,30,30),
-                TextColor3=(not isTH) and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140),
-            }):Play()
-            skEN.Color=(not isTH) and Theme.Accent or Color3.fromRGB(40,40,40)
-            AddNotification(L("lang_changed"))
-        end
-        bTH.MouseButton1Click:Connect(function() pick("TH") end)
-        bEN.MouseButton1Click:Connect(function() pick("EN") end)
+-- mini toggle สำหรับ Language row
+local function addLangToggle(page)
+    local row=Instance.new("Frame",page); row.BackgroundTransparency=1; row.Size=UDim2.new(1,0,0,30)
+    -- ปุ่ม TH
+    local bTH=Instance.new("TextButton",row)
+    bTH.Size=UDim2.new(0.5,-3,1,0); bTH.Position=UDim2.new(0,0,0,0)
+    bTH.BackgroundColor3=curLang=="TH" and Theme.Accent or Color3.fromRGB(30,30,30)
+    bTH.BorderSizePixel=0; bTH.Font=Enum.Font.GothamBold; bTH.TextSize=11; bTH.AutoButtonColor=false
+    bTH.TextColor3=curLang=="TH" and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140)
+    Instance.new("UICorner",bTH).CornerRadius=UDim.new(0,6)
+    local skTH=Instance.new("UIStroke",bTH)
+    skTH.Color=curLang=="TH" and Theme.Accent or Color3.fromRGB(40,40,40); skTH.Thickness=1
+    -- ปุ่ม EN
+    local bEN=Instance.new("TextButton",row)
+    bEN.Size=UDim2.new(0.5,-3,1,0); bEN.Position=UDim2.new(0.5,3,0,0)
+    bEN.BackgroundColor3=curLang=="EN" and Theme.Accent or Color3.fromRGB(30,30,30)
+    bEN.BorderSizePixel=0; bEN.Font=Enum.Font.GothamBold; bEN.TextSize=11; bEN.AutoButtonColor=false
+    bEN.TextColor3=curLang=="EN" and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140)
+    Instance.new("UICorner",bEN).CornerRadius=UDim.new(0,6)
+    local skEN=Instance.new("UIStroke",bEN)
+    skEN.Color=curLang=="EN" and Theme.Accent or Color3.fromRGB(40,40,40); skEN.Thickness=1
+    local function updTxt()
+        bTH.Text=L("btn_th"); bEN.Text=L("btn_en")
     end
-
-    local function addColorGrid(page,colors,onPick)
-        local wrap=Instance.new("Frame",page)
-        wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,0); wrap.AutomaticSize=Enum.AutomaticSize.Y
-        local grid=Instance.new("UIGridLayout",wrap)
-        grid.CellSize=UDim2.new(0,22,0,22); grid.CellPadding=UDim2.new(0,5,0,5)
-        grid.FillDirection=Enum.FillDirection.Horizontal; grid.SortOrder=Enum.SortOrder.LayoutOrder
-        local swatches={}
-        for _,col in ipairs(colors) do
-            local sw=Instance.new("TextButton",wrap)
-            sw.BackgroundColor3=col; sw.BorderSizePixel=0; sw.Text=""; sw.AutoButtonColor=false
-            Instance.new("UICorner",sw).CornerRadius=UDim.new(0,5)
-            local sk=Instance.new("UIStroke",sw); sk.Color=Color3.new(1,1,1); sk.Thickness=0
-            local capSk=sk
-            sw.MouseButton1Click:Connect(function()
-                for _,s in ipairs(swatches) do s:FindFirstChildWhichIsA("UIStroke").Thickness=0 end
-                capSk.Thickness=2; onPick(col)
-            end)
-            table.insert(swatches,sw)
-        end
-    end
-
-    local function addMiniSlider(page,labelKey,init,mn,mx,onVal)
-        local wrap=Instance.new("Frame",page)
-        wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,28)
-        local lbl=Instance.new("TextLabel",wrap); lbl.BackgroundTransparency=1
-        lbl.Size=UDim2.new(0,52,1,0); lbl.Font=Enum.Font.Gotham; lbl.TextSize=10
-        lbl.TextColor3=Color3.fromRGB(130,130,130); lbl.TextXAlignment=Enum.TextXAlignment.Left
-        local function ulbl() lbl.Text=LANG[curLang][labelKey] or labelKey end; ulbl(); onLangChange(ulbl)
-        local vLbl=Instance.new("TextLabel",wrap); vLbl.BackgroundTransparency=1
-        vLbl.AnchorPoint=Vector2.new(1,0.5); vLbl.Position=UDim2.new(1,0,0.5,0)
-        vLbl.Size=UDim2.new(0,38,0,20); vLbl.Font=Enum.Font.Code; vLbl.TextSize=10
-        vLbl.Text=tostring(init); vLbl.TextColor3=Theme.Accent; vLbl.TextXAlignment=Enum.TextXAlignment.Right
-        onThemeChange("Accent",function(c) if vLbl and vLbl.Parent then vLbl.TextColor3=c end end)
-        local tF=Instance.new("Frame",wrap)
-        tF.Position=UDim2.new(0,56,0.5,-2); tF.Size=UDim2.new(1,-100,0,4)
-        tF.BackgroundColor3=Color3.fromRGB(45,45,45); tF.BorderSizePixel=0
-        Instance.new("UICorner",tF).CornerRadius=UDim.new(0,2)
-        local p0=math.clamp((init-mn)/(mx-mn),0,1)
-        local fF=Instance.new("Frame",tF); fF.Size=UDim2.new(p0,0,1,0)
-        fF.BackgroundColor3=Theme.Accent; fF.BorderSizePixel=0
-        Instance.new("UICorner",fF).CornerRadius=UDim.new(0,2)
-        onThemeChange("Accent",function(c) if fF and fF.Parent then fF.BackgroundColor3=c end end)
-        local kF=Instance.new("Frame",tF); kF.AnchorPoint=Vector2.new(0.5,0.5)
-        kF.Position=UDim2.new(p0,0,0.5,0); kF.Size=UDim2.new(0,12,0,12)
-        kF.BackgroundColor3=Color3.new(1,1,1); kF.BorderSizePixel=0
-        Instance.new("UICorner",kF).CornerRadius=UDim.new(1,0)
-        local drag=false
-        local function setP(x)
-            local r=tF.AbsolutePosition.X; local w=math.max(tF.AbsoluteSize.X,1)
-            local p=math.clamp((x-r)/w,0,1); local v=math.floor(mn+(mx-mn)*p)
-            fF.Size=UDim2.new(p,0,1,0); kF.Position=UDim2.new(p,0,0.5,0)
-            vLbl.Text=tostring(v); onVal(v)
-        end
-        tF.InputBegan:Connect(function(i)
-            if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=true;setP(i.Position.X) end
-        end)
-        UserInputService.InputChanged:Connect(function(i)
-            if drag and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then setP(i.Position.X) end
-        end)
-        UserInputService.InputEnded:Connect(function(i)
-            if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end
-        end)
-    end
-
-    local function addAnimGrid(page)
-        local opts={"Slide","Scale","Wipe","Flip","Bounce","Zoom","Cascade","Stagger","Fade"}
-        local keys={"slide","scale","wipe","flip","bounce","zoom","cascade","stagger","fade"}
-        -- 9 items = 5 rows (ceil(9/2)) * 26 + 4*5 = 150
-        local rows=math.ceil(#keys/2)
-        local totalH=rows*26+(rows-1)*5
-        local btns={}
-        local wrap=Instance.new("Frame",page)
-        wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,totalH)
-        local grid=Instance.new("UIGridLayout",wrap)
-        grid.CellSize=UDim2.new(0,120,0,26); grid.CellPadding=UDim2.new(0,6,0,5)
-        grid.FillDirection=Enum.FillDirection.Horizontal; grid.SortOrder=Enum.SortOrder.LayoutOrder
-        -- อัพเดต cell width ตาม wrap จริง
-        wrap:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-            local w=wrap.AbsoluteSize.X
-            if w>20 then grid.CellSize=UDim2.new(0,math.floor((w-6)/2),0,26) end
-        end)
-        for i,opt in ipairs(opts) do
-            local b=Instance.new("TextButton",wrap)
-            local isActive=keys[i]==Theme.TabAnim
-            b.BackgroundColor3=isActive and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26)
-            b.BorderSizePixel=0; b.Font=Enum.Font.GothamBold; b.Text=opt; b.TextSize=10
-            b.TextColor3=isActive and Theme.Accent or Color3.fromRGB(100,100,100); b.AutoButtonColor=false
-            Instance.new("UICorner",b).CornerRadius=UDim.new(0,5)
-            local bsk=Instance.new("UIStroke",b)
-            bsk.Color=isActive and Theme.Accent or Color3.fromRGB(40,40,40); bsk.Thickness=1
-            table.insert(btns,{btn=b,stroke=bsk,key=keys[i]})
-            local k=keys[i]
-            b.MouseButton1Click:Connect(function()
-                Theme.TabAnim=k
-                for _,bd in ipairs(btns) do
-                    local on=(bd.key==k)
-                    TweenService:Create(bd.btn,TweenInfo.new(0.15),{
-                        BackgroundColor3=on and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26),
-                        TextColor3=on and Theme.Accent or Color3.fromRGB(100,100,100),
-                    }):Play()
-                    bd.stroke.Color=on and Theme.Accent or Color3.fromRGB(40,40,40)
-                end
-            end)
-        end
-    end
-
-    -- LEFT: สี + พื้นหลัง + มุม
-    addSection(SwL,"s_accent")
-    addColorGrid(SwL,{
-        Color3.fromRGB(51,255,255), Color3.fromRGB(255,59,92),  Color3.fromRGB(168,85,247),
-        Color3.fromRGB(34,197,94),  Color3.fromRGB(245,158,11), Color3.fromRGB(59,130,246),
-        Color3.fromRGB(239,68,68),  Color3.fromRGB(236,72,153), Color3.fromRGB(20,184,166),
-        Color3.fromRGB(249,115,22),
-    },function(c) applyTheme("Accent",c) end)
-
-    local sp1=Instance.new("Frame",SwL); sp1.BackgroundTransparency=1; sp1.Size=UDim2.new(1,0,0,4)
-    addSection(SwL,"s_bg")
-    local BG={{Color3.fromRGB(17,17,17),Color3.fromRGB(25,25,25),Color3.fromRGB(28,28,28)},
-              {Color3.fromRGB(8,8,8),Color3.fromRGB(14,14,14),Color3.fromRGB(18,18,18)},
-              {Color3.fromRGB(16,13,28),Color3.fromRGB(24,20,36),Color3.fromRGB(28,24,40)},
-              {Color3.fromRGB(10,22,38),Color3.fromRGB(16,30,50),Color3.fromRGB(20,34,52)},
-              {Color3.fromRGB(12,22,12),Color3.fromRGB(18,30,18),Color3.fromRGB(22,32,22)},
-              {Color3.fromRGB(22,16,9),Color3.fromRGB(30,22,14),Color3.fromRGB(32,24,18)}}
-    local bgMain={}; for _,b in ipairs(BG) do table.insert(bgMain,b[1]) end
-    addColorGrid(SwL,bgMain,function(c)
-        for _,b in ipairs(BG) do
-            if b[1]==c then
-                applyTheme("WinBg",b[1]); applyTheme("TopBg",b[2]); applyTheme("CardBg",b[3]); break
-            end
-        end
+    updTxt(); onLangChange(updTxt)
+    onThemeChange("Accent",function(c)
+        if curLang=="TH" then bTH.BackgroundColor3=c; skTH.Color=c
+        else bEN.BackgroundColor3=c; skEN.Color=c end
     end)
+    local function pick(code)
+        setLang(code)
+        local isTH=code=="TH"
+        TweenService:Create(bTH,TweenInfo.new(0.15),{
+            BackgroundColor3=isTH and Theme.Accent or Color3.fromRGB(30,30,30),
+            TextColor3=isTH and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140),
+        }):Play()
+        skTH.Color=isTH and Theme.Accent or Color3.fromRGB(40,40,40)
+        TweenService:Create(bEN,TweenInfo.new(0.15),{
+            BackgroundColor3=(not isTH) and Theme.Accent or Color3.fromRGB(30,30,30),
+            TextColor3=(not isTH) and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140),
+        }):Play()
+        skEN.Color=(not isTH) and Theme.Accent or Color3.fromRGB(40,40,40)
+        AddNotification(L("lang_changed"))
+    end
+    bTH.MouseButton1Click:Connect(function() pick("TH") end)
+    bEN.MouseButton1Click:Connect(function() pick("EN") end)
+end
 
-    -- 🌈 Theme Presets
-    local spP=Instance.new("Frame",SwL); spP.BackgroundTransparency=1; spP.Size=UDim2.new(1,0,0,4)
-    addSection(SwL,"s_preset")
-    local PRESETS={
-        {"🖤 Dark",   Color3.fromRGB(51,255,255), Color3.fromRGB(17,17,17),  Color3.fromRGB(25,25,25),  Color3.fromRGB(28,28,28)},
-        {"⚫ OLED",   Color3.fromRGB(255,255,255),Color3.fromRGB(0,0,0),     Color3.fromRGB(8,8,8),     Color3.fromRGB(12,12,12)},
-        {"💜 Purple", Color3.fromRGB(196,148,255),Color3.fromRGB(16,8,28),   Color3.fromRGB(22,12,38),  Color3.fromRGB(28,18,44)},
-        {"🌊 Ocean",  Color3.fromRGB(56,189,248), Color3.fromRGB(8,18,36),   Color3.fromRGB(12,26,48),  Color3.fromRGB(16,32,56)},
-        {"🌿 Forest", Color3.fromRGB(74,222,128), Color3.fromRGB(8,20,10),   Color3.fromRGB(12,28,14),  Color3.fromRGB(16,34,18)},
-        {"🌅 Sunset", Color3.fromRGB(251,146,60), Color3.fromRGB(24,10,8),   Color3.fromRGB(34,14,10),  Color3.fromRGB(40,18,12)},
-    }
-    -- 6 presets = 3 rows × 26 + 2×5 gap = 88px
-    local pw=Instance.new("Frame",SwL); pw.BackgroundTransparency=1; pw.Size=UDim2.new(1,0,0,88)
-    local pg=Instance.new("UIGridLayout",pw)
-    pg.CellSize=UDim2.new(0,120,0,26); pg.CellPadding=UDim2.new(0,6,0,5)
-    pg.FillDirection=Enum.FillDirection.Horizontal; pg.SortOrder=Enum.SortOrder.LayoutOrder
-    pw:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-        local w=pw.AbsoluteSize.X
-        if w>20 then pg.CellSize=UDim2.new(0,math.floor((w-6)/2),0,26) end
+local function addColorGrid(page,colors,onPick)
+    local wrap=Instance.new("Frame",page)
+    wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,0); wrap.AutomaticSize=Enum.AutomaticSize.Y
+    local grid=Instance.new("UIGridLayout",wrap)
+    grid.CellSize=UDim2.new(0,22,0,22); grid.CellPadding=UDim2.new(0,5,0,5)
+    grid.FillDirection=Enum.FillDirection.Horizontal; grid.SortOrder=Enum.SortOrder.LayoutOrder
+    local swatches={}
+    for _,col in ipairs(colors) do
+        local sw=Instance.new("TextButton",wrap)
+        sw.BackgroundColor3=col; sw.BorderSizePixel=0; sw.Text=""; sw.AutoButtonColor=false
+        Instance.new("UICorner",sw).CornerRadius=UDim.new(0,5)
+        local sk=Instance.new("UIStroke",sw); sk.Color=Color3.new(1,1,1); sk.Thickness=0
+        local capSk=sk
+        sw.MouseButton1Click:Connect(function()
+            for _,s in ipairs(swatches) do s:FindFirstChildWhichIsA("UIStroke").Thickness=0 end
+            capSk.Thickness=2; onPick(col)
+        end)
+        table.insert(swatches,sw)
+    end
+end
+
+local function addMiniSlider(page,labelKey,init,mn,mx,onVal)
+    local wrap=Instance.new("Frame",page)
+    wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,28)
+    local lbl=Instance.new("TextLabel",wrap); lbl.BackgroundTransparency=1
+    lbl.Size=UDim2.new(0,52,1,0); lbl.Font=Enum.Font.Gotham; lbl.TextSize=10
+    lbl.TextColor3=Color3.fromRGB(130,130,130); lbl.TextXAlignment=Enum.TextXAlignment.Left
+    local function ulbl() lbl.Text=LANG[curLang][labelKey] or labelKey end; ulbl(); onLangChange(ulbl)
+    local vLbl=Instance.new("TextLabel",wrap); vLbl.BackgroundTransparency=1
+    vLbl.AnchorPoint=Vector2.new(1,0.5); vLbl.Position=UDim2.new(1,0,0.5,0)
+    vLbl.Size=UDim2.new(0,38,0,20); vLbl.Font=Enum.Font.Code; vLbl.TextSize=10
+    vLbl.Text=tostring(init); vLbl.TextColor3=Theme.Accent; vLbl.TextXAlignment=Enum.TextXAlignment.Right
+    onThemeChange("Accent",function(c) if vLbl and vLbl.Parent then vLbl.TextColor3=c end end)
+    local tF=Instance.new("Frame",wrap)
+    tF.Position=UDim2.new(0,56,0.5,-2); tF.Size=UDim2.new(1,-100,0,4)
+    tF.BackgroundColor3=Color3.fromRGB(45,45,45); tF.BorderSizePixel=0
+    Instance.new("UICorner",tF).CornerRadius=UDim.new(0,2)
+    local p0=math.clamp((init-mn)/(mx-mn),0,1)
+    local fF=Instance.new("Frame",tF); fF.Size=UDim2.new(p0,0,1,0)
+    fF.BackgroundColor3=Theme.Accent; fF.BorderSizePixel=0
+    Instance.new("UICorner",fF).CornerRadius=UDim.new(0,2)
+    onThemeChange("Accent",function(c) if fF and fF.Parent then fF.BackgroundColor3=c end end)
+    local kF=Instance.new("Frame",tF); kF.AnchorPoint=Vector2.new(0.5,0.5)
+    kF.Position=UDim2.new(p0,0,0.5,0); kF.Size=UDim2.new(0,12,0,12)
+    kF.BackgroundColor3=Color3.new(1,1,1); kF.BorderSizePixel=0
+    Instance.new("UICorner",kF).CornerRadius=UDim.new(1,0)
+    local drag=false
+    local function setP(x)
+        local r=tF.AbsolutePosition.X; local w=math.max(tF.AbsoluteSize.X,1)
+        local p=math.clamp((x-r)/w,0,1); local v=math.floor(mn+(mx-mn)*p)
+        fF.Size=UDim2.new(p,0,1,0); kF.Position=UDim2.new(p,0,0.5,0)
+        vLbl.Text=tostring(v); onVal(v)
+    end
+    tF.InputBegan:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=true;setP(i.Position.X) end
     end)
-    for _,pr in ipairs(PRESETS) do
-        local lbl,ac,bg,top,card=pr[1],pr[2],pr[3],pr[4],pr[5]
-        local b=Instance.new("TextButton",pw)
-        b.BackgroundColor3=bg; b.BorderSizePixel=0
-        b.Font=Enum.Font.GothamBold; b.Text=lbl; b.TextSize=9
-        b.TextColor3=Color3.new(1,1,1); b.AutoButtonColor=false
+    UserInputService.InputChanged:Connect(function(i)
+        if drag and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then setP(i.Position.X) end
+    end)
+    UserInputService.InputEnded:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end
+    end)
+end
+
+local function addAnimGrid(page)
+    local opts={"Slide","Scale","Wipe","Flip","Bounce","Zoom","Cascade","Stagger","Fade"}
+    local keys={"slide","scale","wipe","flip","bounce","zoom","cascade","stagger","fade"}
+    local rows=math.ceil(#keys/2)
+    local totalH=rows*26+(rows-1)*5
+    local btns={}
+    local wrap=Instance.new("Frame",page)
+    wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,totalH)
+    local grid=Instance.new("UIGridLayout",wrap)
+    grid.CellSize=UDim2.new(0,120,0,26); grid.CellPadding=UDim2.new(0,6,0,5)
+    grid.FillDirection=Enum.FillDirection.Horizontal; grid.SortOrder=Enum.SortOrder.LayoutOrder
+    wrap:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+        local w=wrap.AbsoluteSize.X
+        if w>20 then grid.CellSize=UDim2.new(0,math.floor((w-6)/2),0,26) end
+    end)
+    for i,opt in ipairs(opts) do
+        local b=Instance.new("TextButton",wrap)
+        local isActive=keys[i]==Theme.TabAnim
+        b.BackgroundColor3=isActive and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26)
+        b.BorderSizePixel=0; b.Font=Enum.Font.GothamBold; b.Text=opt; b.TextSize=10
+        b.TextColor3=isActive and Theme.Accent or Color3.fromRGB(100,100,100); b.AutoButtonColor=false
         Instance.new("UICorner",b).CornerRadius=UDim.new(0,5)
-        Instance.new("UIStroke",b).Color=ac
+        local bsk=Instance.new("UIStroke",b)
+        bsk.Color=isActive and Theme.Accent or Color3.fromRGB(40,40,40); bsk.Thickness=1
+        table.insert(btns,{btn=b,stroke=bsk,key=keys[i]})
+        local k=keys[i]
         b.MouseButton1Click:Connect(function()
-            applyTheme("Accent",ac); applyTheme("WinBg",bg)
-            applyTheme("TopBg",top); applyTheme("CardBg",card)
-        end)
-    end
-
-    local sp2=Instance.new("Frame",SwL); sp2.BackgroundTransparency=1; sp2.Size=UDim2.new(1,0,0,4)
-    -- ⌨️ Keybind section
-    addSection(SwL,"s_keybind")
-    -- mode selector: Island / Mini
-    local kbMode = "island"  -- default
-    do
-        local mrow=Instance.new("Frame",SwL); mrow.BackgroundTransparency=1; mrow.Size=UDim2.new(1,0,0,24)
-        local mlbl=Instance.new("TextLabel",mrow); mlbl.BackgroundTransparency=1
-        mlbl.Size=UDim2.new(0.45,0,1,0); mlbl.Font=Enum.Font.Gotham; mlbl.TextSize=10
-        mlbl.TextColor3=Color3.fromRGB(130,130,130); mlbl.TextXAlignment=Enum.TextXAlignment.Left
-        local function um() mlbl.Text=L("s_kb_mode") end; um(); onLangChange(um)
-        local bI=Instance.new("TextButton",mrow)
-        bI.Position=UDim2.new(0.47,0,0,0); bI.Size=UDim2.new(0.25,-3,1,0)
-        bI.BackgroundColor3=Color3.fromRGB(35,35,35); bI.BorderSizePixel=0
-        bI.Font=Enum.Font.GothamBold; bI.TextSize=10; bI.AutoButtonColor=false
-        Instance.new("UICorner",bI).CornerRadius=UDim.new(0,5)
-        local skI=Instance.new("UIStroke",bI); skI.Color=Theme.Accent; skI.Thickness=1
-        local bM=Instance.new("TextButton",mrow)
-        bM.Position=UDim2.new(0.74,0,0,0); bM.Size=UDim2.new(0.26,0,1,0)
-        bM.BackgroundColor3=Color3.fromRGB(26,26,26); bM.BorderSizePixel=0
-        bM.Font=Enum.Font.GothamBold; bM.TextSize=10; bM.AutoButtonColor=false
-        Instance.new("UICorner",bM).CornerRadius=UDim.new(0,5)
-        local skM=Instance.new("UIStroke",bM); skM.Color=Color3.fromRGB(40,40,40); skM.Thickness=1
-        local function updMTxt()
-            bI.Text=L("s_kb_island"); bM.Text=L("s_kb_mini")
-        end; updMTxt(); onLangChange(updMTxt)
-        onThemeChange("Accent",function(c)
-            if kbMode=="island" then skI.Color=c; bI.TextColor3=c
-            else skM.Color=c; bM.TextColor3=c end
-        end)
-        local function pickMode(m)
-            kbMode=m
-            local onI=(m=="island")
-            TweenService:Create(bI,TweenInfo.new(0.15),{
-                BackgroundColor3=onI and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26),
-                TextColor3=onI and Theme.Accent or Color3.fromRGB(100,100,100),
-            }):Play()
-            skI.Color=onI and Theme.Accent or Color3.fromRGB(40,40,40)
-            TweenService:Create(bM,TweenInfo.new(0.15),{
-                BackgroundColor3=(not onI) and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26),
-                TextColor3=(not onI) and Theme.Accent or Color3.fromRGB(100,100,100),
-            }):Play()
-            skM.Color=(not onI) and Theme.Accent or Color3.fromRGB(40,40,40)
-        end
-        bI.MouseButton1Click:Connect(function() pickMode("island"); kbModeRef[1]="island" end)
-        bM.MouseButton1Click:Connect(function() pickMode("mini"); kbModeRef[1]="mini" end)
-        -- ตั้ง initial
-        bI.TextColor3=Theme.Accent; bM.TextColor3=Color3.fromRGB(100,100,100)
-    end
-    -- key picker
-    do
-        local krow=Instance.new("Frame",SwL); krow.BackgroundTransparency=1; krow.Size=UDim2.new(1,0,0,26)
-        local klbl=Instance.new("TextLabel",krow); klbl.BackgroundTransparency=1
-        klbl.Size=UDim2.new(0.45,0,1,0); klbl.Font=Enum.Font.Gotham; klbl.TextSize=10
-        klbl.TextColor3=Color3.fromRGB(130,130,130); klbl.TextXAlignment=Enum.TextXAlignment.Left
-        local function uk() klbl.Text=L("s_kb_key") end; uk(); onLangChange(uk)
-        local kbtn=Instance.new("TextButton",krow)
-        kbtn.Position=UDim2.new(0.47,0,0,2); kbtn.Size=UDim2.new(0.53,0,1,-4)
-        kbtn.BackgroundColor3=Color3.fromRGB(30,30,30); kbtn.BorderSizePixel=0
-        kbtn.Font=Enum.Font.Code; kbtn.Text=tostring(WIN_KEY):gsub("Enum.KeyCode.",""); kbtn.TextSize=10
-        kbtn.TextColor3=Theme.Accent; kbtn.AutoButtonColor=false
-        Instance.new("UICorner",kbtn).CornerRadius=UDim.new(0,5)
-        local ksk=Instance.new("UIStroke",kbtn); ksk.Color=Theme.Accent; ksk.Thickness=1
-        onThemeChange("Accent",function(c) if kbtn and kbtn.Parent then kbtn.TextColor3=c; ksk.Color=c end end)
-        local listening=false
-        kbtn.MouseButton1Click:Connect(function()
-            if listening then return end
-            listening=true
-            local function upk() kbtn.Text=L("s_kb_press") end; upk(); onLangChange(upk)
-            kbtn.TextColor3=Color3.fromRGB(200,200,100)
-            local conn; conn=UserInputService.InputBegan:Connect(function(inp,gp)
-                if gp then return end
-                if inp.UserInputType==Enum.UserInputType.Keyboard then
-                    WIN_KEY=inp.KeyCode
-                    kbtn.Text=tostring(WIN_KEY):gsub("Enum.KeyCode.","")
-                    kbtn.TextColor3=Theme.Accent
-                    listening=false; conn:Disconnect()
-                    -- reconnect กลับ lang
-                    onLangChange(function() end) -- no-op แค่ clear listening flag
-                end
-            end)
-        end)
-    end
-    -- keybind mode ส่งผลกับ goIsland/goMini
-    kbModeRef[1] = kbMode  -- sync กับ global
-    -- ทุกครั้งที่ pickMode เปลี่ยน ให้ update kbModeRef ด้วย
-
-    local spKB=Instance.new("Frame",SwL); spKB.BackgroundTransparency=1; spKB.Size=UDim2.new(1,0,0,4)
-    addSection(SwL,"s_corner")
-    addMiniSlider(SwL,"s_win",Theme.WinRadius,0,24,function(v) applyTheme("WinRadius",v) end)
-    addMiniSlider(SwL,"s_cards",Theme.CardRadius,0,16,function(v) applyTheme("CardRadius",v) end)
-
-    -- RIGHT: language + animation + opacity + size + reset
-    addSection(SwR,"s_language")
-    addLangToggle(SwR)
-    local spL=Instance.new("Frame",SwR); spL.BackgroundTransparency=1; spL.Size=UDim2.new(1,0,0,6)
-    addSection(SwR,"s_anim")
-    addAnimGrid(SwR)
-
-    local sp3=Instance.new("Frame",SwR); sp3.BackgroundTransparency=1; sp3.Size=UDim2.new(1,0,0,6)
-    addSection(SwR,"s_opacity")
-    addMiniSlider(SwR,"s_opacity_lbl",100,0,100,function(v) applyTheme("WinOpacity",1-(v/100)) end)
-
-    local sp4=Instance.new("Frame",SwR); sp4.BackgroundTransparency=1; sp4.Size=UDim2.new(1,0,0,6)
-    addSection(SwR,"s_size")
-    local sizeOpts={{"s_small",480,340},{"s_normal",620,400},{"s_large",760,460},{"s_xl",900,520}}
-    local sBtns={}
-    for _,s in ipairs(sizeOpts) do
-        local lbl,w,h=s[1],s[2],s[3]
-        local sb=Instance.new("TextButton",SwR)
-        sb.BackgroundColor3=Color3.fromRGB(26,26,26); sb.BorderSizePixel=0
-        sb.Size=UDim2.new(1,0,0,26); sb.Font=Enum.Font.GothamBold
-        local function usz() sb.Text=L(lbl) end; usz(); onLangChange(usz)
-        sb.TextColor3=Color3.fromRGB(100,100,100); sb.TextSize=11; sb.AutoButtonColor=false
-        Instance.new("UICorner",sb).CornerRadius=UDim.new(0,5)
-        local ssk=Instance.new("UIStroke",sb); ssk.Color=Color3.fromRGB(40,40,40); ssk.Thickness=1
-        table.insert(sBtns,{btn=sb,stroke=ssk})
-        sb.MouseButton1Click:Connect(function()
-            Theme.WinW=w; Theme.WinH=h
-            NORMAL_SIZE=UDim2.new(0,w,0,h)
-            TweenService:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=NORMAL_SIZE}):Play()
-            for _,sd in ipairs(sBtns) do
-                local on=(sd.btn==sb)
-                TweenService:Create(sd.btn,TweenInfo.new(0.15),{
+            Theme.TabAnim=k
+            for _,bd in ipairs(btns) do
+                local on=(bd.key==k)
+                TweenService:Create(bd.btn,TweenInfo.new(0.15),{
                     BackgroundColor3=on and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26),
                     TextColor3=on and Theme.Accent or Color3.fromRGB(100,100,100),
                 }):Play()
-                sd.stroke.Color=on and Theme.Accent or Color3.fromRGB(40,40,40)
+                bd.stroke.Color=on and Theme.Accent or Color3.fromRGB(40,40,40)
             end
         end)
     end
+end
 
-    -- 📋 Notification Log
-    local sp_log=Instance.new("Frame",SwR); sp_log.BackgroundTransparency=1; sp_log.Size=UDim2.new(1,0,0,6)
-    addSection(SwR,"s_notif_log")
-    local logWrap=Instance.new("ScrollingFrame",SwR)
-    logWrap.BackgroundColor3=Color3.fromRGB(22,22,22); logWrap.BorderSizePixel=0
-    logWrap.Size=UDim2.new(1,0,0,110); logWrap.CanvasSize=UDim2.new(0,0,0,0)
-    logWrap.ScrollBarThickness=2; logWrap.ScrollBarImageColor3=Theme.Accent
-    Instance.new("UICorner",logWrap).CornerRadius=UDim.new(0,6)
-    local logLL=Instance.new("UIListLayout",logWrap)
-    logLL.SortOrder=Enum.SortOrder.LayoutOrder; logLL.Padding=UDim.new(0,0)
-    onThemeChange("Accent",function(c) if logWrap and logWrap.Parent then logWrap.ScrollBarImageColor3=c end end)
-    local emptyLbl=Instance.new("TextLabel",logWrap); emptyLbl.BackgroundTransparency=1
-    emptyLbl.Size=UDim2.new(1,0,0,30); emptyLbl.Font=Enum.Font.Gotham; emptyLbl.TextSize=10
-    emptyLbl.TextColor3=Color3.fromRGB(70,70,70); emptyLbl.TextXAlignment=Enum.TextXAlignment.Center
-    local function uEmpty() emptyLbl.Text=L("s_no_notif") end; uEmpty(); onLangChange(uEmpty)
-    local logItems={}
-    local function rebuildLog()
-        for _,it in ipairs(logItems) do if it and it.Parent then it:Destroy() end end
-        logItems={}; emptyLbl.Visible=#NotifLog==0
-        for i,entry in ipairs(NotifLog) do
-            local row=Instance.new("Frame",logWrap)
-            row.BackgroundColor3=i%2==0 and Color3.fromRGB(26,26,26) or Color3.fromRGB(22,22,22)
-            row.BackgroundTransparency=i%2==0 and 0 or 1
-            row.BorderSizePixel=0; row.Size=UDim2.new(1,0,0,22)
-            local dot=Instance.new("Frame",row); dot.AnchorPoint=Vector2.new(0,0.5)
-            dot.Position=UDim2.new(0,6,0.5,0); dot.Size=UDim2.new(0,4,0,4)
-            dot.BackgroundColor3=Theme.Accent; dot.BorderSizePixel=0
-            Instance.new("UICorner",dot).CornerRadius=UDim.new(1,0)
-            onThemeChange("Accent",function(c) if dot and dot.Parent then dot.BackgroundColor3=c end end)
-            local lt=Instance.new("TextLabel",row); lt.BackgroundTransparency=1
-            lt.Position=UDim2.new(0,14,0,0); lt.Size=UDim2.new(1,-18,1,0)
-            lt.Font=Enum.Font.Gotham; lt.Text=entry.txt; lt.TextSize=10
-            lt.TextColor3=Color3.fromRGB(160,160,160); lt.TextXAlignment=Enum.TextXAlignment.Left
-            lt.TextTruncate=Enum.TextTruncate.AtEnd
-            table.insert(logItems,row)
+-- LEFT: สี + พื้นหลัง + มุม
+addSection(SwL,"s_accent")
+addColorGrid(SwL,{
+    Color3.fromRGB(51,255,255), Color3.fromRGB(255,59,92),  Color3.fromRGB(168,85,247),
+    Color3.fromRGB(34,197,94),  Color3.fromRGB(245,158,11), Color3.fromRGB(59,130,246),
+    Color3.fromRGB(239,68,68),  Color3.fromRGB(236,72,153), Color3.fromRGB(20,184,166),
+    Color3.fromRGB(249,115,22),
+},function(c) applyTheme("Accent",c) end)
+
+local sp1=Instance.new("Frame",SwL); sp1.BackgroundTransparency=1; sp1.Size=UDim2.new(1,0,0,4)
+addSection(SwL,"s_bg")
+local BG={{Color3.fromRGB(17,17,17),Color3.fromRGB(25,25,25),Color3.fromRGB(28,28,28)},
+          {Color3.fromRGB(8,8,8),Color3.fromRGB(14,14,14),Color3.fromRGB(18,18,18)},
+          {Color3.fromRGB(16,13,28),Color3.fromRGB(24,20,36),Color3.fromRGB(28,24,40)},
+          {Color3.fromRGB(10,22,38),Color3.fromRGB(16,30,50),Color3.fromRGB(20,34,52)},
+          {Color3.fromRGB(12,22,12),Color3.fromRGB(18,30,18),Color3.fromRGB(22,32,22)},
+          {Color3.fromRGB(22,16,9),Color3.fromRGB(30,22,14),Color3.fromRGB(32,24,18)}}
+local bgMain={}; for _,b in ipairs(BG) do table.insert(bgMain,b[1]) end
+addColorGrid(SwL,bgMain,function(c)
+    for _,b in ipairs(BG) do
+        if b[1]==c then
+            applyTheme("WinBg",b[1]); applyTheme("TopBg",b[2]); applyTheme("CardBg",b[3]); break
         end
-        logWrap.CanvasSize=UDim2.new(0,0,0,logLL.AbsoluteContentSize.Y+4)
     end
-    rebuildLog(); onNotifLog(rebuildLog)
-    local clrBtn=Instance.new("TextButton",SwR)
-    clrBtn.BackgroundColor3=Color3.fromRGB(26,26,26); clrBtn.BorderSizePixel=0
-    clrBtn.Size=UDim2.new(1,0,0,22); clrBtn.Font=Enum.Font.GothamBold; clrBtn.TextSize=10
-    clrBtn.TextColor3=Color3.fromRGB(100,100,100); clrBtn.AutoButtonColor=false
-    Instance.new("UICorner",clrBtn).CornerRadius=UDim.new(0,5)
-    Instance.new("UIStroke",clrBtn).Color=Color3.fromRGB(40,40,40)
-    local function uClr() clrBtn.Text=L("s_clear_log") end; uClr(); onLangChange(uClr)
-    clrBtn.MouseButton1Click:Connect(function()
-        for k in pairs(NotifLog) do NotifLog[k]=nil end
-        for _,fn in ipairs(NotifLogCallbacks) do pcall(fn) end
-    end)
+end)
 
-    local sp5=Instance.new("Frame",SwR); sp5.BackgroundTransparency=1; sp5.Size=UDim2.new(1,0,0,4)
-    local rbtn=Instance.new("TextButton",SwR)
-    rbtn.BackgroundColor3=Color3.fromRGB(22,22,22); rbtn.BorderSizePixel=0
-    rbtn.Size=UDim2.new(1,0,0,28); rbtn.Font=Enum.Font.GothamBold
-    local function updReset() rbtn.Text=L("s_reset") end; updReset(); onLangChange(updReset)
-    local _dum=nil -- placeholder
-    rbtn.TextColor3=Color3.fromRGB(80,80,80); rbtn.TextSize=11; rbtn.AutoButtonColor=false
-    Instance.new("UICorner",rbtn).CornerRadius=UDim.new(0,5)
-    local rsk=Instance.new("UIStroke",rbtn); rsk.Color=Color3.fromRGB(40,40,40); rsk.Thickness=1
-    rbtn.MouseEnter:Connect(function()
-        TweenService:Create(rbtn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(30,10,10),TextColor3=Color3.fromRGB(255,80,80)}):Play()
-        rsk.Color=Color3.fromRGB(180,50,50)
-    end)
-    rbtn.MouseLeave:Connect(function()
-        TweenService:Create(rbtn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(22,22,22),TextColor3=Color3.fromRGB(80,80,80)}):Play()
-        rsk.Color=Color3.fromRGB(40,40,40)
-    end)
-    rbtn.MouseButton1Click:Connect(function()
-        applyTheme("Accent",Color3.fromRGB(51,255,255))
-        applyTheme("WinBg",Color3.fromRGB(17,17,17))
-        applyTheme("TopBg",Color3.fromRGB(25,25,25))
-        applyTheme("CardBg",Color3.fromRGB(28,28,28))
-        applyTheme("WinRadius",10); applyTheme("CardRadius",6); applyTheme("WinOpacity",0)
-        Theme.TabAnim="slide"; Theme.WinW=620; Theme.WinH=400
-        NORMAL_SIZE=UDim2.new(0,620,0,400)
-        TweenService:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=NORMAL_SIZE}):Play()
-        AddNotification(L("reset_done"))
+-- 🌈 Theme Presets
+local spP=Instance.new("Frame",SwL); spP.BackgroundTransparency=1; spP.Size=UDim2.new(1,0,0,4)
+addSection(SwL,"s_preset")
+local PRESETS={
+    {"🖤 Dark",   Color3.fromRGB(51,255,255), Color3.fromRGB(17,17,17),  Color3.fromRGB(25,25,25),  Color3.fromRGB(28,28,28)},
+    {"⚫ OLED",   Color3.fromRGB(255,255,255),Color3.fromRGB(0,0,0),     Color3.fromRGB(8,8,8),     Color3.fromRGB(12,12,12)},
+    {"💜 Purple", Color3.fromRGB(196,148,255),Color3.fromRGB(16,8,28),   Color3.fromRGB(22,12,38),  Color3.fromRGB(28,18,44)},
+    {"🌊 Ocean",  Color3.fromRGB(56,189,248), Color3.fromRGB(8,18,36),   Color3.fromRGB(12,26,48),  Color3.fromRGB(16,32,56)},
+    {"🌿 Forest", Color3.fromRGB(74,222,128), Color3.fromRGB(8,20,10),   Color3.fromRGB(12,28,14),  Color3.fromRGB(16,34,18)},
+    {"🌅 Sunset", Color3.fromRGB(251,146,60), Color3.fromRGB(24,10,8),   Color3.fromRGB(34,14,10),  Color3.fromRGB(40,18,12)},
+}
+local pw=Instance.new("Frame",SwL); pw.BackgroundTransparency=1; pw.Size=UDim2.new(1,0,0,88)
+local pg=Instance.new("UIGridLayout",pw)
+pg.CellSize=UDim2.new(0,120,0,26); pg.CellPadding=UDim2.new(0,6,0,5)
+pg.FillDirection=Enum.FillDirection.Horizontal; pg.SortOrder=Enum.SortOrder.LayoutOrder
+pw:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+    local w=pw.AbsoluteSize.X
+    if w>20 then pg.CellSize=UDim2.new(0,math.floor((w-6)/2),0,26) end
+end)
+for _,pr in ipairs(PRESETS) do
+    local lbl,ac,bg,top,card=pr[1],pr[2],pr[3],pr[4],pr[5]
+    local b=Instance.new("TextButton",pw)
+    b.BackgroundColor3=bg; b.BorderSizePixel=0
+    b.Font=Enum.Font.GothamBold; b.Text=lbl; b.TextSize=9
+    b.TextColor3=Color3.new(1,1,1); b.AutoButtonColor=false
+    Instance.new("UICorner",b).CornerRadius=UDim.new(0,5)
+    Instance.new("UIStroke",b).Color=ac
+    b.MouseButton1Click:Connect(function()
+        applyTheme("Accent",ac); applyTheme("WinBg",bg)
+        applyTheme("TopBg",top); applyTheme("CardBg",card)
     end)
 end
+
+local sp2=Instance.new("Frame",SwL); sp2.BackgroundTransparency=1; sp2.Size=UDim2.new(1,0,0,4)
+-- ⌨️ Keybind section
+addSection(SwL,"s_keybind")
+-- mode selector: Island / Mini
+local kbMode = "island"
+do
+    local mrow=Instance.new("Frame",SwL); mrow.BackgroundTransparency=1; mrow.Size=UDim2.new(1,0,0,24)
+    local mlbl=Instance.new("TextLabel",mrow); mlbl.BackgroundTransparency=1
+    mlbl.Size=UDim2.new(0.45,0,1,0); mlbl.Font=Enum.Font.Gotham; mlbl.TextSize=10
+    mlbl.TextColor3=Color3.fromRGB(130,130,130); mlbl.TextXAlignment=Enum.TextXAlignment.Left
+    local function um() mlbl.Text=L("s_kb_mode") end; um(); onLangChange(um)
+    local bI=Instance.new("TextButton",mrow)
+    bI.Position=UDim2.new(0.47,0,0,0); bI.Size=UDim2.new(0.25,-3,1,0)
+    bI.BackgroundColor3=Color3.fromRGB(35,35,35); bI.BorderSizePixel=0
+    bI.Font=Enum.Font.GothamBold; bI.TextSize=10; bI.AutoButtonColor=false
+    Instance.new("UICorner",bI).CornerRadius=UDim.new(0,5)
+    local skI=Instance.new("UIStroke",bI); skI.Color=Theme.Accent; skI.Thickness=1
+    local bM=Instance.new("TextButton",mrow)
+    bM.Position=UDim2.new(0.74,0,0,0); bM.Size=UDim2.new(0.26,0,1,0)
+    bM.BackgroundColor3=Color3.fromRGB(26,26,26); bM.BorderSizePixel=0
+    bM.Font=Enum.Font.GothamBold; bM.TextSize=10; bM.AutoButtonColor=false
+    Instance.new("UICorner",bM).CornerRadius=UDim.new(0,5)
+    local skM=Instance.new("UIStroke",bM); skM.Color=Color3.fromRGB(40,40,40); skM.Thickness=1
+    local function updMTxt()
+        bI.Text=L("s_kb_island"); bM.Text=L("s_kb_mini")
+    end; updMTxt(); onLangChange(updMTxt)
+    onThemeChange("Accent",function(c)
+        if kbMode=="island" then skI.Color=c; bI.TextColor3=c
+        else skM.Color=c; bM.TextColor3=c end
+    end)
+    local function pickMode(m)
+        kbMode=m
+        local onI=(m=="island")
+        TweenService:Create(bI,TweenInfo.new(0.15),{
+            BackgroundColor3=onI and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26),
+            TextColor3=onI and Theme.Accent or Color3.fromRGB(100,100,100),
+        }):Play()
+        skI.Color=onI and Theme.Accent or Color3.fromRGB(40,40,40)
+        TweenService:Create(bM,TweenInfo.new(0.15),{
+            BackgroundColor3=(not onI) and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26),
+            TextColor3=(not onI) and Theme.Accent or Color3.fromRGB(100,100,100),
+        }):Play()
+        skM.Color=(not onI) and Theme.Accent or Color3.fromRGB(40,40,40)
+    end
+    bI.MouseButton1Click:Connect(function() pickMode("island"); kbModeRef[1]="island" end)
+    bM.MouseButton1Click:Connect(function() pickMode("mini"); kbModeRef[1]="mini" end)
+    bI.TextColor3=Theme.Accent; bM.TextColor3=Color3.fromRGB(100,100,100)
+end
+-- key picker
+do
+    local krow=Instance.new("Frame",SwL); krow.BackgroundTransparency=1; krow.Size=UDim2.new(1,0,0,26)
+    local klbl=Instance.new("TextLabel",krow); klbl.BackgroundTransparency=1
+    klbl.Size=UDim2.new(0.45,0,1,0); klbl.Font=Enum.Font.Gotham; klbl.TextSize=10
+    klbl.TextColor3=Color3.fromRGB(130,130,130); klbl.TextXAlignment=Enum.TextXAlignment.Left
+    local function uk() klbl.Text=L("s_kb_key") end; uk(); onLangChange(uk)
+    local kbtn=Instance.new("TextButton",krow)
+    kbtn.Position=UDim2.new(0.47,0,0,2); kbtn.Size=UDim2.new(0.53,0,1,-4)
+    kbtn.BackgroundColor3=Color3.fromRGB(30,30,30); kbtn.BorderSizePixel=0
+    kbtn.Font=Enum.Font.Code; kbtn.Text=tostring(WIN_KEY):gsub("Enum.KeyCode.",""); kbtn.TextSize=10
+    kbtn.TextColor3=Theme.Accent; kbtn.AutoButtonColor=false
+    Instance.new("UICorner",kbtn).CornerRadius=UDim.new(0,5)
+    local ksk=Instance.new("UIStroke",kbtn); ksk.Color=Theme.Accent; ksk.Thickness=1
+    onThemeChange("Accent",function(c) if kbtn and kbtn.Parent then kbtn.TextColor3=c; ksk.Color=c end end)
+    local listening=false
+    kbtn.MouseButton1Click:Connect(function()
+        if listening then return end
+        listening=true
+        local function upk() kbtn.Text=L("s_kb_press") end; upk(); onLangChange(upk)
+        kbtn.TextColor3=Color3.fromRGB(200,200,100)
+        local conn; conn=UserInputService.InputBegan:Connect(function(inp,gp)
+            if gp then return end
+            if inp.UserInputType==Enum.UserInputType.Keyboard then
+                WIN_KEY=inp.KeyCode
+                kbtn.Text=tostring(WIN_KEY):gsub("Enum.KeyCode.","")
+                kbtn.TextColor3=Theme.Accent
+                listening=false; conn:Disconnect()
+                onLangChange(function() end)
+            end
+        end)
+    end)
+end
+kbModeRef[1] = kbMode
+
+local spKB=Instance.new("Frame",SwL); spKB.BackgroundTransparency=1; spKB.Size=UDim2.new(1,0,0,4)
+addSection(SwL,"s_corner")
+addMiniSlider(SwL,"s_win",Theme.WinRadius,0,24,function(v) applyTheme("WinRadius",v) end)
+addMiniSlider(SwL,"s_cards",Theme.CardRadius,0,16,function(v) applyTheme("CardRadius",v) end)
+
+-- RIGHT: language + animation + opacity + size + reset
+addSection(SwR,"s_language")
+addLangToggle(SwR)
+local spL=Instance.new("Frame",SwR); spL.BackgroundTransparency=1; spL.Size=UDim2.new(1,0,0,6)
+addSection(SwR,"s_anim")
+addAnimGrid(SwR)
+
+local sp3=Instance.new("Frame",SwR); sp3.BackgroundTransparency=1; sp3.Size=UDim2.new(1,0,0,6)
+addSection(SwR,"s_opacity")
+addMiniSlider(SwR,"s_opacity_lbl",100,0,100,function(v) applyTheme("WinOpacity",1-(v/100)) end)
+
+local sp4=Instance.new("Frame",SwR); sp4.BackgroundTransparency=1; sp4.Size=UDim2.new(1,0,0,6)
+addSection(SwR,"s_size")
+local sizeOpts={{"s_small",480,340},{"s_normal",620,400},{"s_large",760,460},{"s_xl",900,520}}
+local sBtns={}
+for _,s in ipairs(sizeOpts) do
+    local lbl,w,h=s[1],s[2],s[3]
+    local sb=Instance.new("TextButton",SwR)
+    sb.BackgroundColor3=Color3.fromRGB(26,26,26); sb.BorderSizePixel=0
+    sb.Size=UDim2.new(1,0,0,26); sb.Font=Enum.Font.GothamBold
+    local function usz() sb.Text=L(lbl) end; usz(); onLangChange(usz)
+    sb.TextColor3=Color3.fromRGB(100,100,100); sb.TextSize=11; sb.AutoButtonColor=false
+    Instance.new("UICorner",sb).CornerRadius=UDim.new(0,5)
+    local ssk=Instance.new("UIStroke",sb); ssk.Color=Color3.fromRGB(40,40,40); ssk.Thickness=1
+    table.insert(sBtns,{btn=sb,stroke=ssk})
+    sb.MouseButton1Click:Connect(function()
+        Theme.WinW=w; Theme.WinH=h
+        NORMAL_SIZE=UDim2.new(0,w,0,h)
+        TweenService:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=NORMAL_SIZE}):Play()
+        for _,sd in ipairs(sBtns) do
+            local on=(sd.btn==sb)
+            TweenService:Create(sd.btn,TweenInfo.new(0.15),{
+                BackgroundColor3=on and Color3.fromRGB(35,35,35) or Color3.fromRGB(26,26,26),
+                TextColor3=on and Theme.Accent or Color3.fromRGB(100,100,100),
+            }):Play()
+            sd.stroke.Color=on and Theme.Accent or Color3.fromRGB(40,40,40)
+        end
+    end)
+end
+
+-- 📋 Notification Log
+local sp_log=Instance.new("Frame",SwR); sp_log.BackgroundTransparency=1; sp_log.Size=UDim2.new(1,0,0,6)
+addSection(SwR,"s_notif_log")
+local logWrap=Instance.new("ScrollingFrame",SwR)
+logWrap.BackgroundColor3=Color3.fromRGB(22,22,22); logWrap.BorderSizePixel=0
+logWrap.Size=UDim2.new(1,0,0,110); logWrap.CanvasSize=UDim2.new(0,0,0,0)
+logWrap.ScrollBarThickness=2; logWrap.ScrollBarImageColor3=Theme.Accent
+Instance.new("UICorner",logWrap).CornerRadius=UDim.new(0,6)
+local logLL=Instance.new("UIListLayout",logWrap)
+logLL.SortOrder=Enum.SortOrder.LayoutOrder; logLL.Padding=UDim.new(0,0)
+onThemeChange("Accent",function(c) if logWrap and logWrap.Parent then logWrap.ScrollBarImageColor3=c end end)
+local emptyLbl=Instance.new("TextLabel",logWrap); emptyLbl.BackgroundTransparency=1
+emptyLbl.Size=UDim2.new(1,0,0,30); emptyLbl.Font=Enum.Font.Gotham; emptyLbl.TextSize=10
+emptyLbl.TextColor3=Color3.fromRGB(70,70,70); emptyLbl.TextXAlignment=Enum.TextXAlignment.Center
+local function uEmpty() emptyLbl.Text=L("s_no_notif") end; uEmpty(); onLangChange(uEmpty)
+local logItems={}
+local function rebuildLog()
+    for _,it in ipairs(logItems) do if it and it.Parent then it:Destroy() end end
+    logItems={}; emptyLbl.Visible=#NotifLog==0
+    for i,entry in ipairs(NotifLog) do
+        local row=Instance.new("Frame",logWrap)
+        row.BackgroundColor3=i%2==0 and Color3.fromRGB(26,26,26) or Color3.fromRGB(22,22,22)
+        row.BackgroundTransparency=i%2==0 and 0 or 1
+        row.BorderSizePixel=0; row.Size=UDim2.new(1,0,0,22)
+        local dot=Instance.new("Frame",row); dot.AnchorPoint=Vector2.new(0,0.5)
+        dot.Position=UDim2.new(0,6,0.5,0); dot.Size=UDim2.new(0,4,0,4)
+        dot.BackgroundColor3=Theme.Accent; dot.BorderSizePixel=0
+        Instance.new("UICorner",dot).CornerRadius=UDim.new(1,0)
+        onThemeChange("Accent",function(c) if dot and dot.Parent then dot.BackgroundColor3=c end end)
+        local lt=Instance.new("TextLabel",row); lt.BackgroundTransparency=1
+        lt.Position=UDim2.new(0,14,0,0); lt.Size=UDim2.new(1,-18,1,0)
+        lt.Font=Enum.Font.Gotham; lt.Text=entry.txt; lt.TextSize=10
+        lt.TextColor3=Color3.fromRGB(160,160,160); lt.TextXAlignment=Enum.TextXAlignment.Left
+        lt.TextTruncate=Enum.TextTruncate.AtEnd
+        table.insert(logItems,row)
+    end
+    logWrap.CanvasSize=UDim2.new(0,0,0,logLL.AbsoluteContentSize.Y+4)
+end
+rebuildLog(); onNotifLog(rebuildLog)
+local clrBtn=Instance.new("TextButton",SwR)
+clrBtn.BackgroundColor3=Color3.fromRGB(26,26,26); clrBtn.BorderSizePixel=0
+clrBtn.Size=UDim2.new(1,0,0,22); clrBtn.Font=Enum.Font.GothamBold; clrBtn.TextSize=10
+clrBtn.TextColor3=Color3.fromRGB(100,100,100); clrBtn.AutoButtonColor=false
+Instance.new("UICorner",clrBtn).CornerRadius=UDim.new(0,5)
+Instance.new("UIStroke",clrBtn).Color=Color3.fromRGB(40,40,40)
+local function uClr() clrBtn.Text=L("s_clear_log") end; uClr(); onLangChange(uClr)
+clrBtn.MouseButton1Click:Connect(function()
+    for k in pairs(NotifLog) do NotifLog[k]=nil end
+    for _,fn in ipairs(NotifLogCallbacks) do pcall(fn) end
+end)
+
+local sp5=Instance.new("Frame",SwR); sp5.BackgroundTransparency=1; sp5.Size=UDim2.new(1,0,0,4)
+local rbtn=Instance.new("TextButton",SwR)
+rbtn.BackgroundColor3=Color3.fromRGB(22,22,22); rbtn.BorderSizePixel=0
+rbtn.Size=UDim2.new(1,0,0,28); rbtn.Font=Enum.Font.GothamBold
+local function updReset() rbtn.Text=L("s_reset") end; updReset(); onLangChange(updReset)
+local _dum=nil -- placeholder
+rbtn.TextColor3=Color3.fromRGB(80,80,80); rbtn.TextSize=11; rbtn.AutoButtonColor=false
+Instance.new("UICorner",rbtn).CornerRadius=UDim.new(0,5)
+local rsk=Instance.new("UIStroke",rbtn); rsk.Color=Color3.fromRGB(40,40,40); rsk.Thickness=1
+rbtn.MouseEnter:Connect(function()
+    TweenService:Create(rbtn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(30,10,10),TextColor3=Color3.fromRGB(255,80,80)}):Play()
+    rsk.Color=Color3.fromRGB(180,50,50)
+end)
+rbtn.MouseLeave:Connect(function()
+    TweenService:Create(rbtn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(22,22,22),TextColor3=Color3.fromRGB(80,80,80)}):Play()
+    rsk.Color=Color3.fromRGB(40,40,40)
+end)
+rbtn.MouseButton1Click:Connect(function()
+    applyTheme("Accent",Color3.fromRGB(51,255,255))
+    applyTheme("WinBg",Color3.fromRGB(17,17,17))
+    applyTheme("TopBg",Color3.fromRGB(25,25,25))
+    applyTheme("CardBg",Color3.fromRGB(28,28,28))
+    applyTheme("WinRadius",10); applyTheme("CardRadius",6); applyTheme("WinOpacity",0)
+    Theme.TabAnim="slide"; Theme.WinW=620; Theme.WinH=400
+    NORMAL_SIZE=UDim2.new(0,620,0,400)
+    TweenService:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=NORMAL_SIZE}):Play()
+    AddNotification(L("reset_done"))
+end)
+
+end -- BuildUISettings
+
+-- Call the settings builder
 BuildUISettings()
+
 -- ══════════════════════════════════════════════════════════════
 --  DEMO TABS
 -- ══════════════════════════════════════════════════════════════
