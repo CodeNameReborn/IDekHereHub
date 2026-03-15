@@ -10,6 +10,7 @@ local GuiService       = game:GetService("GuiService")
 local _old = game.CoreGui:FindFirstChild("IDekhere Hub")
 if _old then _old:Destroy() end
 
+
 -- ══════════════════════════════════════════════════════════════
 --  LANGUAGE SYSTEM
 -- ══════════════════════════════════════════════════════════════
@@ -35,7 +36,6 @@ local LANG = {
         s_notif_log = "📋 ประวัติแจ้งเตือน",
         s_no_notif  = "ยังไม่มีประวัติ",
         s_clear_log = "ล้างประวัติ",
-        s_corner    = "🔘 มุมโค้ง",
         s_win       = "Window",
         s_cards     = "Cards",
         s_opacity_lbl = "Opacity",
@@ -68,7 +68,6 @@ local LANG = {
         s_notif_log = "📋 Notification Log",
         s_no_notif  = "No history yet",
         s_clear_log = "Clear Log",
-        s_corner    = "🔘 Corner Radius",
         s_win       = "Window",
         s_cards     = "Cards",
         s_opacity_lbl = "Opacity",
@@ -110,12 +109,101 @@ local function onThemeChange(key, fn)
     if not ThemeCallbacks[key] then ThemeCallbacks[key] = {} end
     table.insert(ThemeCallbacks[key], fn)
 end
+
+-- ================== ระบบบันทึก Settings ==================
+-- ================== ระบบบันทึก Settings ==================
+local savedScripts = {}          -- เก็บสคริปต์ทั้งหมด
+local isLoading = false          -- กำลังโหลด? (ป้องกันบันทึกซ้ำ)
+local uiReady = false            -- UI พร้อมใช้งานแล้ว?
+local kbModeRef = {"island"}     -- โหมดปุ่มลัด (island/mini)
+local scriptListContainer = nil  -- ScrollingFrame ของรายการสคริปต์
+local refreshScriptList = nil    -- ฟังก์ชันรีเฟรชรายการสคริปต์ (จะกำหนดทีหลัง)
+
+-- ตรวจสอบว่ารองรับการเขียนไฟล์หรือไม่
+local fileSupport = (type(writefile) == "function" and type(readfile) == "function" and type(isfile) == "function")
+
+local function SaveAll()
+    if not uiReady or not fileSupport then return end
+    local data = {
+        Theme = Theme,
+        curLang = curLang,
+        WIN_KEY = tostring(WIN_KEY):gsub("Enum.KeyCode.", ""),
+        kbMode = kbModeRef[1],
+        savedScripts = savedScripts,
+    }
+    local success, json = pcall(function()
+        return game:GetService("HttpService"):JSONEncode(data)
+    end)
+    if success then
+        pcall(writefile, "IDekhereHub_Settings.json", json)
+    end
+end
+
+local function LoadAll()
+    isLoading = true
+    if fileSupport then
+        local success, data = pcall(function()
+            if isfile("IDekhereHub_Settings.json") then
+                return game:GetService("HttpService"):JSONDecode(readfile("IDekhereHub_Settings.json"))
+            end
+        end)
+        if success and data then
+            if data.Theme then
+                for k, v in pairs(data.Theme) do
+                    Theme[k] = v
+                end
+            end
+            if data.curLang then
+                curLang = data.curLang
+            end
+            if data.WIN_KEY then
+                -- แปลง string เป็น Enum.KeyCode อย่างปลอดภัย
+                local success, key = pcall(function()
+                    return Enum.KeyCode[data.WIN_KEY]
+                end)
+                if success and key then
+                    WIN_KEY = key
+                end
+            end
+            if data.kbMode then
+                if data.kbMode == "island" or data.kbMode == "mini" then
+                    kbModeRef[1] = data.kbMode
+                end
+            end
+            if data.savedScripts then
+                savedScripts = data.savedScripts
+            end
+        end
+    end
+    -- ถ้า kbMode ไม่ถูกต้อง ให้ใช้ค่าเริ่มต้น
+    if kbModeRef[1] ~= "island" and kbModeRef[1] ~= "mini" then
+        kbModeRef[1] = "island"
+    end
+    isLoading = false
+end
+
+-- โหลดค่าก่อนสร้าง UI หลัก
+LoadAll()
+
+-- ปรับ applyTheme ให้บันทึกอัตโนมัติเมื่อ UI พร้อม
 local function applyTheme(key, val)
     Theme[key] = val
     if ThemeCallbacks[key] then
         for _, fn in ipairs(ThemeCallbacks[key]) do
             pcall(fn, val)
         end
+    end
+    if not isLoading and uiReady then
+        SaveAll()
+    end
+end
+
+-- ปรับ setLang ให้บันทึกอัตโนมัติ
+local originalSetLang = setLang
+setLang = function(code)
+    originalSetLang(code)
+    if not isLoading and uiReady then
+        SaveAll()
     end
 end
 
@@ -363,8 +451,6 @@ local function goIsland()
     end)
     task.delay(0.4,function() islandClick.Visible=true end)
 end
-
-local kbModeRef = {"island"}
 
 UserInputService.InputBegan:Connect(function(inp,gp)
     if gp then return end
@@ -1688,8 +1774,8 @@ local scriptListLayout = Instance.new("UIListLayout", scriptList)
 scriptListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 scriptListLayout.Padding = UDim.new(0, 2)
 
--- Script storage (in-memory)
-local savedScripts = {}  -- { {name="...", code="..."} }
+-- กำหนด container ให้ global เพื่อให้ refreshScriptList ใช้งานได้
+scriptListContainer = scriptList
 
 -- ฟังก์ชันเพิ่มสคริปต์เริ่มต้น (Remote Spy และ HTTP Spy)
 local function addDefaultScripts()
@@ -1768,16 +1854,19 @@ print("HTTP Spy active. All HttpService requests are logged.")]]
     table.insert(savedScripts, { name = "🌐 HTTP Spy", code = httpSpyCode })
 end
 
--- เรียกเพิ่มสคริปต์เริ่มต้น
-addDefaultScripts()
+-- ถ้ายังไม่มีสคริปต์เลย ให้เพิ่มสคริปต์เริ่มต้น
+if #savedScripts == 0 then
+    addDefaultScripts()
+end
 
--- Function to refresh the script list UI
-local function refreshScriptList()
-    for _, child in ipairs(scriptList:GetChildren()) do
+-- ฟังก์ชันรีเฟรชรายการสคริปต์ใน UI
+refreshScriptList = function()
+    if not scriptListContainer then return end
+    for _, child in ipairs(scriptListContainer:GetChildren()) do
         if child:IsA("Frame") then child:Destroy() end
     end
     for i, scr in ipairs(savedScripts) do
-        local row = Instance.new("Frame", scriptList)
+        local row = Instance.new("Frame", scriptListContainer)
         row.BackgroundColor3 = i % 2 == 0 and Color3.fromRGB(28, 28, 28) or Color3.fromRGB(22, 22, 22)
         row.BorderSizePixel = 0
         row.Size = UDim2.new(1, 0, 0, 24)
@@ -1825,9 +1914,10 @@ local function refreshScriptList()
         deleteBtn.MouseButton1Click:Connect(function()
             table.remove(savedScripts, i)
             refreshScriptList()
+            SaveAll()
         end)
     end
-    scriptList.CanvasSize = UDim2.new(0, 0, 0, scriptListLayout.AbsoluteContentSize.Y + 4)
+    scriptListContainer.CanvasSize = UDim2.new(0, 0, 0, scriptListLayout.AbsoluteContentSize.Y + 4)
 end
 
 -- Simple popup for naming script
@@ -1922,6 +2012,7 @@ saveScriptBtn.MouseButton1Click:Connect(function()
         if name == "" then name = "Script " .. (#savedScripts + 1) end
         table.insert(savedScripts, { name = name, code = code })
         refreshScriptList()
+        SaveAll()
         namePopup.Visible = false
         outputLbl.Text = "> saved as " .. name
         outputLbl.TextColor3 = Color3.fromRGB(100, 220, 100)
@@ -2336,7 +2427,6 @@ local sp2=Instance.new("Frame",SwL); sp2.BackgroundTransparency=1; sp2.Size=UDim
 -- ⌨️ Keybind section
 addSection(SwL,"s_keybind")
 -- mode selector: Island / Mini
-local kbMode = "island"
 do
     local mrow=Instance.new("Frame",SwL); mrow.BackgroundTransparency=1; mrow.Size=UDim2.new(1,0,0,24)
     local mlbl=Instance.new("TextLabel",mrow); mlbl.BackgroundTransparency=1
@@ -2375,10 +2465,18 @@ do
             TextColor3=(not onI) and Theme.Accent or Color3.fromRGB(100,100,100),
         }):Play()
         skM.Color=(not onI) and Theme.Accent or Color3.fromRGB(40,40,40)
+        kbModeRef[1] = m
+        SaveAll()
     end
-    bI.MouseButton1Click:Connect(function() pickMode("island"); kbModeRef[1]="island" end)
-    bM.MouseButton1Click:Connect(function() pickMode("mini"); kbModeRef[1]="mini" end)
+    bI.MouseButton1Click:Connect(function() pickMode("island") end)
+    bM.MouseButton1Click:Connect(function() pickMode("mini") end)
     bI.TextColor3=Theme.Accent; bM.TextColor3=Color3.fromRGB(100,100,100)
+    local kbMode = kbModeRef[1] -- ใช้ค่าที่โหลดมา
+    if kbMode == "island" then
+        pickMode("island")
+    else
+        pickMode("mini")
+    end
 end
 -- key picker
 do
@@ -2409,11 +2507,11 @@ do
                 kbtn.TextColor3=Theme.Accent
                 listening=false; conn:Disconnect()
                 onLangChange(function() end)
+                SaveAll()
             end
         end)
     end)
 end
-kbModeRef[1] = kbMode
 
 local spKB=Instance.new("Frame",SwL); spKB.BackgroundTransparency=1; spKB.Size=UDim2.new(1,0,0,4)
 addSection(SwL,"s_corner")
@@ -2457,6 +2555,7 @@ for _,s in ipairs(sizeOpts) do
             }):Play()
             sd.stroke.Color=on and Theme.Accent or Color3.fromRGB(40,40,40)
         end
+        SaveAll()
     end)
 end
 
@@ -2538,12 +2637,19 @@ rbtn.MouseButton1Click:Connect(function()
     NORMAL_SIZE=UDim2.new(0,620,0,400)
     TweenService:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=NORMAL_SIZE}):Play()
     AddNotification(L("reset_done"))
+    SaveAll()
 end)
 
 end -- BuildUISettings
 
 -- Call the settings builder
 BuildUISettings()
+
+-- หลังจากสร้าง UI ทั้งหมดแล้ว ให้ตั้งค่า uiReady = true และรีเฟรชรายการสคริปต์
+uiReady = true
+if refreshScriptList then
+    refreshScriptList()
+end
 
 -- ══════════════════════════════════════════════════════════════
 --  DEMO TABS
