@@ -1,4 +1,50 @@
 -- ============================================================
+--   IDekhere Hub v4  |  Stability Patch (Auto-added helpers)
+--   Added by ChatGPT: connection manager, debounce, safe delay
+-- ============================================================
+
+-- Connection manager (prevents memory leaks)
+local __Connections = {}
+
+local function SafeConnect(signal, fn)
+    local c = signal:Connect(fn)
+    table.insert(__Connections, c)
+    return c
+end
+
+local function CleanupConnections()
+    for _,c in ipairs(__Connections) do
+        pcall(function() c:Disconnect() end)
+    end
+    __Connections = {}
+end
+
+-- Debounce helper
+local function Debounce(fn, delay)
+    local busy = false
+    delay = delay or 0.25
+    return function(...)
+        if busy then return end
+        busy = true
+        local ok,err = pcall(fn,...)
+        task.delay(delay,function() busy = false end)
+        if not ok then warn(err) end
+    end
+end
+
+-- Safe delay wrapper
+local function SafeDelay(t, fn)
+    task.delay(t,function()
+        local ok,err = pcall(fn)
+        if not ok then warn(err) end
+    end)
+end
+
+-- When UI gets destroyed you can call:
+-- CleanupConnections()
+
+
+-- ============================================================
 --   IDekhere Hub v4  |  Fully Debugged + Dev Panel Enhancements
 -- ============================================================
 local TweenService     = game:GetService("TweenService")
