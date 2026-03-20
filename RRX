@@ -32,7 +32,6 @@ local Terrain          = workspace:FindFirstChildOfClass("Terrain")
 -- ══════════════════════════════════════════════════════
 local fileSupport = (type(writefile)=="function" and type(readfile)=="function" and type(isfile)=="function")
 
--- Default settings (จะถูก overwrite โดย LoadSetting ถ้ามีไฟล์)
 _G.SST = {
     Select_UnitCL="Select", Select_Vote={}, Auto_Upgrade=false,
     Auto_Play=false, Auto_Vote=false, Auto_Upgtade_Maxyen=false,
@@ -150,7 +149,6 @@ local function SaveAll()
     SS()
 end
 
--- Load WIN_KEY from saved settings
 pcall(function()
     if _G.SST.WIN_KEY then
         local ok,k=pcall(function() return Enum.KeyCode[_G.SST.WIN_KEY] end)
@@ -179,6 +177,18 @@ local GUI = Instance.new("ScreenGui")
 GUI.Name="IDekhere Hub"; GUI.Parent=game.CoreGui
 GUI.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
 GUI.ResetOnSpawn=false; GUI.IgnoreGuiInset=true
+
+-- ==== 🔥 แก้ไขอีโมจิ: เปลี่ยนฟอนต์ทุกตัวให้รองรับอีโมจิ ====
+task.delay(0.1, function()
+    for _, obj in ipairs(GUI:GetDescendants()) do
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            if obj.Font == Enum.Font.Gotham or obj.Font == Enum.Font.GothamBold or obj.Font == Enum.Font.GothamSemibold then
+                obj.Font = Enum.Font.SourceSans
+            end
+        end
+    end
+end)
+-- ======================================================
 
 -- ── Drag helper
 local function MakeDraggable(handle, obj)
@@ -222,7 +232,6 @@ local function makeRefreshBtn(parent, zIdx)
     btn.MouseLeave:Connect(function()
         TweenService:Create(btn,TweenInfo.new(0.12),{BackgroundColor3=Color3.fromRGB(38,38,38),TextColor3=Color3.fromRGB(150,150,150)}):Play()
     end)
-    -- spin animation
     local spinning=false
     local function spin()
         if spinning then return end; spinning=true
@@ -441,7 +450,6 @@ UserInputService.InputBegan:Connect(function(inp,gp)
     elseif GUI:FindFirstChild("MiniBtn") then restoreFromMini()
     else
         if kbModeRef[1]=="mini" then
-            -- go mini via keybind
             if GUI:FindFirstChild("MiniBtn") then return end
             TweenService:Create(Main,TweenInfo.new(0.12,Enum.EasingStyle.Sine),{Size=UDim2.new(0,650,0,420)}):Play()
             task.wait(0.1)
@@ -758,7 +766,6 @@ local function AddTab(tabname)
         function obj:Set(v) curSel=v; sel.Text=v end
         function obj:Get() return curSel end
 
-        -- ── ผูก Refresh ──
         rBtn.MouseButton1Click:Connect(function()
             task.spawn(spinFn)
             if obj.onRefresh then
@@ -788,7 +795,6 @@ local function AddTab(tabname)
         arr.Text="▼"; arr.TextColor3=Theme.Accent; arr.TextSize=9
         onThemeChange("Accent",function(c) if arr and arr.Parent then arr.TextColor3=c end end)
 
-        -- ── Refresh button ──
         local rBtn,spinFn=makeRefreshBtn(base,3)
 
         local sel=Instance.new("TextLabel",base); sel.BackgroundColor3=Color3.fromRGB(38,38,38); sel.BorderSizePixel=0
@@ -888,7 +894,6 @@ local function AddTab(tabname)
         function obj:Get() return selected end
         function obj:Clear() selected={}; buildRows(curList); updSel() end
 
-        -- ── ผูก Refresh ──
         rBtn.MouseButton1Click:Connect(function()
             task.spawn(spinFn)
             if obj.onRefresh then
@@ -1628,28 +1633,21 @@ local chapterDD=MAIN:AddDropdownL("Select Chapter",ChapterList,_G.SST.Select_Cha
 local StageList={"1","2","3","4","5","6","7","8","9","10"}
 local stageDD=MAIN:AddDropdownL("Select Stage",StageList,_G.SST.Select_Stage,function(v) _G.SST.Select_Stage=v; SS() end)
 MAIN:AddToggleL("Auto Join Story",_G.SST.Auto_Join_Story,function(v) _G.SST.Auto_Join_Story=v; SS() end)
-local plr = game:GetService("Players").LocalPlayer
-local remote = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-local SST = _G.SST
 
 task.spawn(function()
-    while SST and SST.Auto_Join_Story and SST.Select_Chapter and SST.Select_Stage do
-        task.wait(1)
-        -- ตรวจสอบว่าใน lobby หรือมี SystemMessage แล้วข้ามไป
-        if workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage") then
-            continue
-        end
-        -- ส่งคำสั่งสร้างห้องและตั้งค่า
-        remote:FireServer("Create")
-        remote:FireServer("Change-World", {World = SST.Select_Chapter})
-        remote:FireServer("Change-Chapter", {Chapter = SST.Select_Chapter .. "_Chapter" .. SST.Select_Stage})
-        remote:FireServer("Submit")
-        task.wait(0.1)
-        remote:FireServer("Start")
-        -- รอจนกว่าจะออกจากห้องหรือปิด Auto_Join_Story
-        repeat task.wait(0.5) until not SST.Auto_Join_Story or workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage")
+    while task.wait(1) do
+        pcall(function()
+            if not _G.SST.Auto_Join_Story or not _G.SST.Select_Chapter or not _G.SST.Select_Stage then return end
+            local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
+            repeat task.wait(0.5)
+                ev:FireServer("Create"); ev:FireServer("Change-World",{World=_G.SST.Select_Chapter})
+                ev:FireServer("Change-Chapter",{Chapter=_G.SST.Select_Chapter.."_Chapter".._G.SST.Select_Stage})
+                ev:FireServer("Submit"); task.wait(0.1); ev:FireServer("Start")
+            until not _G.SST.Auto_Join_Story or not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage")
+        end)
     end
 end)
+
 MAIN:AddSeperatorL("Join Ranger")
 MAIN:AddToggleL("Auto Join Ranger",_G.SST.Auto_Join_Ranger,function(v) _G.SST.Auto_Join_Ranger=v; SS() end)
 local allStages={{world="OnePiece",chapter="OnePiece_RangerStage1"},{world="Namek",chapter="Namek_RangerStage1"},{world="DemonSlayer",chapter="DemonSlayer_RangerStage1"},{world="Naruto",chapter="Naruto_RangerStage1"},{world="OPM",chapter="OPM_RangerStage1"},{world="TokyoGhoul",chapter="TokyoGhoul_RangerStage1"},{world="OnePiece",chapter="OnePiece_RangerStage2"},{world="Namek",chapter="Namek_RangerStage2"},{world="DemonSlayer",chapter="DemonSlayer_RangerStage2"},{world="Naruto",chapter="Naruto_RangerStage2"},{world="OPM",chapter="OPM_RangerStage2"},{world="TokyoGhoul",chapter="TokyoGhoul_RangerStage2"},{world="OnePiece",chapter="OnePiece_RangerStage3"},{world="Namek",chapter="Namek_RangerStage3"},{world="DemonSlayer",chapter="DemonSlayer_RangerStage3"},{world="Naruto",chapter="Naruto_RangerStage3"},{world="OPM",chapter="OPM_RangerStage3"},{world="TokyoGhoul",chapter="TokyoGhoul_RangerStage3"},{world="TokyoGhoul",chapter="TokyoGhoul_RangerStage4"},{world="TokyoGhoul",chapter="TokyoGhoul_RangerStage5"}}
@@ -1705,7 +1703,6 @@ local UnitList={}
 for _,unit in ipairs(GetUnitPlayer:GetChildren()) do table.insert(UnitList,unit.Name) end
 
 local unitDD=MAIN:AddDropdownR("Select Unit",UnitList,_G.SST.Select_UnitCL,function(v) _G.SST.Select_UnitCL=v; SS() end)
--- Refresh unit list from Collection
 unitDD.onRefresh=function()
     local nl={}; for _,u in ipairs(GetUnitPlayer:GetChildren()) do table.insert(nl,u.Name) end; return nl
 end
@@ -1800,7 +1797,6 @@ local unitsFolder=plr:FindFirstChild("UnitsFolder")
 local unitNames={"All Unit"}
 if unitsFolder then for _,u in ipairs(unitsFolder:GetChildren()) do table.insert(unitNames,u.Name) end end
 local upgradeDD=AP:AddMultiDropdownR("Select Unit to Upgrade",unitNames,function(v) _G.SST.Select_Unit=v; SS() end)
--- Refresh upgrade unit list
 upgradeDD.onRefresh=function()
     local nl={"All Unit"}; local uf=plr:FindFirstChild("UnitsFolder")
     if uf then for _,u in ipairs(uf:GetChildren()) do table.insert(nl,u.Name) end end; return nl
@@ -1980,12 +1976,12 @@ do
         pcall(function()
             kickConn=game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
                 if child.Name=="ErrorPrompt" and child:FindFirstChild("MessageArea") and _G.SST.Auto_Kick_Rejoin then
-                    TeleportService:Teleport(111446873000464)
+                    TeleportService:Teleport(72829404259339)
                 end
             end)
         end)
     end
-    setupKick() -- connect ตั้งแต่ต้น เช็ค flag ตอน fire แทน
+    setupKick()
 end
 
 -- ═══ ITEM CHECK TAB ═══════════════════════════════════
