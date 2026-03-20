@@ -1635,13 +1635,19 @@ task.spawn(function()
             if not _G.SST.Auto_Join_Story or not _G.SST.Select_Chapter or not _G.SST.Select_Stage then return end
             local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
             repeat task.wait(0.5)
+                if workspace:FindFirstChild("Lobby") then
                 ev:FireServer("Create"); ev:FireServer("Change-World",{World=_G.SST.Select_Chapter})
                 ev:FireServer("Change-Chapter",{Chapter=_G.SST.Select_Chapter.."_Chapter".._G.SST.Select_Stage})
-                ev:FireServer("Submit"); task.wait(0.1); ev:FireServer("Start")
+                ev:FireServer("Submit"); 
+                end task.wait(0.1); 
+                if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                    ev:FireServer("Start")
+                end
             until not _G.SST.Auto_Join_Story or not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage")
         end)
     end
 end)
+
 MAIN:AddSeperatorL("Join Ranger")
 MAIN:AddToggleL("Auto Join Ranger",_G.SST.Auto_Join_Ranger,function(v) _G.SST.Auto_Join_Ranger=v; SS() end)
 local allStages={{world="OnePiece",chapter="OnePiece_RangerStage1"},{world="Namek",chapter="Namek_RangerStage1"},{world="DemonSlayer",chapter="DemonSlayer_RangerStage1"},{world="Naruto",chapter="Naruto_RangerStage1"},{world="OPM",chapter="OPM_RangerStage1"},{world="TokyoGhoul",chapter="TokyoGhoul_RangerStage1"},{world="OnePiece",chapter="OnePiece_RangerStage2"},{world="Namek",chapter="Namek_RangerStage2"},{world="DemonSlayer",chapter="DemonSlayer_RangerStage2"},{world="Naruto",chapter="Naruto_RangerStage2"},{world="OPM",chapter="OPM_RangerStage2"},{world="TokyoGhoul",chapter="TokyoGhoul_RangerStage2"},{world="OnePiece",chapter="OnePiece_RangerStage3"},{world="Namek",chapter="Namek_RangerStage3"},{world="DemonSlayer",chapter="DemonSlayer_RangerStage3"},{world="Naruto",chapter="Naruto_RangerStage3"},{world="OPM",chapter="OPM_RangerStage3"},{world="TokyoGhoul",chapter="TokyoGhoul_RangerStage3"},{world="TokyoGhoul",chapter="TokyoGhoul_RangerStage4"},{world="TokyoGhoul",chapter="TokyoGhoul_RangerStage5"}}
