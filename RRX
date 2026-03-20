@@ -1618,7 +1618,7 @@ local AutoPlayRemote= ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Ser
 -- ═══ INFO TAB ═════════════════════════════════════════
 MAIN:AddSeperatorL("INFO")
 MAIN:AddLabelL("<b>Welcome</b> To RebornXer Hub")
-MAIN:AddLabelL("Map : <font color='#33ffff'>Anime Rangers X</font>")
+MAIN:AddLabelL("Map : <font color='#33ffff'>Re: Rangers X</font>")
 MAIN:AddLabelL("Day : "..os.date("%d %B %Y"))
 MAIN:AddLineL()
 
@@ -1654,17 +1654,19 @@ local allStages={{world="OnePiece",chapter="OnePiece_RangerStage1"},{world="Name
 
 task.spawn(function()
     local rangerStage=PlayerDataRef.RangerStage
-    while task.wait(0.5) do
+    while task.wait(1) do
         pcall(function()
             if not _G.SST.Auto_Join_Ranger or not workspace:FindFirstChild("Lobby") or #rangerStage:GetChildren()>=20 then return end
             local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
             for _,stage in ipairs(allStages) do
                 while workspace:FindFirstChild("Lobby") and _G.SST.Auto_Join_Ranger and #rangerStage:GetChildren()<20 and not plr.PlayerGui:FindFirstChild("SystemMessage") do
-                    task.wait(0.3)
+                    task.wait(0.5)
                     pcall(function()
+                        if workspace:FindFirstChild("Lobby") then
                         ev:FireServer("Create"); ev:FireServer("Change-Mode",{Mode="Ranger Stage"})
                         ev:FireServer("Change-World",{World=stage.world}); ev:FireServer("Change-Chapter",{Chapter=stage.chapter})
-                        ev:FireServer("Submit"); task.wait(0.1); ev:FireServer("Start")
+                        ev:FireServer("Submit"); end task.wait(0.1); 
+                        if not plr.PlayerGui:FindFirstChild("SystemMessage") then ev:FireServer("Start") end
                     end)
                 end
             end
@@ -1672,7 +1674,7 @@ task.spawn(function()
     end
 end)
 
-MAIN:AddToggleL("Auto Join Challenge",_G.SST.Auto_Join_Challenge,function(v) _G.SST.Auto_Join_Challenge=v; SS() end)
+--MAIN:AddToggleL("Auto Join Challenge",_G.SST.Auto_Join_Challenge,function(v) _G.SST.Auto_Join_Challenge=v; SS() end)
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
@@ -1684,7 +1686,7 @@ task.spawn(function()
     end
 end)
 
-MAIN:AddToggleL("Auto Join Boss Event",_G.SST.Auto_Join_BossEvent,function(v) _G.SST.Auto_Join_BossEvent=v; SS() end)
+--MAIN:AddToggleL("Auto Join Boss Event",_G.SST.Auto_Join_BossEvent,function(v) _G.SST.Auto_Join_BossEvent=v; SS() end)
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
@@ -1916,14 +1918,6 @@ RunService.Heartbeat:Connect(function()
 end)
 
 WH:AddSeperatorR("BoostFps")
-WH:AddToggleR("Disable Effects",_G.SST.Disible_Effects,function(v)
-    _G.SST.Disible_Effects=v
-    pcall(function()
-        local assets=ReplicatedStorage:FindFirstChild("Assets")
-        if assets then local ef=assets:FindFirstChild("Effects") or assets:FindFirstChild("Effects_Hidden"); if ef then ef.Name=v and "Effects_Hidden" or "Effects" end end
-        local ua=ReplicatedStorage:FindFirstChild("UnitAttacks") or ReplicatedStorage:FindFirstChild("UnitAttacks_Hidden"); if ua then ua.Name=v and "UnitAttacks_Hidden" or "UnitAttacks" end
-    end); SS()
-end)
 
 local blackScreenUI=nil
 local function toggleBlackScreen(enable)
