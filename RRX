@@ -141,7 +141,7 @@ pcall(function()
     if _G.SST.Theme_WinH       then Theme.WinH       = _G.SST.Theme_WinH       end
 end)
 
--- ── ลบ GUI เก่า
+-- ── Remove old GUI
 local _old = game.CoreGui:FindFirstChild("IDekhere Hub")
 if _old then _old:Destroy() end
 
@@ -149,19 +149,6 @@ if _old then _old:Destroy() end
 --  LANGUAGE
 -- ══════════════════════════════════════════════════════
 local LANG = {
-    TH={
-        welcome="ยินดีต้อนรับสู่ IDekhere Hub!", reset_done="รีเซ็ต UI เรียบร้อยแล้ว!",
-        lang_changed="เปลี่ยนภาษาแล้ว", s_accent=">> สีหลัก", s_bg=">> พื้นหลัง",
-        s_preset=">> ธีมสำเร็จรูป", s_corner=">> มุมโค้ง", s_anim=">> Tab อนิเมชั่น",
-        s_opacity=">> ความโปร่งใส", s_size=">> ขนาด Window", s_language=">> ภาษา",
-        s_keybind=">> ปุ่มลัด", s_kb_mode="โหมด", s_kb_island="Island",
-        s_kb_mini="Mini", s_kb_key="ปุ่ม", s_kb_press="กดปุ่มที่ต้องการ...",
-        s_notif_log=">> ประวัติแจ้งเตือน", s_no_notif="ยังไม่มีประวัติ",
-        s_clear_log="ล้างประวัติ", s_win="Window", s_cards="Cards",
-        s_opacity_lbl="Opacity", s_small="เล็ก", s_normal="ปกติ",
-        s_large="ใหญ่", s_xl="XL", s_reset="↺  รีเซ็ตทุกอย่าง",
-        btn_th="TH ไทย", btn_en="EN English",
-    },
     EN={
         welcome="Welcome to IDekhere Hub!", reset_done="UI has been reset!",
         lang_changed="Language changed", s_accent=">> Accent Color", s_bg=">> Background",
@@ -173,16 +160,14 @@ local LANG = {
         s_clear_log="Clear Log", s_win="Window", s_cards="Cards",
         s_opacity_lbl="Opacity", s_small="Small", s_normal="Normal",
         s_large="Large", s_xl="XL", s_reset="↺  Reset Everything",
-        btn_th="TH Thai", btn_en="EN English",
     },
 }
-local curLang = _G.SST.curLang or "TH"
+local curLang = "EN"
 local LangCBs = {}
-local function L(k) return LANG[curLang][k] or k end
+local function L(k) return LANG["EN"][k] or k end
 local function onLangChange(fn) table.insert(LangCBs, fn) end
 local function setLang(code)
-    curLang = code; _G.SST.curLang = code
-    for _,fn in ipairs(LangCBs) do pcall(fn) end
+    curLang = "EN"
 end
 
 -- Settings persistence vars
@@ -273,8 +258,8 @@ local function makeRefreshBtn(parent, zIdx)
     btn.Position=UDim2.new(1,-2,0,2)
     btn.Size=UDim2.new(0,22,0,22)
     btn.BackgroundColor3=Color3.fromRGB(38,38,38)
-    btn.BorderSizePixel=0; btn.Font=Enum.Font.Arimo
-    btn.Text="🔄"; btn.TextSize=20; btn.AutoButtonColor=false
+    btn.BorderSizePixel=0; btn.Font=Enum.Font.GothamBold
+    btn.Text="↻"; btn.TextSize=13; btn.AutoButtonColor=false
     btn.ZIndex=zIdx or 3
     btn.TextColor3=Color3.fromRGB(150,150,150)
     Instance.new("UICorner",btn).CornerRadius=UDim.new(0,5)
@@ -1007,7 +992,7 @@ local function AddTab(tabname)
         local wrap=Instance.new("Frame",parent); wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,CARD_H); wrap.ClipsDescendants=false
         local base=mkCard(wrap,CARD_H); base.Size=UDim2.new(1,0,0,CARD_H); base.ClipsDescendants=false
 
-        -- header (เว้นขวา 26px ให้ refresh btn)
+        -- header (leave 26px right for refresh btn)
         local hdr=Instance.new("TextButton",base); hdr.BackgroundTransparency=1
         hdr.Size=UDim2.new(1,-28,0,26); hdr.Text=""; hdr.ZIndex=2
         mkTxt(hdr,title,8,12)
@@ -1028,7 +1013,7 @@ local function AddTab(tabname)
 
         local sb=Instance.new("TextBox",wrap); sb.BackgroundColor3=Color3.fromRGB(35,35,35); sb.BorderSizePixel=0
         sb.Position=UDim2.new(0,0,0,SB_Y); sb.Size=UDim2.new(1,0,0,SB_H)
-        sb.Font=Enum.Font.Gotham; sb.PlaceholderText=">> ค้นหา..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
+        sb.Font=Enum.Font.Gotham; sb.PlaceholderText=">> Search..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
         sb.Text=""; sb.TextColor3=Color3.fromRGB(200,200,200); sb.TextSize=11; sb.ClearTextOnFocus=false
         sb.Visible=false; sb.ZIndex=3
         Instance.new("UICorner",sb).CornerRadius=UDim.new(0,5)
@@ -1092,7 +1077,7 @@ local function AddTab(tabname)
         function obj:Set(v) curSel=v; sel.Text=v end
         function obj:Get() return curSel end
 
-        -- ── ผูก Refresh ──
+        -- ── Bind Refresh ──
         rBtn.MouseButton1Click:Connect(function()
             task.spawn(spinFn)
             if obj.onRefresh then
@@ -1115,7 +1100,7 @@ local function AddTab(tabname)
 
         local hdr=Instance.new("TextButton",base); hdr.BackgroundTransparency=1
         hdr.Size=UDim2.new(1,-28,0,26); hdr.Text=""; hdr.ZIndex=2
-        mkTxt(hdr,""..title,8,12)
+        mkTxt(hdr,"✦ "..title,8,12)
         local arr=Instance.new("TextLabel",hdr); arr.BackgroundTransparency=1
         arr.AnchorPoint=Vector2.new(1,0.5); arr.Position=UDim2.new(1,-4,0.5,0)
         arr.Size=UDim2.new(0,14,0,14); arr.Font=Enum.Font.GothamBold
@@ -1127,12 +1112,12 @@ local function AddTab(tabname)
 
         local sel=Instance.new("TextLabel",base); sel.BackgroundColor3=Color3.fromRGB(38,38,38); sel.BorderSizePixel=0
         sel.Position=UDim2.new(0,4,0,28); sel.Size=UDim2.new(1,-8,0,20)
-        sel.Font=Enum.Font.Gotham; sel.Text=" Select..."; sel.TextColor3=Color3.fromRGB(90,90,90); sel.TextSize=10
+        sel.Font=Enum.Font.Gotham; sel.Text="Select multiple..."; sel.TextColor3=Color3.fromRGB(90,90,90); sel.TextSize=10
         Instance.new("UICorner",sel).CornerRadius=UDim.new(0,4)
 
         local sb=Instance.new("TextBox",wrap); sb.BackgroundColor3=Color3.fromRGB(35,35,35); sb.BorderSizePixel=0
         sb.Position=UDim2.new(0,0,0,SB_Y); sb.Size=UDim2.new(1,0,0,SB_H)
-        sb.Font=Enum.Font.Gotham; sb.PlaceholderText=">> ค้นหา..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
+        sb.Font=Enum.Font.Gotham; sb.PlaceholderText=">> Search..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
         sb.Text=""; sb.TextColor3=Color3.fromRGB(200,200,200); sb.TextSize=11; sb.ClearTextOnFocus=false
         sb.Visible=false; sb.ZIndex=3
         Instance.new("UICorner",sb).CornerRadius=UDim.new(0,5)
@@ -1146,7 +1131,7 @@ local function AddTab(tabname)
         local function calcOpenH(n) return ITEMS_Y+n*IH end
         local function updSel()
             local k={}; for kk in pairs(selected) do table.insert(k,kk) end
-            if #k==0 then sel.Text="เลือกหลายรายการ..."; sel.TextColor3=Color3.fromRGB(90,90,90)
+            if #k==0 then sel.Text="Select multiple..."; sel.TextColor3=Color3.fromRGB(90,90,90)
             else sel.Text=table.concat(k,", "); sel.TextColor3=Theme.Accent end
             pcall(cb,selected)
         end
@@ -1222,7 +1207,7 @@ local function AddTab(tabname)
         function obj:Get() return selected end
         function obj:Clear() selected={}; buildRows(curList); updSel() end
 
-        -- ── ผูก Refresh ──
+        -- ── Bind Refresh ──
         rBtn.MouseButton1Click:Connect(function()
             task.spawn(spinFn)
             if obj.onRefresh then
@@ -1439,7 +1424,7 @@ local SwTitle=Instance.new("TextLabel",SwTop); SwTitle.BackgroundTransparency=1
 SwTitle.Position=UDim2.new(0,12,0,0); SwTitle.Size=UDim2.new(1,-50,1,0)
 SwTitle.Font=Enum.Font.GothamBold; SwTitle.TextColor3=Theme.Accent; SwTitle.TextSize=12; SwTitle.ZIndex=52
 SwTitle.TextXAlignment=Enum.TextXAlignment.Left
-local function updSwTitle() SwTitle.Text="[=] "..(curLang=="TH" and "ตั้งค่า UI" or "UI Settings") end
+local function updSwTitle() SwTitle.Text="[=] "..("UI Settings") end
 updSwTitle(); onLangChange(updSwTitle)
 onThemeChange("Accent",function(c) if SwTitle and SwTitle.Parent then SwTitle.TextColor3=c end end)
 
@@ -1609,7 +1594,7 @@ local function BuildUISettings()
     Instance.new("UICorner",editorBg).CornerRadius=UDim.new(0,6); Instance.new("UIStroke",editorBg).Color=Color3.fromRGB(40,40,40)
     local codeBox=Instance.new("TextBox",editorBg); codeBox.BackgroundTransparency=1
     codeBox.Position=UDim2.new(0,8,0,6); codeBox.Size=UDim2.new(1,-16,1,-12); codeBox.Font=Enum.Font.Code
-    codeBox.PlaceholderText="-- เขียน script ที่นี่\nprint('Hello World')"
+    codeBox.PlaceholderText="-- Write script here\nprint('Hello World')"
     codeBox.PlaceholderColor3=Color3.fromRGB(60,60,60); codeBox.Text=""
     codeBox.TextColor3=Color3.fromRGB(180,220,180); codeBox.TextSize=11; codeBox.MultiLine=true
     codeBox.ClearTextOnFocus=false; codeBox.TextXAlignment=Enum.TextXAlignment.Left; codeBox.TextYAlignment=Enum.TextYAlignment.Top
@@ -1922,20 +1907,7 @@ startRemoteSpy(); print("Remote Spy started.")
     addMiniSlider(SwL,"s_cards",Theme.CardRadius,0,16,function(v) applyTheme("CardRadius",v) end)
 
     -- Build right settings
-    do -- language toggle
-        addSection(SwR,"s_language")
-        local row=Instance.new("Frame",SwR); row.BackgroundTransparency=1; row.Size=UDim2.new(1,0,0,30)
-        local bTH=Instance.new("TextButton",row); bTH.Size=UDim2.new(0.5,-3,1,0); bTH.BackgroundColor3=curLang=="TH" and Theme.Accent or Color3.fromRGB(30,30,30); bTH.BorderSizePixel=0; bTH.Font=Enum.Font.GothamBold; bTH.TextSize=11; bTH.AutoButtonColor=false; bTH.TextColor3=curLang=="TH" and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140); Instance.new("UICorner",bTH).CornerRadius=UDim.new(0,6); local skTH=Instance.new("UIStroke",bTH); skTH.Color=curLang=="TH" and Theme.Accent or Color3.fromRGB(40,40,40); skTH.Thickness=1
-        local bEN=Instance.new("TextButton",row); bEN.Size=UDim2.new(0.5,-3,1,0); bEN.Position=UDim2.new(0.5,3,0,0); bEN.BackgroundColor3=curLang=="EN" and Theme.Accent or Color3.fromRGB(30,30,30); bEN.BorderSizePixel=0; bEN.Font=Enum.Font.GothamBold; bEN.TextSize=11; bEN.AutoButtonColor=false; bEN.TextColor3=curLang=="EN" and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140); Instance.new("UICorner",bEN).CornerRadius=UDim.new(0,6); local skEN=Instance.new("UIStroke",bEN); skEN.Color=curLang=="EN" and Theme.Accent or Color3.fromRGB(40,40,40); skEN.Thickness=1
-        local function updTxt() bTH.Text=L("btn_th"); bEN.Text=L("btn_en") end; updTxt(); onLangChange(updTxt)
-        local function pick(code)
-            setLang(code); local isTH=code=="TH"
-            TweenService:Create(bTH,TweenInfo.new(0.15),{BackgroundColor3=isTH and Theme.Accent or Color3.fromRGB(30,30,30),TextColor3=isTH and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140)}):Play(); skTH.Color=isTH and Theme.Accent or Color3.fromRGB(40,40,40)
-            TweenService:Create(bEN,TweenInfo.new(0.15),{BackgroundColor3=(not isTH) and Theme.Accent or Color3.fromRGB(30,30,30),TextColor3=(not isTH) and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140)}):Play(); skEN.Color=(not isTH) and Theme.Accent or Color3.fromRGB(40,40,40)
-            AddNotification(L("lang_changed"))
-        end
-        bTH.MouseButton1Click:Connect(function() pick("TH") end); bEN.MouseButton1Click:Connect(function() pick("EN") end)
-    end
+    -- Language toggle removed (English only)
     addSection(SwR,"s_anim"); addAnimGrid(SwR)
     addSection(SwR,"s_opacity"); addMiniSlider(SwR,"s_opacity_lbl",100,0,100,function(v) applyTheme("WinOpacity",1-(v/100)) end)
     addSection(SwR,"s_size")
@@ -2141,7 +2113,7 @@ end)
 local NameUnit  = MAIN:AddLabelR(""); local CodeUnit=MAIN:AddLabelR("")
 local SpeedPot  = MAIN:AddLabelR(""); local RangePot=MAIN:AddLabelR("")
 local HealthPot = MAIN:AddLabelR(""); local DamagePot=MAIN:AddLabelR("")
-local CooldownPot=MAIN:AddLabelR("")
+local CooldownPot=MAIN:AddLabelR(""); local TraitLbl=MAIN:AddLabelR("")
 
 task.spawn(function()
     while task.wait(0.5) do
@@ -2160,149 +2132,27 @@ task.spawn(function()
     end
 end)
 
-
--- ══════════════════════════════════════════════════════
---  WEBHOOK HELPERS  (ต้องนิยามก่อนใช้ในทุก tab)
--- ══════════════════════════════════════════════════════
-
--- ── Avatar fetcher with cache ────────────────────────
-local _avatarCache = {}
-local function getAvatar(userId)
-    if _avatarCache[userId] then return _avatarCache[userId] end
-    local fallback = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
-    local req = http_request or request or (syn and syn.request)
-    if not req then return fallback end
-    local ok, res = pcall(function()
-        return req({ Url="https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png", Method="GET" })
-    end)
-    if not ok or not res or not res.Body then return fallback end
-    local parsed; pcall(function() parsed = HttpService:JSONDecode(res.Body) end)
-    local url = parsed and parsed.data and parsed.data[1] and parsed.data[1].imageUrl
-    local result = (url and url ~= "") and url or fallback
-    _avatarCache[userId] = result
-    return result
-end
-
--- ── Match Result Webhook ─────────────────────────────
-local function sendWebhook(isWin, RewardsText, GameTime)
-    local url = _G.SST.Place_WebHook_Link
-    if not url or url == "" then return end
-    local pd = ReplicatedStorage:FindFirstChild("Player_Data") and ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
-    if not pd or not pd:FindFirstChild("Data") then return end
-    local dataFolder = pd.Data
-    local function safeVal(obj) return obj and tostring(obj.Value or obj.Text or "0") or "0" end
-    local resultDesc = isWin
-        and "# 🏆  VICTORY\n> The battle is won. Rangers stand victorious!"
-        or  "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger."
-    local color = isWin and 0x00E676 or 0xFF1744
-    local avatarUrl = getAvatar(plr.UserId)
-    local payload = {
-        ["content"] = "",
-        ["embeds"] = {{
-            ["author"]      = { ["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile" },
-            ["title"]       = "Anime Rangers X  ·  Match Result",
-            ["description"] = resultDesc,
-            ["thumbnail"]   = { ["url"]=avatarUrl },
-            ["color"]       = color,
-            ["fields"] = {
-                { ["name"]="💎  Gem",    ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Gem")).."\n```",  ["inline"]=true  },
-                { ["name"]="🪙  Gold",   ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Gold")).."\n```", ["inline"]=true  },
-                { ["name"]="⭐  Level",  ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Level")).."  (EXP: "..safeVal(dataFolder:FindFirstChild("Exp"))..")\n```", ["inline"]=false },
-                { ["name"]="⏱️  Match Time", ["value"]="```\n"..tostring(GameTime).."\n```", ["inline"]=false },
-                { ["name"]="🎁  Rewards",    ["value"]="```\n"..(RewardsText ~= "" and RewardsText or "— none —").."\n```", ["inline"]=false },
-            },
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
-            ["footer"]    = { ["text"]="IDekhere Hub  ·  v4f  |  Anime Rangers X", ["icon_url"]=avatarUrl },
-        }}
-    }
-    local ok, json = pcall(function() return HttpService:JSONEncode(payload) end)
-    if not ok then return end
-    local req = http_request or request or (syn and syn.request)
-    if not req then return end
-    pcall(function() req({ Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json }) end)
-end
-
 MAIN:AddSeperatorR("Trait Reroll")
-local TraitLbl=MAIN:AddLabelR("")
 local TraitList={"Superior I","Superior II","Superior III","Horizon I","Horizon II","Horizon III","Endure I","Endure II","Endure III","Brute","Sniper","Colossal","Investor","Jokester","Blitz","Juggernaut","Millionaire","Violent","Seraph","Capitalist","Duplicator","Sovereign"}
 local traitDD=MAIN:AddMultiDropdownR("Select Trait",TraitList,function(v) _G.SST.Select_Trait=v; SS() end)
 if type(_G.SST.Select_Trait)=="table" then task.defer(function() pcall(function() traitDD:Set(_G.SST.Select_Trait) end) end) end
 MAIN:AddToggleR("Auto Reroll Trait",_G.SST.Auto_Reroll_Trait,function(v) _G.SST.Auto_Reroll_Trait=v; SS() end)
 
--- ── Trait Reroll loop ────────────────────────────────
+-- Trait Reroll section (in MAIN tab)
 task.spawn(function()
     local traitRemote
     pcall(function() traitRemote = ReplicatedStorage.Remote.Server.Gambling.RerollTrait end)
-    local lastTrait    = ""
-    local lastUnitName = ""
     while task.wait(0.5) do
         pcall(function()
             if not _G.SST.Auto_Reroll_Trait or not traitRemote then return end
             local unit = GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
-            if not unit or not unit:FindFirstChild("Tag") then return end
+            if not unit then return end
             local desired = _G.SST.Select_Trait or {}
             local current = unit.PrimaryTrait.Value
-            -- reset เมื่อเปลี่ยน unit
-            if lastUnitName ~= unit.Name then
-                lastUnitName = unit.Name
-                lastTrait    = ""
-            end
-            -- ตรวจว่าเลือก trait ไว้ไหม
-            local hasDesired = false
-            for _, v in pairs(desired) do if v then hasDesired=true; break end end
-            if not hasDesired then return end
-
-            if desired[current] then
-                -- ได้ trait ที่ต้องการ → แจ้งเตือนครั้งเดียวแล้วหยุด
-                if lastTrait ~= current then
-                    lastTrait = current
-                    AddNotification("[Trait] Got: "..current.." on "..unit.Name.."!")
-                    -- ส่ง Webhook ถ้าเปิด Send_WebHook อยู่
-                    if _G.SST.Send_WebHook and _G.SST.Place_WebHook_Link ~= "" then
-                        local url      = _G.SST.Place_WebHook_Link
-                        -- getAvatar มี cache อยู่แล้ว → ได้ CDN URL จริง ไม่ใช่ redirect
-                        local avatarUrl = getAvatar(plr.UserId)
-                        local tag = unit:FindFirstChild("Tag") and unit.Tag.Value or "?"
-                        local spd = unit:FindFirstChild("SpeedPotential") and unit.SpeedPotential.Value or "?"
-                        local rng = unit:FindFirstChild("RangePotential") and unit.RangePotential.Value or "?"
-                        local hp  = unit:FindFirstChild("HealthPotential") and unit.HealthPotential.Value or "?"
-                        local dmg = unit:FindFirstChild("DamagePotential") and unit.DamagePotential.Value or "?"
-                        local cd  = unit:FindFirstChild("AttackCooldownPotential") and unit.AttackCooldownPotential.Value or "?"
-                        local payload = {
-                            ["content"] = "",
-                            ["embeds"] = {{
-                                ["author"]      = { ["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile" },
-                                ["title"]       = "Anime Rangers X  ·  Trait Reroll",
-                                ["description"] = "# ✨  TRAIT UNLOCKED!\n> **"..unit.Name.."** got the desired trait.",
-                                ["thumbnail"]   = { ["url"]=avatarUrl },
-                                ["color"]       = 0xA855F7,
-                                ["fields"] = {
-                                    { ["name"]="✨  Trait",     ["value"]="```fix\n"..current.."\n```",  ["inline"]=false },
-                                    { ["name"]="🪪  Unit",       ["value"]="```fix\n"..unit.Name.."\n```", ["inline"]=true  },
-                                    { ["name"]="🔑  Tag",        ["value"]="```fix\n"..tag.."\n```",       ["inline"]=true  },
-                                    { ["name"]="📊  Potentials", ["value"]="```fix\nSpeed: "..spd.."  Range: "..rng.."\nHP:    "..hp.."   DMG:   "..dmg.."\nCD:    "..cd.."\n```", ["inline"]=false },
-                                },
-                                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
-                                ["footer"]    = { ["text"]="IDekhere Hub  ·  v4f  |  Trait Reroll", ["icon_url"]=avatarUrl },
-                            }}
-                        }
-                        local ok, json = pcall(function() return HttpService:JSONEncode(payload) end)
-                        if ok then
-                            local req = http_request or request or (syn and syn.request)
-                            if req then
-                                pcall(function() req({ Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json }) end)
-                            end
-                        end
-                    end
-                    -- หยุด reroll หลัง success เสมอ
-                    _G.SST.Auto_Reroll_Trait = false
-                    SS()
-                end
-            else
-                -- ยังไม่ได้ → reroll ต่อ
-                lastTrait = current
+            if not desired[current] then
+                -- Pass unit object directly
                 traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {"",""})
-                task.wait(0.5)
+                task.wait(0.3)
             end
         end)
     end
@@ -2384,10 +2234,10 @@ task.spawn(function()
         end
 
         -- Auto Upgrade
-  -- Auto Upgrade (ตรวจสอบ Yen)
+  -- Auto Upgrade (check Yen)
 if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
     pcall(function()
-        -- ดึงค่า Yen ปัจจุบันจาก UI
+        -- Get current Yen value from UI
         local yenValue = 0
         local hud = plr.PlayerGui:FindFirstChild("HUD")
         if hud then
@@ -2419,7 +2269,7 @@ if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
 
         for _, unit in ipairs(unitsF:GetChildren()) do
             if unit:IsA("Instance") and (allU or selU[unit.Name] == true) then
-                -- หาค่า Cost จาก UI
+                -- Get unit Cost from UI
                 local cost = 0
                 local unitsManager = plr.PlayerGui.HUD.InGame.UnitsManager
                 if unitsManager then
@@ -2430,14 +2280,14 @@ if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
                             local costTextObj = unitFrame:FindFirstChild("CostText")
                             if costTextObj then
                                 local costText = costTextObj.Text
-                                -- ดึงตัวเลขจากข้อความ เช่น "Cost: <font color='#ff0000'>250</font>"
+                                -- Extract number from text e.g. "Cost: <font color='#ff0000'>250</font>"
                                 cost = tonumber(costText:match("Cost:</font>%s*(%d+)")) or 0
                             end
                         end
                     end
                 end
 
-                -- ตรวจสอบว่ามีเงินพอหรือไม่
+                -- Check if enough Yen
                 if yenValue >= cost then
                     pcall(function()
                         upgradeRemote:FireServer(unit)
@@ -2462,7 +2312,7 @@ end)
 
 -- ═══ SHOP TAB ═════════════════════════════════════════
 SP:AddSeperatorL("Auto Buy Item")
-SP:AddLabelL("ซื้อไอเทมอัตโนมัติจาก Merchant")
+SP:AddLabelL("Auto buy items from Merchant")
 
 -- Load item list from player's Merchant folder
 local buyItemList={}
@@ -2524,7 +2374,7 @@ task.spawn(function()
 end)
 
 AP:AddSeperatorR("Speed Set Game")
--- ใน AP tab (Auto Play)
+-- In AP tab (Auto Play)
 local speedOptions = {"1x", "2x", "3x"}
 local speedDD = AP:AddDropdownR("Game Speed", speedOptions, _G.SST.Select_Speed and tostring(_G.SST.Select_Speed).."x" or "1x", function(v)
     local speed = tonumber(v:gsub("x", ""))
@@ -2596,52 +2446,142 @@ WH:AddToggleR("Send WebHook", _G.SST.Send_WebHook or false, function(v)
     _G.SST.Send_WebHook = v
     SS()
 end)
+-- 🔥 Webhook sender
+local function getAvatar(userId)
+    return "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png"
+end
 
--- ── Match result webhook loop ────────────────────────
+local function sendWebhook(isWin, RewardsText, GameTime)
+    local url = _G.SST.Place_WebHook_Link
+    if not url or url == "" then return end
+
+    local PlayerDataFolder = ReplicatedStorage:FindFirstChild("Player_Data")
+    if not PlayerDataFolder then return end
+
+    local pd = PlayerDataFolder:FindFirstChild(plr.Name)
+    if not pd or not pd:FindFirstChild("Data") then return end
+
+    local dataFolder = pd.Data
+
+    local function safeVal(obj)
+        return obj and (obj.Value or obj.Text) or "0"
+    end
+
+    local resultText = isWin and "🏆 WIN" or "💀 LOSE"
+    local color = isWin and 0x00ff88 or 0xff3c3c
+
+    local payload = {
+        ["content"] = "",
+        ["embeds"] = {{
+            ["author"] = {
+                ["name"] = plr.Name,
+                ["icon_url"] = getAvatar(plr.UserId)
+            },
+            ["title"] = "Anime Rangers X - "..resultText,
+            ["thumbnail"] = {
+                ["url"] = getAvatar(plr.UserId)
+            },
+            ["color"] = color,
+            ["fields"] = {
+                {
+                    ["name"] = "📊 Stats",
+                    ["value"] =
+                        "```"..
+                        "Gem: "..safeVal(dataFolder:FindFirstChild("Gem"))..
+                        "\nGold: "..safeVal(dataFolder:FindFirstChild("Gold"))..
+                        "\nLevel: "..safeVal(dataFolder:FindFirstChild("Level"))..
+                        " (Exp: "..safeVal(dataFolder:FindFirstChild("Exp"))..")"..
+                        "\nEgg: "..safeVal(dataFolder:FindFirstChild("Egg"))..
+                        "```"
+                },
+                {
+                    ["name"] = "⏱ Time",
+                    ["value"] = "```"..tostring(GameTime).."```"
+                },
+                {
+                    ["name"] = "🎁 Rewards",
+                    ["value"] = "```"..(RewardsText ~= "" and RewardsText or "None").."```"
+                }
+            },
+            ["footer"] = {
+                ["text"] = "IDekhere Hub | Match Result"
+            }
+        }}
+    }
+
+    local success, json = pcall(function()
+        return HttpService:JSONEncode(payload)
+    end)
+    if not success then return end
+
+    local req = http_request or request or (syn and syn.request)
+    if not req then return end
+
+    pcall(function()
+        req({
+            Url = url,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = json
+        })
+    end)
+end
+
 local sentThisMatch = false
-local matchEnded    = false
+local matchEnded = false
 
-task.spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            if not _G.SST.Send_WebHook then return end
-            local rUI = plr.PlayerGui:FindFirstChild("RewardsUI")
-            if not rUI then return end
-            if rUI.Enabled then
-                if not sentThisMatch and not matchEnded then
-                    task.wait(0.5)
-                    local isWin = true
-                    pcall(function()
-                        local resultFrame = rUI.Main:FindFirstChild("Result") or rUI.Main.LeftSide:FindFirstChild("Result")
-                        if resultFrame and resultFrame.Text then
-                            if string.find(string.lower(resultFrame.Text), "lose") then isWin = false end
-                        end
-                    end)
-                    local GameTime = "Unknown"
-                    pcall(function() GameTime = rUI.Main.LeftSide.TotalTime.Text end)
-                    local RewardsText = ""
-                    local rf = plr:FindFirstChild("RewardsShow")
-                    if rf then
-                        for _, ri in ipairs(rf:GetChildren()) do
-                            if ri:IsA("Folder") then
-                                local a = ri:FindFirstChild("Amount")
-                                if a then RewardsText = RewardsText..ri.Name..": "..tostring(a.Value or a.Text or "0").."\n" end
-                            end
+RunService.Heartbeat:Connect(function()
+    if not _G.SST.Send_WebHook then return end
+
+    local rUI = plr.PlayerGui:FindFirstChild("RewardsUI")
+    if not rUI then return end
+
+    if rUI.Enabled then
+        if not sentThisMatch and not matchEnded then
+            task.wait(0.5) -- wait for data to load
+
+            local isWin = true
+            pcall(function()
+                local resultFrame = rUI.Main:FindFirstChild("Result") or rUI.Main.LeftSide:FindFirstChild("Result")
+                if resultFrame and resultFrame.Text then
+                    if string.find(string.lower(resultFrame.Text), "lose") then
+                        isWin = false
+                    end
+                end
+            end)
+
+            local GameTime = "Unknown"
+            pcall(function()
+                GameTime = rUI.Main.LeftSide.TotalTime.Text
+            end)
+
+            local RewardsText = ""
+            local rf = plr:FindFirstChild("RewardsShow")
+            if rf then
+                for _, ri in ipairs(rf:GetChildren()) do
+                    if ri:IsA("Folder") then
+                        local a = ri:FindFirstChild("Amount")
+                        if a then
+                            local val = a.Value or a.Text or "0"
+                            RewardsText = RewardsText .. ri.Name .. ": " .. tostring(val) .. "\n"
                         end
                     end
-                    sendWebhook(isWin, RewardsText, GameTime)
-                    sentThisMatch = true
-                    matchEnded    = true
-                end
-            else
-                if matchEnded then
-                    sentThisMatch = false
-                    matchEnded    = false
                 end
             end
-        end)
+
+            sendWebhook(isWin, RewardsText, GameTime)
+            sentThisMatch = true
+            matchEnded = true
+        end
+    else
+        if matchEnded then
+            sentThisMatch = false
+            matchEnded = false
+        end
     end
 end)
+
+WH:AddSeperatorR("BoostFps")
 
 local blackScreenUI = nil
 local function toggleBlackScreen(enable)
@@ -2669,7 +2609,7 @@ local function toggleBlackScreen(enable)
     end
 end
 
--- ใน toggle (ตอนสร้าง GUI)
+-- Toggle (when building GUI)
 WH:AddToggleR("Black Screen", _G.SST.Black_Screen, function(v)
     _G.SST.Black_Screen = v
     SS()
