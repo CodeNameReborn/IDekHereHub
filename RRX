@@ -1,3 +1,8 @@
+--[[
+    RebornXer Hub for Anime Rangers X
+    Fixed and Optimized Version
+]]
+
 repeat task.wait() until game:GetService("Players").LocalPlayer
 repeat task.wait() until game:GetService("ReplicatedStorage").Player_Data
 repeat task.wait() until game:GetService("ReplicatedStorage").Player_Data:FindFirstChild(game:GetService("Players").LocalPlayer.Name)
@@ -32,26 +37,48 @@ local Terrain          = workspace:FindFirstChildOfClass("Terrain")
 -- ══════════════════════════════════════════════════════
 local fileSupport = (type(writefile)=="function" and type(readfile)=="function" and type(isfile)=="function")
 
--- Default settings (จะถูก overwrite โดย LoadSetting ถ้ามีไฟล์)
+-- Default settings (will be overwritten by LoadSetting if file exists)
 _G.SST = {
-    Select_UnitCL="Select", Select_Vote={}, Auto_Upgrade=false,
-    Auto_Play=false, Auto_Vote=false, Auto_Upgtade_Maxyen=false,
-    Auto_Vote_Start=false, Black_Screen=false, Boost_Fps=false,
-    Select_Farme_Rate=60, Anti_AFK=true, Auto_Kick_Rejoin=false,
-    Select_Deley_Vote=1, Select_Potential={}, Select_Stats={},
-    Select_Trait={}, Auto_ReRoll_Stats_Potential=false,
-    Auto_Reroll_Trait=false, Auto_Join_Story=false,
-    Auto_Join_Ranger=false, Auto_Join_Challenge=false,
-    Auto_Join_BossEvent=false, Send_WebHook=false,
-    Place_WebHook_Link="", Disible_Effects=false, Select_Unit={},
-    Wait_For_Upgrade_Unit=false, Select_Chapter="OnePiece",
-    Select_Stage="1",
+    Select_UnitCL = "Select",
+    Select_Vote = {},
+    Auto_Upgrade = false,
+    Auto_Play = false,
+    Auto_Vote = false,
+    Auto_Upgtade_Maxyen = false,
+    Auto_Vote_Start = false,
+    Black_Screen = false,
+    Boost_Fps = false,
+    Select_Frame_Rate = 60,
+    Anti_AFK = true,
+    Auto_Kick_Rejoin = false,
+    Select_Deley_Vote = 1,
+    Select_Potential = {},
+    Select_Stats = {},
+    Select_Trait = {},
+    Auto_ReRoll_Stats_Potential = false,
+    Auto_Reroll_Trait = false,
+    Auto_Join_Story = false,
+    Auto_Join_Ranger = false,
+    Auto_Join_Challenge = false,
+    Auto_Join_BossEvent = false,
+    Send_WebHook = false,
+    Place_WebHook_Link = "",
+    Disible_Effects = false,
+    Select_Unit = {},
+    Wait_For_Upgrade_Unit = false,
+    Select_Chapter = "OnePiece",
+    Select_Stage = "1",
     -- Shop / Merchant
-    Auto_BuyItem=false, Select_BuyItem="Ramen",
-    BuyItem_Amount=1, BuyItem_MinYen=0, BuyItem_MaxYen=999999,
-    Select_Speed=1,
+    Auto_BuyItem = false,
+    Select_BuyItem = "Ramen",
+    BuyItem_Amount = 1,
+    BuyItem_MinYen = 0,
+    BuyItem_MaxYen = 999999,
+    Select_Speed = 1,
     -- Summon / Gacha
-    Auto_Summon=false, Select_SummonMode="Standard", Select_SummonCount="10x",
+    Auto_Summon = false,
+    Select_SummonMode = "Standard",
+    Select_SummonCount = "10x",
 }
 
 local function SS()
@@ -76,7 +103,30 @@ local function LoadSetting()
 end
 LoadSetting()
 
--- ── โหลด Theme จากไฟล์ที่บันทึกไว้ ──────────────────
+-- ══════════════════════════════════════════════════════
+--  THEME (defined early)
+-- ══════════════════════════════════════════════════════
+local Theme = {
+    Accent    = Color3.fromRGB(51,255,255),
+    WinBg     = Color3.fromRGB(17,17,17),
+    TopBg     = Color3.fromRGB(25,25,25),
+    CardBg    = Color3.fromRGB(28,28,28),
+    CardStroke= Color3.fromRGB(44,44,44),
+    Text      = Color3.fromRGB(195,195,195),
+    WinRadius = 10,
+    CardRadius= 6,
+    WinOpacity= 0,
+    TabAnim   = "slide",
+    WinW      = 620,
+    WinH      = 400,
+}
+local ThemeCBs = {}
+local function onThemeChange(key,fn)
+    if not ThemeCBs[key] then ThemeCBs[key]={} end
+    table.insert(ThemeCBs[key],fn)
+end
+
+-- Load saved theme values (if any) into Theme
 pcall(function()
     local function rgb3(t) if type(t)=="table" and #t==3 then return Color3.new(t[1],t[2],t[3]) end end
     if _G.SST.Theme_Accent     then Theme.Accent     = rgb3(_G.SST.Theme_Accent)    or Theme.Accent    end
@@ -135,25 +185,6 @@ local function setLang(code)
     for _,fn in ipairs(LangCBs) do pcall(fn) end
 end
 
--- ══════════════════════════════════════════════════════
---  THEME
--- ══════════════════════════════════════════════════════
-local Theme = {
-    Accent    = Color3.fromRGB(51,255,255),
-    WinBg     = Color3.fromRGB(17,17,17),
-    TopBg     = Color3.fromRGB(25,25,25),
-    CardBg    = Color3.fromRGB(28,28,28),
-    CardStroke= Color3.fromRGB(44,44,44),
-    Text      = Color3.fromRGB(195,195,195),
-    WinRadius = 10, CardRadius=6, WinOpacity=0,
-    TabAnim   = "slide", WinW=620, WinH=400,
-}
-local ThemeCBs = {}
-local function onThemeChange(key,fn)
-    if not ThemeCBs[key] then ThemeCBs[key]={} end
-    table.insert(ThemeCBs[key],fn)
-end
-
 -- Settings persistence vars
 local uiReady    = false
 local isLoading  = false
@@ -168,7 +199,7 @@ local function SaveAll()
     _G.SST.WIN_KEY     = tostring(WIN_KEY):gsub("Enum.KeyCode.","")
     _G.SST.kbMode      = kbModeRef[1]
     _G.SST.savedScripts= savedScripts
-    -- บันทึก Theme settings
+    -- Save Theme settings
     _G.SST.Theme_Accent    = {Theme.Accent.R, Theme.Accent.G, Theme.Accent.B}
     _G.SST.Theme_WinBg     = {Theme.WinBg.R, Theme.WinBg.G, Theme.WinBg.B}
     _G.SST.Theme_TopBg     = {Theme.TopBg.R, Theme.TopBg.G, Theme.TopBg.B}
@@ -271,7 +302,7 @@ end
 --  MAIN FRAME
 -- ══════════════════════════════════════════════════════
 local WIN_NAME   = "IDekhere Hub"
-local WIN_LOGO   = 0
+local WIN_LOGO   = 0  -- place a valid image ID here if desired
 local NORMAL_SIZE = UDim2.new(0,Theme.WinW,0,Theme.WinH)
 local NORMAL_POS  = UDim2.new(0.5,0,0.5,0)
 local isIsland=false; local isMax=false
@@ -1992,16 +2023,17 @@ task.spawn(function()
         pcall(function()
             if not _G.SST.Auto_Join_Story or not _G.SST.Select_Chapter or not _G.SST.Select_Stage then return end
             local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-            repeat task.wait(0.5)
-                if workspace:FindFirstChild("Lobby") then
-                ev:FireServer("Create"); ev:FireServer("Change-World",{World=_G.SST.Select_Chapter})
+            -- Only attempt if in lobby and no game active
+            if workspace:FindFirstChild("Lobby") and not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                ev:FireServer("Create")
+                ev:FireServer("Change-World",{World=_G.SST.Select_Chapter})
                 ev:FireServer("Change-Chapter",{Chapter=_G.SST.Select_Chapter.."_Chapter".._G.SST.Select_Stage})
-                ev:FireServer("Submit"); 
-                end task.wait(0.1); 
+                ev:FireServer("Submit")
+                task.wait(0.5)
                 if not plr.PlayerGui:FindFirstChild("SystemMessage") then
                     ev:FireServer("Start")
                 end
-            until not _G.SST.Auto_Join_Story or not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage")
+            end
         end)
     end
 end)
@@ -2021,10 +2053,16 @@ task.spawn(function()
                     task.wait(0.5)
                     pcall(function()
                         if workspace:FindFirstChild("Lobby") then
-                        ev:FireServer("Create"); ev:FireServer("Change-Mode",{Mode="Ranger Stage"})
-                        ev:FireServer("Change-World",{World=stage.world}); ev:FireServer("Change-Chapter",{Chapter=stage.chapter})
-                        ev:FireServer("Submit"); end task.wait(0.1); 
-                        if not plr.PlayerGui:FindFirstChild("SystemMessage") then ev:FireServer("Start") end
+                            ev:FireServer("Create")
+                            ev:FireServer("Change-Mode",{Mode="Ranger Stage"})
+                            ev:FireServer("Change-World",{World=stage.world})
+                            ev:FireServer("Change-Chapter",{Chapter=stage.chapter})
+                            ev:FireServer("Submit")
+                            task.wait(0.1)
+                            if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                                ev:FireServer("Start")
+                            end
+                        end
                     end)
                 end
             end
@@ -2038,8 +2076,10 @@ task.spawn(function()
         pcall(function()
             if not _G.SST.Auto_Join_Challenge or not workspace:FindFirstChild("Lobby") then return end
             local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-            repeat task.wait(0.5); ev:FireServer("Create",{CreateChallengeRoom=true}); ev:FireServer("Start")
-            until not _G.SST.Auto_Join_Challenge or not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage")
+            if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                ev:FireServer("Create",{CreateChallengeRoom=true})
+                ev:FireServer("Start")
+            end
         end)
     end
 end)
@@ -2050,8 +2090,10 @@ task.spawn(function()
         pcall(function()
             if not _G.SST.Auto_Join_BossEvent or not workspace:FindFirstChild("Lobby") then return end
             local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-            repeat task.wait(0.5); ev:FireServer("Boss-Event"); ev:FireServer("Start")
-            until not workspace:FindFirstChild("Lobby") or not _G.SST.Auto_Join_BossEvent or plr.PlayerGui:FindFirstChild("SystemMessage")
+            if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                ev:FireServer("Boss-Event")
+                ev:FireServer("Start")
+            end
         end)
     end
 end)
@@ -2080,17 +2122,16 @@ task.spawn(function()
             if not _G.SST.Auto_ReRoll_Stats_Potential or not _G.SST.Select_UnitCL then return end
             local pList=_G.SST.Select_Potential
             if type(pList)~="table" then return end
-            -- Multi-dropdown returns {potentialName=true} dict
             local unit=GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
             if not unit or not unit:FindFirstChild("Tag") then return end
             local tag=unit.Tag.Value
-            -- Select_Stats is also a dict {statName=true}
             local desired= type(_G.SST.Select_Stats)=="table" and _G.SST.Select_Stats or {}
             for potName,enabled in pairs(pList) do
                 if enabled then
                     local pot=unit:FindFirstChild(potName.."Potential")
                     if pot and not desired[pot.Value] then
-                        rerollRemote:FireServer(potName,tag,"Selective"); task.wait(0.3)
+                        rerollRemote:FireServer(potName,tag,"Selective")
+                        task.wait(0.3)
                     end
                 end
             end
@@ -2108,10 +2149,14 @@ task.spawn(function()
         pcall(function()
             local unit=GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
             if not unit then return end
-            NameUnit:Set("Name  : "..unit.Name); CodeUnit:Set("Code  : "..unit.Tag.Value)
-            SpeedPot:Set("Speed : "..unit.SpeedPotential.Value); RangePot:Set("Range : "..unit.RangePotential.Value)
-            HealthPot:Set("HP    : "..unit.HealthPotential.Value); DamagePot:Set("DMG   : "..unit.DamagePotential.Value)
-            CooldownPot:Set("CD    : "..unit.AttackCooldownPotential.Value); TraitLbl:Set("Trait : "..unit.PrimaryTrait.Value)
+            NameUnit:Set("Name  : "..unit.Name)
+            CodeUnit:Set("Code  : "..unit.Tag.Value)
+            SpeedPot:Set("Speed : "..unit.SpeedPotential.Value)
+            RangePot:Set("Range : "..unit.RangePotential.Value)
+            HealthPot:Set("HP    : "..unit.HealthPotential.Value)
+            DamagePot:Set("DMG   : "..unit.DamagePotential.Value)
+            CooldownPot:Set("CD    : "..unit.AttackCooldownPotential.Value)
+            TraitLbl:Set("Trait : "..unit.PrimaryTrait.Value)
         end)
     end
 end)
@@ -2122,8 +2167,6 @@ local traitDD=MAIN:AddMultiDropdownR("Select Trait",TraitList,function(v) _G.SST
 if type(_G.SST.Select_Trait)=="table" then task.defer(function() pcall(function() traitDD:Set(_G.SST.Select_Trait) end) end) end
 MAIN:AddToggleR("Auto Reroll Trait",_G.SST.Auto_Reroll_Trait,function(v) _G.SST.Auto_Reroll_Trait=v; SS() end)
 
-
--- ── Auto Reroll Trait loop
 task.spawn(function()
     local traitRemote
     pcall(function() traitRemote=ReplicatedStorage.Remote.Server.Gambling.RerollTrait end)
@@ -2134,10 +2177,7 @@ task.spawn(function()
             if not unit or not unit:FindFirstChild("Tag") then return end
             local desired=_G.SST.Select_Trait or {}
             local current=unit.PrimaryTrait.Value
-            -- Multi-dropdown returns {traitName=true} dict
-            local found = (type(desired)=="table") and (desired[current]==true)
-            if not found then
-                -- Args: unit instance, "Reroll", "Main", "Shards", {"", ""}
+            if not desired[current] then
                 traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {"",""})
                 task.wait(0.3)
             end
@@ -2152,7 +2192,9 @@ task.spawn(function()
     while task.wait(1) do
         pcall(function()
             if not _G.SST.Auto_Play then return end
-            if PlayerDataRef.Data.AutoPlay.Value==false then AutoPlayRemote:FireServer() end
+            if PlayerDataRef and PlayerDataRef.Data and PlayerDataRef.Data.AutoPlay and PlayerDataRef.Data.AutoPlay.Value==false then
+                AutoPlayRemote:FireServer()
+            end
         end)
     end
 end)
@@ -2171,105 +2213,80 @@ local unitNames={"All Unit"}
 if unitsFolder then for _,u in ipairs(unitsFolder:GetChildren()) do table.insert(unitNames,u.Name) end end
 local upgradeDD=AP:AddMultiDropdownR("Select Unit to Upgrade",unitNames,function(v) _G.SST.Select_Unit=v; SS() end)
 if type(_G.SST.Select_Unit)=="table" then task.defer(function() pcall(function() upgradeDD:Set(_G.SST.Select_Unit) end) end) end
--- Refresh upgrade unit list
 upgradeDD.onRefresh=function()
     local nl={"All Unit"}; local uf=plr:FindFirstChild("UnitsFolder")
     if uf then for _,u in ipairs(uf:GetChildren()) do table.insert(nl,u.Name) end end; return nl
 end
 AP:AddToggleR("Auto Upgrade Unit",_G.SST.Auto_Upgrade,function(v) _G.SST.Auto_Upgrade=v; SS() end)
 AP:AddToggleR("Auto Upgrade Yen",_G.SST.Auto_Upgtade_Maxyen,function(v) _G.SST.Auto_Upgtade_Maxyen=v; SS() end)
--- ค้นหา TextLabel ที่แสดงเงิน
-local function getCurrentYen()
-    local yenLabel = inGameUI:FindFirstChild("Yen") or 
-                     inGameUI:FindFirstChild("Money") or 
-                     inGameUI:FindFirstChild("Cash")
-    if not yenLabel then
-        local topBar = inGameUI:FindFirstChild("TopBar")
-        if topBar then
-            yenLabel = topBar:FindFirstChild("Yen") or topBar:FindFirstChild("Money")
+
+-- single game loop
+task.spawn(function()
+    local gui=plr:WaitForChild("PlayerGui")
+    local remF=ReplicatedStorage:WaitForChild("Remote",9e9):WaitForChild("Server",9e9)
+    local votePath=remF:WaitForChild("OnGame",9e9):WaitForChild("Voting",9e9)
+    local upgradeRemote=remF:WaitForChild("Units",9e9):WaitForChild("Upgrade",9e9)
+    local statsRemote=remF:WaitForChild("Gameplay",9e9):WaitForChild("StatsManager",9e9)
+    local votePlayingRemote=votePath:WaitForChild("VotePlaying",9e9)
+    local hud=gui:WaitForChild("HUD",9e9)
+    local inGameUI=hud and hud:WaitForChild("InGame",9e9)
+    local votePlayingUI=inGameUI and inGameUI:WaitForChild("VotePlaying",9e9)
+    local unitsF=plr:WaitForChild("UnitsFolder",9e9)
+    local vim2=game:GetService("VirtualInputManager")
+
+    while task.wait(0.05) do
+        local sst=_G.SST; if type(sst)~="table" then task.wait(1); continue end
+
+        -- Auto Vote
+        if sst.Auto_Vote and type(sst.Select_Vote)=="table" then
+            pcall(function()
+                local visual=workspace:FindFirstChild("Visual"); if not visual then return end
+                local rewardsUI=gui:FindFirstChild("RewardsUI"); if not rewardsUI or not rewardsUI.Enabled then return end
+                local main=rewardsUI:FindFirstChild("Main"); if not main then return end
+                local leftSide=main:FindFirstChild("LeftSide"); if not leftSide then return end
+                local RWBT=leftSide:FindFirstChild("Button"); if not RWBT then return end
+                local votes={}; for k,v in pairs(sst.Select_Vote) do if v then table.insert(votes,k) end end
+                if #votes==0 then return end
+                local voteRemote=votePath:FindFirstChild(votes[math.random(1,#votes)]); if not voteRemote then return end
+                local hasModel=false
+                for _,child in ipairs(visual:GetChildren()) do
+                    if child:IsA("Model") then hasModel=true; vim2:SendMouseButtonEvent(100,200,0,true,game,0); vim2:SendMouseButtonEvent(100,200,0,false,game,0) end
+                end
+                if not hasModel then
+                    local retryV=RWBT:FindFirstChild("Retry"); local nextV=RWBT:FindFirstChild("Next"); local leaveV=RWBT:FindFirstChild("Leave")
+                    if (retryV and retryV.Visible) or (nextV and nextV.Visible) then voteRemote:FireServer()
+                    elseif leaveV and leaveV.Visible and (not retryV or not retryV.Visible) and sst.Select_Vote["VoteLeave"] then TeleportService:Teleport(111446873000464) end
+                end
+            end)
+        end
+
+        -- Auto Upgrade
+        if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
+            pcall(function()
+                local selU=sst.Select_Unit; local allU=false
+                if type(selU)=="table" then
+                    if selU["All Unit"] then allU=true end
+                else selU={} end
+                for _,unit in ipairs(unitsF:GetChildren()) do
+                    if unit:IsA("Instance") and (allU or selU[unit.Name]==true) then
+                        pcall(function() upgradeRemote:FireServer(unit) end)
+                        task.wait(0.2)
+                    end
+                end
+            end)
+        end
+
+        -- Auto Upgrade Yen
+        if sst.Auto_Upgtade_Maxyen then pcall(function() statsRemote:FireServer("MaximumYen") end) end
+
+        -- Auto Vote Start
+        if sst.Auto_Vote_Start and votePlayingUI and votePlayingUI.Visible then
+            task.wait(sst.Select_Deley_Vote or 1)
+            pcall(function() votePlayingRemote:FireServer() end)
         end
     end
-    if yenLabel and yenLabel:IsA("TextLabel") then
-        local text = yenLabel.Text
-        -- ดึงเฉพาะตัวเลข (เช่น "1,234 Yen" -> 1234)
-        local yen = tonumber(text:match("%d+")) or 0
-        return yen
-    end
-    return nil  -- ถ้าหาไม่เจอให้คืน nil (จะไม่ใช้ตรวจสอบ)
-end
+end)
 
--- ตัวแปรสำหรับดีเลย์
-local upgradeCooldown = 0.5  -- วินาที ระหว่างอัปเกรดแต่ละตัว
-
--- เปลี่ยน loop หลักให้ทำงานช้าลง
-while task.wait(0.5) do   -- เดิม 0.05 เร็วเกินไป
-    local sst = _G.SST
-    if type(sst) ~= "table" then task.wait(1); continue end
-
-    -- ========== Auto Upgrade ==========
-    if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
-        pcall(function()
-            local currentYen = getCurrentYen()
-            local selU = sst.Select_Unit
-            local allU = false
-            if type(selU) == "table" then
-                if selU["All Unit"] then allU = true end
-            else
-                selU = {}  -- fallback
-            end
-
-            -- รวบรวมยูนิตที่ต้องการอัปเกรด
-            local unitsToUpgrade = {}
-            if allU then
-                for _, u in ipairs(unitsF:GetChildren()) do
-                    table.insert(unitsToUpgrade, u)
-                end
-            else
-                for unitName, selected in pairs(selU) do
-                    if selected and unitName ~= "All Unit" then
-                        local u = unitsF:FindFirstChild(unitName)
-                        if u then table.insert(unitsToUpgrade, u) end
-                    end
-                end
-            end
-
-            -- อัปเกรดทีละตัว
-            for _, unit in ipairs(unitsToUpgrade) do
-                -- ถ้าหาเงินเจอ ให้ตรวจสอบว่าเงินพอหรือไม่
-                -- (ไม่ทราบราคาแน่ชัด ใช้วิธีตรวจสอบว่าเงินลดลงหลังอัปเกรด)
-                if currentYen then
-                    local before = getCurrentYen()
-                    if before == nil then before = currentYen end
-                    upgradeRemote:FireServer(unit)
-                    task.wait(0.2)  -- รอเซิร์ฟเวอร์ตอบสนอง
-                    local after = getCurrentYen()
-                    if after and after < before then
-                        -- อัปเกรดสำเร็จ (เงินลดลง)
-                    else
-                        -- เงินไม่ลด แสดงว่าอัปเกรดไม่สำเร็จ (เงินไม่พอ)
-                        -- ข้ามการอัปเกรดตัวนี้ไป
-                        continue
-                    end
-                else
-                    -- ถ้าหาเงินไม่เจอ ก็ส่งไปเลย (แต่ไม่ควร)
-                    upgradeRemote:FireServer(unit)
-                end
-                task.wait(upgradeCooldown)  -- รอระหว่างตัว
-            end
-        end)
-    end
-
-    -- ========== Auto Upgrade Yen ==========
-    if sst.Auto_Upgtade_Maxyen then
-        pcall(function() statsRemote:FireServer("MaximumYen") end)
-    end
-
-    -- ========== Auto Vote Start ==========
-    if sst.Auto_Vote_Start and votePlayingUI and votePlayingUI.Visible then
-        task.wait(sst.Select_Deley_Vote or 1)
-        pcall(function() votePlayingRemote:FireServer() end)
-    end
-end
 -- ═══ SHOP TAB ═════════════════════════════════════════
 SP:AddSeperatorL("Auto Buy Item")
 SP:AddLabelL("ซื้อไอเทมอัตโนมัติจาก Merchant")
@@ -2303,7 +2320,7 @@ buyItemDD.onRefresh=function()
 end
 
 SP:AddSliderL("Min Yen Limit",0,100000,_G.SST.BuyItem_MinYen or 0,function(v) _G.SST.BuyItem_MinYen=v; SS() end)
-SP:AddSliderL("Max Yen Limit",0,1000000,_G.SST.BuyItem_MaxYen or 999999,function(v) _G.SST.BuyItem_MaxYen=v; SS() end)
+SP:AddSliderL("Max Yen Limit",0,100000000000000000,_G.SST.BuyItem_MaxYen or 999999,function(v) _G.SST.BuyItem_MaxYen=v; SS() end)
 SP:AddSliderL("Amount to Buy",1,99,_G.SST.BuyItem_Amount or 1,function(v) _G.SST.BuyItem_Amount=v; SS() end)
 SP:AddToggleL("Auto Buy Item",_G.SST.Auto_BuyItem or false,function(v) _G.SST.Auto_BuyItem=v; SS() end)
 
@@ -2318,7 +2335,6 @@ task.spawn(function()
             local minY=_G.SST.BuyItem_MinYen or 0
             local maxY=_G.SST.BuyItem_MaxYen or 999999
             if gold < minY or gold > maxY then return end
-            -- Multi-dropdown returns {itemName=true} dict — buy each selected item
             local selected=_G.SST.Select_BuyItem
             if type(selected)~="table" then return end
             local amount=_G.SST.BuyItem_Amount or 1
@@ -2373,13 +2389,12 @@ for _,spd in ipairs({1,2,3}) do
     speedBtns[spd]=b
     b.MouseButton1Click:Connect(function() setSpeedUI(capSpd) end)
 end
--- restore saved speed highlight
 if _G.SST.Select_Speed then task.defer(function() setSpeedUI(_G.SST.Select_Speed) end) end
 
 SP:AddSeperatorR("Auto Summon")
 local summonModeList={"Standard","Rate Up","Sol"}
 local summonModeDD=SP:AddDropdownR("Summon Banner",summonModeList,_G.SST.Select_SummonMode or "Standard",function(v) _G.SST.Select_SummonMode=v; SS() end)
-local summonCountList={"1x","5x","10x"}
+local summonCountList={"1x","10x"}
 local summonCountDD=SP:AddDropdownR("Summon Count",summonCountList,_G.SST.Select_SummonCount or "10x",function(v) _G.SST.Select_SummonCount=v; SS() end)
 SP:AddToggleR("Auto Summon",_G.SST.Auto_Summon or false,function(v) _G.SST.Auto_Summon=v; SS() end)
 
@@ -2391,9 +2406,7 @@ task.spawn(function()
             if not _G.SST.Auto_Summon or not summonRemote then return end
             local count=_G.SST.Select_SummonCount or "10x"
             local banner=_G.SST.Select_SummonMode or "Standard"
-            -- Format: count, banner, {}  (matches game's UnitsGacha remote)
-            local args={count, banner, {}}
-            summonRemote:FireServer(unpack(args))
+            summonRemote:FireServer(count, banner, {})
             task.wait(0.3)
         end)
     end
@@ -2427,44 +2440,93 @@ WH:AddButtonL("Redeem All Code",function()
 end)
 
 WH:AddSeperatorR("WebHook")
-WH:AddTextboxR("WebHook Link",_G.SST.Place_WebHook_Link or "","URL...",function(v) _G.SST.Place_WebHook_Link=v; SS() end)
-WH:AddToggleR("Send WebHook",_G.SST.Send_WebHook or false,function(v) _G.SST.Send_WebHook=v; SS() end)
-
-local function sendWebhook(Name,RewardsText,GameTime)
-    local url=_G.SST.Place_WebHook_Link; if not url or url=="" then return end
-    local pd=ReplicatedStorage.Player_Data:FindFirstChild(Name); if not pd then return end
-    local fields={{["name"]="[i] Total",["value"]="```Name: "..Name.."\nGem: "..pd.Data.Gem.Value.."\nGold: "..pd.Data.Gold.Value.."\nLevel: "..pd.Data.Level.Value.." Exp: "..pd.Data.Exp.Value.."\nEgg: "..pd.Data.Egg.Value.."```"},{["name"]="[t] Time",["value"]="```"..GameTime.."```"},{["name"]="[*] Rewards",["value"]="```"..RewardsText.."```"}}
-    local data={["content"]="",["embeds"]={{["author"]={["name"]="IDekhere Hub"},["title"]="Anime Rangers X",["color"]=tonumber(0x13da),["fields"]=fields}}}
-    local ok,json=pcall(HttpService.JSONEncode,HttpService,data); if not ok then return end
-    local req=http_request or request or (syn and syn.request) or nil
-    if req then pcall(req,{Url=url,Body=json,Method="POST",Headers={["Content-Type"]="application/json"}}) end
-end
-
-local hasSent=false; local OffSent=false
-task.spawn(function() while task.wait(0.5) do pcall(function() local r=plr.PlayerGui:FindFirstChild("RewardsUI"); if r then OffSent=not r.Enabled end end) end end)
-RunService.Heartbeat:Connect(function()
-    pcall(function()
-        if not _G.SST.Send_WebHook or not OffSent then return end
-        local rUI=plr.PlayerGui:FindFirstChild("RewardsUI"); if not rUI or not rUI.Enabled then hasSent=false; return end
-        if hasSent then return end
-        local gt=rUI.Main.LeftSide.TotalTime.Text; local rt=""
-        local rf=plr:FindFirstChild("RewardsShow")
-        if rf then for _,ri in ipairs(rf:GetChildren()) do if ri:IsA("Folder") then local a=ri:FindFirstChild("Amount"); if a then rt=rt..ri.Name..": "..tostring(a.Value or a.Text).."\n" end end end end
-        sendWebhook(plr.Name,rt,gt); hasSent=true; OffSent=false
-    end)
+WH:AddTextboxR("WebHook Link", _G.SST.Place_WebHook_Link or "", "", function(v)
+    _G.SST.Place_WebHook_Link = v
+    SS()
 end)
 
+WH:AddToggleR("Send WebHook", _G.SST.Send_WebHook or false, function(v)
+    _G.SST.Send_WebHook = v
+    SS()
+end)
+-- 🔥 CONTROL
+local sentThisMatch = false
+local matchEnded = false
+
+RunService.Heartbeat:Connect(function()
+    if not _G.SST.Send_WebHook then return end
+
+    local rUI = plr.PlayerGui:FindFirstChild("RewardsUI")
+    if not rUI then return end
+
+    -- ถ้า RewardsUI เปิดอยู่ แสดงว่าเพิ่งจบเกม
+    if rUI.Enabled then
+        if not sentThisMatch and not matchEnded then
+            -- รอให้ข้อมูล rewards โหลดเสร็จ (0.5 วินาที)
+            task.wait(0.5)
+
+            -- 🔥 เช็ค Win / Lose (ปรับตามเกม)
+            local isWin = true
+            pcall(function()
+                local resultFrame = rUI.Main:FindFirstChild("Result") or rUI.Main.LeftSide:FindFirstChild("Result")
+                if resultFrame and resultFrame.Text then
+                    if string.find(string.lower(resultFrame.Text), "lose") then
+                        isWin = false
+                    end
+                end
+            end)
+
+            -- 🔥 เวลา
+            local GameTime = "Unknown"
+            pcall(function()
+                GameTime = rUI.Main.LeftSide.TotalTime.Text
+            end)
+
+            -- 🔥 rewards
+            local RewardsText = ""
+            local rf = plr:FindFirstChild("RewardsShow")
+            if rf then
+                for _, ri in ipairs(rf:GetChildren()) do
+                    if ri:IsA("Folder") then
+                        local a = ri:FindFirstChild("Amount")
+                        if a then
+                            local val = a.Value or a.Text or "0"
+                            RewardsText = RewardsText .. ri.Name .. ": " .. tostring(val) .. "\n"
+                        end
+                    end
+                end
+            end
+
+            -- 🚀 ส่ง Webhook
+            sendWebhook(isWin, RewardsText, GameTime)
+            sentThisMatch = true
+            matchEnded = true
+        end
+    else
+        -- เมื่อ RewardsUI ปิด (รับรางวัลแล้วหรือออก) ให้รีเซ็ต flag เพื่อรอบเกมถัดไป
+        if matchEnded then
+            sentThisMatch = false
+            matchEnded = false
+        end
+    end
+end)
 WH:AddSeperatorR("BoostFps")
 
 local blackScreenUI=nil
 local function toggleBlackScreen(enable)
-    if not enable then if blackScreenUI then blackScreenUI.Enabled=false end; return end
-    if blackScreenUI then blackScreenUI.Enabled=true; return end
+    if not enable then
+        if blackScreenUI then blackScreenUI.Enabled=false end
+        RunService:Set3dRenderingEnabled(true)
+        return
+    end
+    if blackScreenUI then blackScreenUI.Enabled=true; RunService:Set3dRenderingEnabled(false); return end
     blackScreenUI=Instance.new("ScreenGui"); blackScreenUI.Name="Blackscreen"
     blackScreenUI.DisplayOrder=1; blackScreenUI.ResetOnSpawn=false; blackScreenUI.IgnoreGuiInset=true; blackScreenUI.Parent=plr.PlayerGui
     local f=Instance.new("Frame",blackScreenUI); f.BackgroundColor3=Color3.new(0,0,0); f.Size=UDim2.new(1,0,1,0); f.BorderSizePixel=0
+    RunService:Set3dRenderingEnabled(false)
 end
 WH:AddToggleR("Black Screen",_G.SST.Black_Screen,function(v) _G.SST.Black_Screen=v; SS(); RunService:Set3dRenderingEnabled(not v); toggleBlackScreen(v) end)
+
 WH:AddToggleR("Boost Fps",_G.SST.Boost_Fps,function(v) _G.SST.Boost_Fps=v; SS() end)
 
 local boosted=false; local origTerrain={}; local origLighting={}; local origEffects={}
@@ -2485,25 +2547,34 @@ task.spawn(function()
     end
 end)
 
-WH:AddSliderR("Select Frame Rate",0,240,_G.SST.Select_Farme_Rate or 60,function(v) _G.SST.Select_Farme_Rate=v; SS() end)
-task.spawn(function() while task.wait(1) do pcall(function() if type(_G.SST.Select_Farme_Rate)=="number" and _G.SST.Select_Farme_Rate>0 then setfpscap(_G.SST.Select_Farme_Rate) end end) end end)
+WH:AddSliderR("Select Frame Rate",0,240,_G.SST.Select_Frame_Rate or 60,function(v) _G.SST.Select_Frame_Rate=v; SS() end)
+task.spawn(function() while task.wait(1) do pcall(function() if type(_G.SST.Select_Frame_Rate)=="number" and _G.SST.Select_Frame_Rate>0 then setfpscap(_G.SST.Select_Frame_Rate) end end) end end)
 
 WH:AddSeperatorR("Misc")
 WH:AddToggleR("Anti AFK",_G.SST.Anti_AFK,function(v) _G.SST.Anti_AFK=v; SS() end)
 task.spawn(function()
-    local connected=false
+    local antiAfkConnection=nil
+    local function updateAntiAfk()
+        if antiAfkConnection then antiAfkConnection:Disconnect(); antiAfkConnection=nil end
+        if _G.SST.Anti_AFK then
+            antiAfkConnection=plr.Idled:Connect(function()
+                VirtualUser:Button2Down(Vector2.new(9999,9999),workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                VirtualUser:Button2Up(Vector2.new(9999,9999),workspace.CurrentCamera.CFrame)
+            end)
+        end
+    end
+    updateAntiAfk()
     while task.wait(1) do
-        if _G.SST and _G.SST.Anti_AFK and not connected then
-            connected=true
-            plr.Idled:Connect(function() VirtualUser:Button2Down(Vector2.new(9999,9999),workspace.CurrentCamera.CFrame); task.wait(1); VirtualUser:Button2Up(Vector2.new(9999,9999),workspace.CurrentCamera.CFrame) end)
+        if _G.SST.Anti_AFK then
+            if not antiAfkConnection then updateAntiAfk() end
+        else
+            if antiAfkConnection then antiAfkConnection:Disconnect(); antiAfkConnection=nil end
         end
     end
 end)
 
--- ✅ Auto Kick Rejoin – connect ครั้งเดียว ไม่ใช้ loop
-WH:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin,function(v)
-    _G.SST.Auto_Kick_Rejoin=v; SS()
-end)
+WH:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin,function(v) _G.SST.Auto_Kick_Rejoin=v; SS() end)
 do
     local kickConn=nil
     local function setupKick()
@@ -2511,12 +2582,12 @@ do
         pcall(function()
             kickConn=game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
                 if child.Name=="ErrorPrompt" and child:FindFirstChild("MessageArea") and _G.SST.Auto_Kick_Rejoin then
-                    TeleportService:Teleport(111446873000464)
+                    TeleportService:Teleport(111446873000464) -- Game ID of Anime Rangers X
                 end
             end)
         end)
     end
-    setupKick() -- connect ตั้งแต่ต้น เช็ค flag ตอน fire แทน
+    setupKick()
 end
 
 -- ═══ ITEM CHECK TAB ═══════════════════════════════════
@@ -2530,7 +2601,9 @@ task.spawn(function()
         pcall(function()
             local pd=ReplicatedStorage.Player_Data:FindFirstChild(plr.Name); if not pd then return end
             LV:Set("Level : "..pd.Data.Level.Value.."  Exp : "..pd.Data.Exp.Value)
-            GemAmt:Set("Gem   : "..pd.Data.Gem.Value); GoldAmt:Set("Gold  : "..pd.Data.Gold.Value); EggAmt:Set("Egg   : "..pd.Data.Egg.Value)
+            GemAmt:Set("Gem   : "..pd.Data.Gem.Value)
+            GoldAmt:Set("Gold  : "..pd.Data.Gold.Value)
+            EggAmt:Set("Egg   : "..pd.Data.Egg.Value)
         end)
     end
 end)
