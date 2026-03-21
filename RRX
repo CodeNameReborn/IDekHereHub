@@ -76,6 +76,21 @@ local function LoadSetting()
 end
 LoadSetting()
 
+-- ── โหลด Theme จากไฟล์ที่บันทึกไว้ ──────────────────
+pcall(function()
+    local function rgb3(t) if type(t)=="table" and #t==3 then return Color3.new(t[1],t[2],t[3]) end end
+    if _G.SST.Theme_Accent     then Theme.Accent     = rgb3(_G.SST.Theme_Accent)    or Theme.Accent    end
+    if _G.SST.Theme_WinBg      then Theme.WinBg      = rgb3(_G.SST.Theme_WinBg)     or Theme.WinBg     end
+    if _G.SST.Theme_TopBg      then Theme.TopBg      = rgb3(_G.SST.Theme_TopBg)     or Theme.TopBg     end
+    if _G.SST.Theme_CardBg     then Theme.CardBg     = rgb3(_G.SST.Theme_CardBg)    or Theme.CardBg    end
+    if _G.SST.Theme_WinRadius  then Theme.WinRadius  = _G.SST.Theme_WinRadius  end
+    if _G.SST.Theme_CardRadius then Theme.CardRadius = _G.SST.Theme_CardRadius end
+    if _G.SST.Theme_WinOpacity then Theme.WinOpacity = _G.SST.Theme_WinOpacity end
+    if _G.SST.Theme_TabAnim    then Theme.TabAnim    = _G.SST.Theme_TabAnim    end
+    if _G.SST.Theme_WinW       then Theme.WinW       = _G.SST.Theme_WinW       end
+    if _G.SST.Theme_WinH       then Theme.WinH       = _G.SST.Theme_WinH       end
+end)
+
 -- ── ลบ GUI เก่า
 local _old = game.CoreGui:FindFirstChild("IDekhere Hub")
 if _old then _old:Destroy() end
@@ -86,29 +101,29 @@ if _old then _old:Destroy() end
 local LANG = {
     TH={
         welcome="ยินดีต้อนรับสู่ IDekhere Hub!", reset_done="รีเซ็ต UI เรียบร้อยแล้ว!",
-        lang_changed="เปลี่ยนภาษาแล้ว", s_accent="🎨 สีหลัก", s_bg="🌑 พื้นหลัง",
-        s_preset="🌈 ธีมสำเร็จรูป", s_corner="🔘 มุมโค้ง", s_anim="✨ Tab อนิเมชั่น",
-        s_opacity="💧 ความโปร่งใส", s_size="📐 ขนาด Window", s_language="🌐 ภาษา",
-        s_keybind="⌨️ ปุ่มลัด", s_kb_mode="โหมด", s_kb_island="Island",
+        lang_changed="เปลี่ยนภาษาแล้ว", s_accent=">> สีหลัก", s_bg=">> พื้นหลัง",
+        s_preset=">> ธีมสำเร็จรูป", s_corner=">> มุมโค้ง", s_anim=">> Tab อนิเมชั่น",
+        s_opacity=">> ความโปร่งใส", s_size=">> ขนาด Window", s_language=">> ภาษา",
+        s_keybind=">> ปุ่มลัด", s_kb_mode="โหมด", s_kb_island="Island",
         s_kb_mini="Mini", s_kb_key="ปุ่ม", s_kb_press="กดปุ่มที่ต้องการ...",
-        s_notif_log="📋 ประวัติแจ้งเตือน", s_no_notif="ยังไม่มีประวัติ",
+        s_notif_log=">> ประวัติแจ้งเตือน", s_no_notif="ยังไม่มีประวัติ",
         s_clear_log="ล้างประวัติ", s_win="Window", s_cards="Cards",
         s_opacity_lbl="Opacity", s_small="เล็ก", s_normal="ปกติ",
         s_large="ใหญ่", s_xl="XL", s_reset="↺  รีเซ็ตทุกอย่าง",
-        btn_th="🇹🇭 ไทย", btn_en="🇺🇸 English",
+        btn_th="TH ไทย", btn_en="EN English",
     },
     EN={
         welcome="Welcome to IDekhere Hub!", reset_done="UI has been reset!",
-        lang_changed="Language changed", s_accent="🎨 Accent Color", s_bg="🌑 Background",
-        s_preset="🌈 Theme Presets", s_corner="🔘 Corner Radius", s_anim="✨ Tab Animation",
-        s_opacity="💧 Transparency", s_size="📐 Window Size", s_language="🌐 Language",
-        s_keybind="⌨️ Keybind", s_kb_mode="Mode", s_kb_island="Island",
+        lang_changed="Language changed", s_accent=">> Accent Color", s_bg=">> Background",
+        s_preset=">> Theme Presets", s_corner=">> Corner Radius", s_anim=">> Tab Animation",
+        s_opacity=">> Transparency", s_size=">> Window Size", s_language=">> Language",
+        s_keybind=">> Keybind", s_kb_mode="Mode", s_kb_island="Island",
         s_kb_mini="Mini", s_kb_key="Key", s_kb_press="Press a key...",
-        s_notif_log="📋 Notification Log", s_no_notif="No history yet",
+        s_notif_log=">> Notification Log", s_no_notif="No history yet",
         s_clear_log="Clear Log", s_win="Window", s_cards="Cards",
         s_opacity_lbl="Opacity", s_small="Small", s_normal="Normal",
         s_large="Large", s_xl="XL", s_reset="↺  Reset Everything",
-        btn_th="🇹🇭 Thai", btn_en="🇺🇸 English",
+        btn_th="TH Thai", btn_en="EN English",
     },
 }
 local curLang = _G.SST.curLang or "TH"
@@ -153,6 +168,17 @@ local function SaveAll()
     _G.SST.WIN_KEY     = tostring(WIN_KEY):gsub("Enum.KeyCode.","")
     _G.SST.kbMode      = kbModeRef[1]
     _G.SST.savedScripts= savedScripts
+    -- บันทึก Theme settings
+    _G.SST.Theme_Accent    = {Theme.Accent.R, Theme.Accent.G, Theme.Accent.B}
+    _G.SST.Theme_WinBg     = {Theme.WinBg.R, Theme.WinBg.G, Theme.WinBg.B}
+    _G.SST.Theme_TopBg     = {Theme.TopBg.R, Theme.TopBg.G, Theme.TopBg.B}
+    _G.SST.Theme_CardBg    = {Theme.CardBg.R, Theme.CardBg.G, Theme.CardBg.B}
+    _G.SST.Theme_WinRadius  = Theme.WinRadius
+    _G.SST.Theme_CardRadius = Theme.CardRadius
+    _G.SST.Theme_WinOpacity = Theme.WinOpacity
+    _G.SST.Theme_TabAnim    = Theme.TabAnim
+    _G.SST.Theme_WinW       = Theme.WinW
+    _G.SST.Theme_WinH       = Theme.WinH
     SS()
 end
 
@@ -288,88 +314,264 @@ local function macBtn(name,color,px,fn)
     b.MouseButton1Click:Connect(fn); return b
 end
 
--- 🔴 Mini / close
-macBtn("CloseBtn",Color3.fromRGB(255,59,48),8,function()
+-- [RED] Mini / close (red mac button → collapses to floating pill)
+macBtn("CloseBtn", Color3.fromRGB(255,59,48), 8, function()
     if GUI:FindFirstChild("MiniBtn") then return end
+
     local vp = workspace.CurrentCamera.ViewportSize
-    local cx = Main.AbsolutePosition.X + Main.AbsoluteSize.X/2
-    local cy = Main.AbsolutePosition.Y + Main.AbsoluteSize.Y/2
-    TweenService:Create(Main,TweenInfo.new(0.12,Enum.EasingStyle.Sine),{Size=UDim2.new(0,Theme.WinW+30,0,Theme.WinH+20)}):Play()
-    task.wait(0.1); tweenCorner(50)
-    TweenService:Create(Main,TweenInfo.new(0.44,Enum.EasingStyle.Back,Enum.EasingDirection.In),
-        {Size=UDim2.new(0,0,0,0),Position=UDim2.new(0,cx,0,cy),BackgroundTransparency=0.5}):Play()
-    task.wait(0.47); Main.Visible=false
-    local mini=Instance.new("Frame",GUI)
-    mini.Name="MiniBtn"; mini.AnchorPoint=Vector2.new(0.5,0.5)
-    mini.Position=UDim2.new(0,cx,0,cy); mini.Size=UDim2.new(0,0,0,0)
-    mini.BackgroundColor3=Color3.fromRGB(16,16,16); mini.BorderSizePixel=0; mini.ZIndex=50
-    Instance.new("UICorner",mini).CornerRadius=UDim.new(0,16)
-    local msk=Instance.new("UIStroke",mini); msk.Color=Theme.Accent; msk.Thickness=1.5
-    local mt=Instance.new("TextLabel",mini); mt.Size=UDim2.new(1,0,1,0); mt.BackgroundTransparency=1
-    mt.Text="◈"; mt.TextColor3=Theme.Accent; mt.Font=Enum.Font.GothamBold; mt.TextSize=18; mt.ZIndex=51
-    TweenService:Create(mini,TweenInfo.new(0.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,45,0,45)}):Play()
-    local ca=Instance.new("TextButton",mini); ca.Size=UDim2.new(1,0,1,0)
-    ca.BackgroundTransparency=1; ca.Text=""; ca.ZIndex=52
+    local cx  = Main.AbsolutePosition.X + Main.AbsoluteSize.X / 2
+    local cy  = Main.AbsolutePosition.Y + Main.AbsoluteSize.Y / 2
+
+    TweenService:Create(Main, TweenInfo.new(0.12, Enum.EasingStyle.Sine),
+        {Size = UDim2.new(0, Theme.WinW + 30, 0, Theme.WinH + 20)}):Play()
+    task.wait(0.1)
+    tweenCorner(50)
+    TweenService:Create(Main, TweenInfo.new(0.44, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+        {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0, cx, 0, cy), BackgroundTransparency = 0.5}):Play()
+    task.wait(0.47)
+    Main.Visible = false
+
+    -- floating mini pill
+    local mini = Instance.new("Frame", GUI)
+    mini.Name               = "MiniBtn"
+    mini.AnchorPoint        = Vector2.new(0.5, 0.5)
+    mini.Position           = UDim2.new(0, cx, 0, cy)
+    mini.Size               = UDim2.new(0, 0, 0, 0)
+    mini.BackgroundColor3   = Color3.fromRGB(16, 16, 16)
+    mini.BorderSizePixel    = 0
+    mini.ZIndex             = 50
+    Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 16)
+
+    local msk     = Instance.new("UIStroke", mini)
+    msk.Color     = Theme.Accent
+    msk.Thickness = 1.5
+
+    local mt = Instance.new("TextLabel", mini)
+    mt.Size                 = UDim2.new(1, 0, 1, 0)
+    mt.BackgroundTransparency = 1
+    mt.Text                 = "◈"
+    mt.TextColor3           = Theme.Accent
+    mt.Font                 = Enum.Font.GothamBold
+    mt.TextSize             = 18
+    mt.ZIndex               = 51
+
+    TweenService:Create(mini, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        {Size = UDim2.new(0, 45, 0, 45)}):Play()
+
+    local ca = Instance.new("TextButton", mini)
+    ca.Size                 = UDim2.new(1, 0, 1, 0)
+    ca.BackgroundTransparency = 1
+    ca.Text                 = ""
+    ca.ZIndex               = 52
+
     ca.MouseEnter:Connect(function()
-        TweenService:Create(msk,TweenInfo.new(0.15),{Thickness=2.5}):Play()
-        TweenService:Create(mini,TweenInfo.new(0.15,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,52,0,52)}):Play()
+        TweenService:Create(msk,  TweenInfo.new(0.15), {Thickness = 2.5}):Play()
+        TweenService:Create(mini, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Size = UDim2.new(0, 52, 0, 52)}):Play()
     end)
     ca.MouseLeave:Connect(function()
-        TweenService:Create(msk,TweenInfo.new(0.15),{Thickness=1.5}):Play()
-        TweenService:Create(mini,TweenInfo.new(0.15,Enum.EasingStyle.Sine),{Size=UDim2.new(0,45,0,45)}):Play()
+        TweenService:Create(msk,  TweenInfo.new(0.15), {Thickness = 1.5}):Play()
+        TweenService:Create(mini, TweenInfo.new(0.15, Enum.EasingStyle.Sine),
+            {Size = UDim2.new(0, 45, 0, 45)}):Play()
     end)
     ca.MouseButton1Click:Connect(function()
-        local mp=mini.AbsolutePosition; local ms=mini.AbsoluteSize
-        local ox=mp.X+ms.X/2; local oy=mp.Y+ms.Y/2
-        TweenService:Create(mini,TweenInfo.new(0.18,Enum.EasingStyle.Back,Enum.EasingDirection.In),{Size=UDim2.new(0,0,0,0)}):Play()
-        task.wait(0.2); mini:Destroy()
-        Main.Visible=true; Main.BackgroundTransparency=0.5
-        Main.Size=UDim2.new(0,0,0,0); Main.Position=UDim2.new(0,ox,0,oy)
+        local mp = mini.AbsolutePosition
+        local ms = mini.AbsoluteSize
+        local ox = mp.X + ms.X / 2
+        local oy = mp.Y + ms.Y / 2
+
+        TweenService:Create(mini, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+            {Size = UDim2.new(0, 0, 0, 0)}):Play()
+        task.wait(0.2)
+        mini:Destroy()
+
+        Main.Visible              = true
+        Main.BackgroundTransparency = 0.5
+        Main.Size                 = UDim2.new(0, 0, 0, 0)
+        Main.Position             = UDim2.new(0, ox, 0, oy)
         tweenCorner(Theme.WinRadius)
-        TweenService:Create(Main,TweenInfo.new(0.55,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
-            {Size=NORMAL_SIZE,Position=NORMAL_POS,BackgroundTransparency=Theme.WinOpacity}):Play()
+        TweenService:Create(Main, TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Size = NORMAL_SIZE, Position = NORMAL_POS, BackgroundTransparency = Theme.WinOpacity}):Play()
     end)
 end)
 
--- island overlay
-local islandClick=Instance.new("TextButton",Main)
-islandClick.Size=UDim2.new(1,0,1,0); islandClick.BackgroundTransparency=1
-islandClick.Text=""; islandClick.ZIndex=3; islandClick.Visible=false
-local iDot=Instance.new("Frame",islandClick); iDot.AnchorPoint=Vector2.new(0,0.5)
-iDot.Position=UDim2.new(0,10,0.5,0); iDot.Size=UDim2.new(0,7,0,7)
-iDot.BackgroundColor3=Theme.Accent; iDot.BorderSizePixel=0; iDot.ZIndex=4
-Instance.new("UICorner",iDot).CornerRadius=UDim.new(1,0)
-local iLbl=Instance.new("TextLabel",islandClick)
-iLbl.Position=UDim2.new(0,22,0,0); iLbl.Size=UDim2.new(1,-54,1,0)
-iLbl.BackgroundTransparency=1; iLbl.Text=WIN_NAME
-iLbl.TextColor3=Color3.fromRGB(210,210,210); iLbl.Font=Enum.Font.GothamBold
-iLbl.TextSize=12; iLbl.ZIndex=4; iLbl.TextXAlignment=Enum.TextXAlignment.Left
-local iArr=Instance.new("TextLabel",islandClick); iArr.BackgroundTransparency=1
-iArr.AnchorPoint=Vector2.new(1,0.5); iArr.Position=UDim2.new(1,-8,0.5,0)
-iArr.Size=UDim2.new(0,16,1,0); iArr.Text="▼"; iArr.TextColor3=Theme.Accent
-iArr.Font=Enum.Font.GothamBold; iArr.TextSize=9; iArr.ZIndex=4
-onThemeChange("Accent",function(c) iDot.BackgroundColor3=c; iArr.TextColor3=c end)
+-- ══════════════════════════════════════════════════════
+--  ISLAND OVERLAY  (Dynamic Island style)
+-- ══════════════════════════════════════════════════════
 
+-- invisible hit-area covering the whole pill
+local islandClick = Instance.new("TextButton", Main)
+islandClick.Size               = UDim2.new(1, 0, 1, 0)
+islandClick.BackgroundTransparency = 1
+islandClick.Text               = ""
+islandClick.ZIndex             = 3
+islandClick.Visible            = false
+
+-- ── live pulse dot ──────────────────────────────────
+local iDot = Instance.new("Frame", islandClick)
+iDot.AnchorPoint      = Vector2.new(0, 0.5)
+iDot.Position         = UDim2.new(0, 12, 0.5, 0)
+iDot.Size             = UDim2.new(0, 8, 0, 8)
+iDot.BackgroundColor3 = Theme.Accent
+iDot.BorderSizePixel  = 0
+iDot.ZIndex           = 5
+Instance.new("UICorner", iDot).CornerRadius = UDim.new(1, 0)
+
+-- pulse ring behind dot
+local iPulse = Instance.new("Frame", islandClick)
+iPulse.AnchorPoint      = Vector2.new(0.5, 0.5)
+iPulse.Position         = UDim2.new(0, 16, 0.5, 0)
+iPulse.Size             = UDim2.new(0, 8, 0, 8)
+iPulse.BackgroundColor3 = Theme.Accent
+iPulse.BackgroundTransparency = 0.4
+iPulse.BorderSizePixel  = 0
+iPulse.ZIndex           = 4
+Instance.new("UICorner", iPulse).CornerRadius = UDim.new(1, 0)
+
+-- ── icon / logo text ─────────────────────────────────
+local iIcon = Instance.new("TextLabel", islandClick)
+iIcon.Position            = UDim2.new(0, 26, 0, 0)
+iIcon.Size                = UDim2.new(0, 18, 1, 0)
+iIcon.BackgroundTransparency = 1
+iIcon.Text                = "◈"
+iIcon.TextColor3          = Theme.Accent
+iIcon.Font                = Enum.Font.GothamBold
+iIcon.TextSize            = 13
+iIcon.ZIndex              = 5
+
+-- ── hub name label ───────────────────────────────────
+local iLbl = Instance.new("TextLabel", islandClick)
+iLbl.Position            = UDim2.new(0, 46, 0, 0)
+iLbl.Size                = UDim2.new(1, -110, 1, 0)
+iLbl.BackgroundTransparency = 1
+iLbl.Text                = WIN_NAME
+iLbl.TextColor3          = Color3.fromRGB(220, 220, 220)
+iLbl.Font                = Enum.Font.GothamBold
+iLbl.TextSize            = 12
+iLbl.ZIndex              = 5
+iLbl.TextXAlignment      = Enum.TextXAlignment.Left
+
+-- ── live clock ───────────────────────────────────────
+local iTime = Instance.new("TextLabel", islandClick)
+iTime.AnchorPoint        = Vector2.new(1, 0.5)
+iTime.Position           = UDim2.new(1, -28, 0.5, 0)
+iTime.Size               = UDim2.new(0, 46, 0, 18)
+iTime.BackgroundTransparency = 1
+iTime.Text               = "--:--"
+iTime.TextColor3         = Color3.fromRGB(140, 140, 140)
+iTime.Font               = Enum.Font.Code
+iTime.TextSize           = 11
+iTime.ZIndex             = 5
+iTime.TextXAlignment     = Enum.TextXAlignment.Right
+
+-- update clock every second while island is visible
+task.spawn(function()
+    while true do
+        task.wait(1)
+        pcall(function()
+            if islandClick.Visible then
+                local t  = os.time()
+                local hh = math.floor(t / 3600) % 24
+                local mm = math.floor(t / 60)   % 60
+                iTime.Text = string.format("%02d:%02d", hh, mm)
+            end
+        end)
+    end
+end)
+
+-- ── expand chevron ───────────────────────────────────
+local iArr = Instance.new("TextLabel", islandClick)
+iArr.AnchorPoint        = Vector2.new(1, 0.5)
+iArr.Position           = UDim2.new(1, -8, 0.5, 1)
+iArr.Size               = UDim2.new(0, 16, 0, 16)
+iArr.BackgroundTransparency = 1
+iArr.Text               = "⌄"
+iArr.TextColor3         = Theme.Accent
+iArr.Font               = Enum.Font.GothamBold
+iArr.TextSize           = 14
+iArr.ZIndex             = 5
+
+-- ── theme callbacks ──────────────────────────────────
+onThemeChange("Accent", function(c)
+    iDot.BackgroundColor3  = c
+    iPulse.BackgroundColor3 = c
+    iIcon.TextColor3       = c
+    iArr.TextColor3        = c
+end)
+
+-- ── hover effects ────────────────────────────────────
+islandClick.MouseEnter:Connect(function()
+    TweenService:Create(Main, TweenInfo.new(0.18, Enum.EasingStyle.Sine),
+        {BackgroundColor3 = Color3.fromRGB(26, 26, 26)}):Play()
+    TweenService:Create(iLbl, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+    TweenService:Create(iArr, TweenInfo.new(0.15), {TextTransparency = 0}):Play()
+end)
+islandClick.MouseLeave:Connect(function()
+    TweenService:Create(Main, TweenInfo.new(0.18, Enum.EasingStyle.Sine),
+        {BackgroundColor3 = Theme.WinBg}):Play()
+    TweenService:Create(iLbl, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(220, 220, 220)}):Play()
+end)
+
+-- ── pulse animation loop ─────────────────────────────
+task.spawn(function()
+    while true do
+        task.wait(1.6)
+        pcall(function()
+            if not islandClick.Visible then return end
+            TweenService:Create(iPulse, TweenInfo.new(0.6, Enum.EasingStyle.Sine),
+                {Size = UDim2.new(0, 18, 0, 18), BackgroundTransparency = 1}):Play()
+            task.wait(0.65)
+            iPulse.Size = UDim2.new(0, 8, 0, 8)
+            iPulse.BackgroundTransparency = 0.4
+        end)
+    end
+end)
+
+-- ── restore from island ──────────────────────────────
 local function restoreIsland()
     if not isIsland then return end
-    isIsland=false; islandClick.Visible=false; Top.Visible=true
-    TweenService:Create(Main,TweenInfo.new(0.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
-        {Size=NORMAL_SIZE,Position=NORMAL_POS}):Play()
-    tweenCorner(Theme.WinRadius,0.05)
+    isIsland = false
+
+    -- shrink chevron to signal action
+    TweenService:Create(iArr, TweenInfo.new(0.1), {Rotation = 180}):Play()
+    task.wait(0.08)
+
+    islandClick.Visible = false
+    Top.Visible         = true
+
+    -- pill expand then window opens
+    TweenService:Create(Main, TweenInfo.new(0.15, Enum.EasingStyle.Sine),
+        {Size = UDim2.new(0, 240, 0, 36)}):Play()
+    task.wait(0.12)
+
+    tweenCorner(Theme.WinRadius, 0)
+    TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        {Size = NORMAL_SIZE, Position = NORMAL_POS}):Play()
+
+    iArr.Rotation = 0
 end
 islandClick.MouseButton1Click:Connect(restoreIsland)
 
--- 🟡 Island
-macBtn("MinimizeBtn",Color3.fromRGB(255,204,0),24,function()
+-- [YEL] Island  (yellow mac button)
+macBtn("MinimizeBtn", Color3.fromRGB(255,204,0), 24, function()
     if GUI:FindFirstChild("MiniBtn") or isIsland then return end
-    isIsland=true; Top.Visible=false
-    TweenService:Create(Main,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),
-        {Size=UDim2.new(0,200,0,32),Position=UDim2.new(0.5,0,0,14)}):Play()
-    tweenCorner(16)
-    task.delay(0.45,function() islandClick.Visible=true end)
+    isIsland  = true
+    Top.Visible = false
+
+    -- step 1: squeeze slightly wider before shrinking (feels physical)
+    TweenService:Create(Main, TweenInfo.new(0.12, Enum.EasingStyle.Sine),
+        {Size = UDim2.new(0, Theme.WinW + 20, 0, Theme.WinH + 10)}):Play()
+    task.wait(0.10)
+
+    -- step 2: collapse into pill at top-center
+    tweenCorner(18)
+    TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
+        {Size = UDim2.new(0, 220, 0, 32), Position = UDim2.new(0.5, 0, 0, 26)}):Play()
+
+    task.delay(0.42, function() islandClick.Visible = true end)
 end)
 
--- 🟢 Fullscreen
+-- [GRN] Fullscreen
 macBtn("MaximizeBtn",Color3.fromRGB(52,199,89),40,function()
     if isIsland or GUI:FindFirstChild("MiniBtn") then return end
     isMax=not isMax
@@ -426,59 +628,106 @@ onThemeChange("Accent",function(c) RightScroll.ScrollBarImageColor3=c end)
 MakeDraggable(Top,Main)
 
 -- keybind toggle
+-- ── keyboard shortcut path to island ────────────────
 local function goIsland()
     if GUI:FindFirstChild("MiniBtn") or isIsland then return end
-    isIsland=true; Top.Visible=false
-    TweenService:Create(Main,TweenInfo.new(0.45,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),
-        {Size=UDim2.new(0,200,0,32),Position=UDim2.new(0.5,0,0,14)}):Play()
-    task.delay(0.02,function()
-        TweenService:Create(MainCorner,TweenInfo.new(0.3,Enum.EasingStyle.Sine),{CornerRadius=UDim.new(0,16)}):Play()
-    end)
-    task.delay(0.4,function() islandClick.Visible=true end)
+    isIsland    = true
+    Top.Visible = false
+
+    -- slight bounce before collapse
+    TweenService:Create(Main, TweenInfo.new(0.1, Enum.EasingStyle.Sine),
+        {Size = UDim2.new(0, Theme.WinW + 18, 0, Theme.WinH + 8)}):Play()
+    task.wait(0.08)
+
+    TweenService:Create(MainCorner, TweenInfo.new(0.35, Enum.EasingStyle.Sine),
+        {CornerRadius = UDim.new(0, 18)}):Play()
+    TweenService:Create(Main, TweenInfo.new(0.48, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
+        {Size = UDim2.new(0, 220, 0, 32), Position = UDim2.new(0.5, 0, 0, 26)}):Play()
+
+    task.delay(0.44, function() islandClick.Visible = true end)
 end
 
+-- ── restore from mini pill ───────────────────────────
 local function restoreFromMini()
-    local mini=GUI:FindFirstChild("MiniBtn"); if not mini then return end
-    local mp=mini.AbsolutePosition; local ms=mini.AbsoluteSize
-    local ox=mp.X+ms.X/2; local oy=mp.Y+ms.Y/2
-    TweenService:Create(mini,TweenInfo.new(0.18,Enum.EasingStyle.Back,Enum.EasingDirection.In),{Size=UDim2.new(0,0,0,0)}):Play()
-    task.delay(0.2,function()
-        mini:Destroy(); Main.Visible=true; Main.BackgroundTransparency=0.5
-        Main.Size=UDim2.new(0,0,0,0); Main.Position=UDim2.new(0,ox,0,oy)
+    local mini = GUI:FindFirstChild("MiniBtn")
+    if not mini then return end
+
+    local mp = mini.AbsolutePosition
+    local ms = mini.AbsoluteSize
+    local ox = mp.X + ms.X / 2
+    local oy = mp.Y + ms.Y / 2
+
+    TweenService:Create(mini, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+        {Size = UDim2.new(0, 0, 0, 0)}):Play()
+
+    task.delay(0.2, function()
+        mini:Destroy()
+        Main.Visible              = true
+        Main.BackgroundTransparency = 0.5
+        Main.Size                 = UDim2.new(0, 0, 0, 0)
+        Main.Position             = UDim2.new(0, ox, 0, oy)
         tweenCorner(Theme.WinRadius)
-        TweenService:Create(Main,TweenInfo.new(0.55,Enum.EasingStyle.Back,Enum.EasingDirection.Out),
-            {Size=NORMAL_SIZE,Position=NORMAL_POS,BackgroundTransparency=Theme.WinOpacity}):Play()
+        TweenService:Create(Main, TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Size = NORMAL_SIZE, Position = NORMAL_POS, BackgroundTransparency = Theme.WinOpacity}):Play()
     end)
 end
 
-UserInputService.InputBegan:Connect(function(inp,gp)
-    if gp or inp.KeyCode~=WIN_KEY then return end
-    if isIsland then restoreIsland()
-    elseif GUI:FindFirstChild("MiniBtn") then restoreFromMini()
+-- ── keybind toggle (Island / Mini / Restore) ─────────
+UserInputService.InputBegan:Connect(function(inp, gp)
+    if gp or inp.KeyCode ~= WIN_KEY then return end
+
+    if isIsland then
+        restoreIsland()
+    elseif GUI:FindFirstChild("MiniBtn") then
+        restoreFromMini()
+    elseif kbModeRef[1] == "mini" then
+        -- collapse to mini pill via keybind
+        if GUI:FindFirstChild("MiniBtn") then return end
+
+        TweenService:Create(Main, TweenInfo.new(0.12, Enum.EasingStyle.Sine),
+            {Size = UDim2.new(0, 650, 0, 420)}):Play()
+        task.wait(0.1)
+        TweenService:Create(MainCorner, TweenInfo.new(0.3, Enum.EasingStyle.Sine),
+            {CornerRadius = UDim.new(0, 50)}):Play()
+        TweenService:Create(Main, TweenInfo.new(0.44, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+            {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0, 36, 0, 72), BackgroundTransparency = 0.5}):Play()
+        task.wait(0.47)
+        Main.Visible = false
+
+        local mini = Instance.new("Frame", GUI)
+        mini.Name               = "MiniBtn"
+        mini.AnchorPoint        = Vector2.new(0.5, 0.5)
+        mini.Position           = UDim2.new(0, 36, 0, 72)
+        mini.Size               = UDim2.new(0, 0, 0, 0)
+        mini.BackgroundColor3   = Color3.fromRGB(16, 16, 16)
+        mini.BorderSizePixel    = 0
+        mini.ZIndex             = 50
+        Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 16)
+
+        local msk       = Instance.new("UIStroke", mini)
+        msk.Color       = Theme.Accent
+        msk.Thickness   = 1.5
+
+        local mt = Instance.new("TextLabel", mini)
+        mt.Size                 = UDim2.new(1, 0, 1, 0)
+        mt.BackgroundTransparency = 1
+        mt.Text                 = "◈"
+        mt.TextColor3           = Theme.Accent
+        mt.Font                 = Enum.Font.GothamBold
+        mt.TextSize             = 18
+        mt.ZIndex               = 51
+
+        TweenService:Create(mini, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Size = UDim2.new(0, 45, 0, 45)}):Play()
+
+        local ca = Instance.new("TextButton", mini)
+        ca.Size                 = UDim2.new(1, 0, 1, 0)
+        ca.BackgroundTransparency = 1
+        ca.Text                 = ""
+        ca.ZIndex               = 52
+        ca.MouseButton1Click:Connect(restoreFromMini)
     else
-        if kbModeRef[1]=="mini" then
-            -- go mini via keybind
-            if GUI:FindFirstChild("MiniBtn") then return end
-            TweenService:Create(Main,TweenInfo.new(0.12,Enum.EasingStyle.Sine),{Size=UDim2.new(0,650,0,420)}):Play()
-            task.wait(0.1)
-            TweenService:Create(MainCorner,TweenInfo.new(0.3,Enum.EasingStyle.Sine),{CornerRadius=UDim.new(0,50)}):Play()
-            TweenService:Create(Main,TweenInfo.new(0.44,Enum.EasingStyle.Back,Enum.EasingDirection.In),
-                {Size=UDim2.new(0,0,0,0),Position=UDim2.new(0,52,0,52),BackgroundTransparency=0.5}):Play()
-            task.wait(0.47); Main.Visible=false
-            local mini=Instance.new("Frame",GUI); mini.Name="MiniBtn"; mini.AnchorPoint=Vector2.new(0.5,0.5)
-            mini.Position=UDim2.new(0,52,0,52); mini.Size=UDim2.new(0,0,0,0)
-            mini.BackgroundColor3=Color3.fromRGB(16,16,16); mini.BorderSizePixel=0; mini.ZIndex=50
-            Instance.new("UICorner",mini).CornerRadius=UDim.new(0,16)
-            local msk=Instance.new("UIStroke",mini); msk.Color=Theme.Accent; msk.Thickness=1.5
-            local mt=Instance.new("TextLabel",mini); mt.Size=UDim2.new(1,0,1,0); mt.BackgroundTransparency=1
-            mt.Text="◈"; mt.TextColor3=Theme.Accent; mt.Font=Enum.Font.GothamBold; mt.TextSize=18; mt.ZIndex=51
-            TweenService:Create(mini,TweenInfo.new(0.5,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,45,0,45)}):Play()
-            local ca=Instance.new("TextButton",mini); ca.Size=UDim2.new(1,0,1,0)
-            ca.BackgroundTransparency=1; ca.Text=""; ca.ZIndex=52
-            ca.MouseButton1Click:Connect(restoreFromMini)
-        else
-            goIsland()
-        end
+        goIsland()
     end
 end)
 
@@ -748,7 +997,7 @@ local function AddTab(tabname)
 
         local sb=Instance.new("TextBox",wrap); sb.BackgroundColor3=Color3.fromRGB(35,35,35); sb.BorderSizePixel=0
         sb.Position=UDim2.new(0,0,0,SB_Y); sb.Size=UDim2.new(1,0,0,SB_H)
-        sb.Font=Enum.Font.Gotham; sb.PlaceholderText="🔍 ค้นหา..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
+        sb.Font=Enum.Font.Gotham; sb.PlaceholderText=">> ค้นหา..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
         sb.Text=""; sb.TextColor3=Color3.fromRGB(200,200,200); sb.TextSize=11; sb.ClearTextOnFocus=false
         sb.Visible=false; sb.ZIndex=3
         Instance.new("UICorner",sb).CornerRadius=UDim.new(0,5)
@@ -852,7 +1101,7 @@ local function AddTab(tabname)
 
         local sb=Instance.new("TextBox",wrap); sb.BackgroundColor3=Color3.fromRGB(35,35,35); sb.BorderSizePixel=0
         sb.Position=UDim2.new(0,0,0,SB_Y); sb.Size=UDim2.new(1,0,0,SB_H)
-        sb.Font=Enum.Font.Gotham; sb.PlaceholderText="🔍 ค้นหา..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
+        sb.Font=Enum.Font.Gotham; sb.PlaceholderText=">> ค้นหา..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
         sb.Text=""; sb.TextColor3=Color3.fromRGB(200,200,200); sb.TextSize=11; sb.ClearTextOnFocus=false
         sb.Visible=false; sb.ZIndex=3
         Instance.new("UICorner",sb).CornerRadius=UDim.new(0,5)
@@ -1043,22 +1292,69 @@ local function nqRestack()
 end
 local function AddNotification(txt)
     pushLog(txt)
+    -- ── island notification (drops below the pill) ──────
     if isIsland then
-        local iw=Instance.new("Frame",GUI); iw.AnchorPoint=Vector2.new(0.5,0)
-        iw.BackgroundColor3=Color3.fromRGB(18,18,18); iw.BorderSizePixel=0
-        iw.Position=UDim2.new(0.5,0,0,44); iw.Size=UDim2.new(0,180,0,0); iw.ZIndex=200
-        Instance.new("UICorner",iw).CornerRadius=UDim.new(0,8)
-        local isk=Instance.new("UIStroke",iw); isk.Color=Theme.Accent; isk.Thickness=1
-        local it=Instance.new("TextLabel",iw); it.BackgroundTransparency=1
-        it.Position=UDim2.new(0,8,0,6); it.Size=UDim2.new(1,-16,0,24)
-        it.Font=Enum.Font.Gotham; it.Text=txt; it.TextColor3=Color3.fromRGB(200,200,200)
-        it.TextSize=10; it.ZIndex=201; it.TextWrapped=true; it.TextXAlignment=Enum.TextXAlignment.Center
-        iw:TweenSize(UDim2.new(0,180,0,36),"Out","Quart",0.25,true)
-        task.delay(2,function()
-            TweenService:Create(iw,TweenInfo.new(0.2,Enum.EasingStyle.Sine),{BackgroundTransparency=1,Position=UDim2.new(0.5,0,0,36)}):Play()
-            pcall(function() isk.Transparency=1; it.TextTransparency=1 end)
-            task.wait(0.25); iw:Destroy()
-        end); return
+        local iw = Instance.new("Frame", GUI)
+        iw.AnchorPoint      = Vector2.new(0.5, 0)
+        iw.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        iw.BorderSizePixel  = 0
+        iw.Position         = UDim2.new(0.5, 0, 0, 48)
+        iw.Size             = UDim2.new(0, 220, 0, 0)
+        iw.ZIndex           = 200
+        iw.ClipsDescendants = true
+        Instance.new("UICorner", iw).CornerRadius = UDim.new(0, 10)
+
+        local isk     = Instance.new("UIStroke", iw)
+        isk.Color     = Theme.Accent
+        isk.Thickness = 1.2
+
+        -- accent left bar
+        local iBar = Instance.new("Frame", iw)
+        iBar.Size             = UDim2.new(0, 3, 1, 0)
+        iBar.BackgroundColor3 = Theme.Accent
+        iBar.BorderSizePixel  = 0
+        Instance.new("UICorner", iBar).CornerRadius = UDim.new(0, 2)
+
+        -- icon
+        local iIco = Instance.new("TextLabel", iw)
+        iIco.Position            = UDim2.new(0, 10, 0, 0)
+        iIco.Size                = UDim2.new(0, 18, 1, 0)
+        iIco.BackgroundTransparency = 1
+        iIco.Text                = "◈"
+        iIco.TextColor3          = Theme.Accent
+        iIco.Font                = Enum.Font.GothamBold
+        iIco.TextSize            = 12
+        iIco.ZIndex              = 202
+
+        -- message
+        local it = Instance.new("TextLabel", iw)
+        it.Position          = UDim2.new(0, 32, 0, 0)
+        it.Size              = UDim2.new(1, -40, 1, 0)
+        it.BackgroundTransparency = 1
+        it.Font              = Enum.Font.Gotham
+        it.Text              = txt
+        it.TextColor3        = Color3.fromRGB(205, 205, 205)
+        it.TextSize          = 11
+        it.ZIndex            = 201
+        it.TextWrapped       = true
+        it.TextXAlignment    = Enum.TextXAlignment.Left
+
+        -- drop in from above the pill
+        iw:TweenSize(UDim2.new(0, 220, 0, 38), "Out", "Quart", 0.28, true)
+
+        task.delay(2.4, function()
+            TweenService:Create(iw, TweenInfo.new(0.22, Enum.EasingStyle.Sine),
+                {BackgroundTransparency = 1, Position = UDim2.new(0.5, 0, 0, 44)}):Play()
+            pcall(function()
+                isk.Transparency = 1
+                it.TextTransparency = 1
+                iIco.TextTransparency = 1
+                iBar.BackgroundTransparency = 1
+            end)
+            task.wait(0.25)
+            iw:Destroy()
+        end)
+        return
     end
     local nf=Instance.new("Frame",GUI); nf.AnchorPoint=Vector2.new(0.5,1)
     nf.BackgroundColor3=Color3.fromRGB(18,18,18); nf.BorderSizePixel=0
@@ -1112,7 +1408,7 @@ local SwTitle=Instance.new("TextLabel",SwTop); SwTitle.BackgroundTransparency=1
 SwTitle.Position=UDim2.new(0,12,0,0); SwTitle.Size=UDim2.new(1,-50,1,0)
 SwTitle.Font=Enum.Font.GothamBold; SwTitle.TextColor3=Theme.Accent; SwTitle.TextSize=12; SwTitle.ZIndex=52
 SwTitle.TextXAlignment=Enum.TextXAlignment.Left
-local function updSwTitle() SwTitle.Text="⚙️  "..(curLang=="TH" and "ตั้งค่า UI" or "UI Settings") end
+local function updSwTitle() SwTitle.Text="[=] "..(curLang=="TH" and "ตั้งค่า UI" or "UI Settings") end
 updSwTitle(); onLangChange(updSwTitle)
 onThemeChange("Accent",function(c) if SwTitle and SwTitle.Parent then SwTitle.TextColor3=c end end)
 
@@ -1221,7 +1517,7 @@ local function BuildUISettings()
     onThemeChange("WinBg",function(c) if LockScreen and LockScreen.Parent then LockScreen.BackgroundColor3=c end end)
     local lockIcon=Instance.new("TextLabel",LockScreen); lockIcon.BackgroundTransparency=1
     lockIcon.AnchorPoint=Vector2.new(0.5,0); lockIcon.Position=UDim2.new(0.5,0,0,30)
-    lockIcon.Size=UDim2.new(0,60,0,60); lockIcon.Font=Enum.Font.GothamBold; lockIcon.Text="🔒"; lockIcon.TextSize=36; lockIcon.ZIndex=53
+    lockIcon.Size=UDim2.new(0,60,0,60); lockIcon.Font=Enum.Font.GothamBold; lockIcon.Text="[L]"; lockIcon.TextSize=36; lockIcon.ZIndex=53
     local lockHint=Instance.new("TextLabel",LockScreen); lockHint.BackgroundTransparency=1
     lockHint.AnchorPoint=Vector2.new(0.5,0); lockHint.Position=UDim2.new(0.5,0,0,95); lockHint.Size=UDim2.new(0.7,0,0,20)
     lockHint.Font=Enum.Font.Gotham; lockHint.Text="Enter password"; lockHint.TextSize=11; lockHint.TextColor3=Color3.fromRGB(120,120,120); lockHint.ZIndex=53
@@ -1243,7 +1539,7 @@ local function BuildUISettings()
 
     local function tryUnlock()
         if pwBox.Text==DEV_PASSWORD then
-            devUnlocked=true; lockIcon.Text="🔓"
+            devUnlocked=true; lockIcon.Text="[O]"
             TweenService:Create(LockScreen,TweenInfo.new(0.3,Enum.EasingStyle.Sine),{BackgroundTransparency=1}):Play()
             task.delay(0.3,function() LockScreen.Visible=false end)
             AddNotification("Dev mode unlocked!")
@@ -1295,10 +1591,10 @@ local function BuildUISettings()
     outputLbl.TextXAlignment=Enum.TextXAlignment.Left; outputLbl.TextYAlignment=Enum.TextYAlignment.Top; outputLbl.TextWrapped=true
     local copyOut=Instance.new("TextButton",outputBg); copyOut.AnchorPoint=Vector2.new(1,0.5)
     copyOut.Position=UDim2.new(1,-4,0.5,0); copyOut.Size=UDim2.new(0,26,0,26); copyOut.BackgroundColor3=Theme.Accent
-    copyOut.BorderSizePixel=0; copyOut.Font=Enum.Font.GothamBold; copyOut.Text="📋"; copyOut.TextSize=12
+    copyOut.BorderSizePixel=0; copyOut.Font=Enum.Font.GothamBold; copyOut.Text="[C]"; copyOut.TextSize=12
     copyOut.TextColor3=Color3.fromRGB(15,15,15); copyOut.AutoButtonColor=false
     Instance.new("UICorner",copyOut).CornerRadius=UDim.new(0,5)
-    copyOut.MouseButton1Click:Connect(function() GuiService:SetClipboard(outputLbl.Text); copyOut.Text="✓"; task.delay(1,function() copyOut.Text="📋" end) end)
+    copyOut.MouseButton1Click:Connect(function() GuiService:SetClipboard(outputLbl.Text); copyOut.Text="✓"; task.delay(1,function() copyOut.Text="[C]" end) end)
     onThemeChange("Accent",function(c) copyOut.BackgroundColor3=c end)
     local runBtn=Instance.new("TextButton",DevR); runBtn.Position=UDim2.new(0,0,1,-22); runBtn.Size=UDim2.new(1,0,0,20)
     runBtn.BackgroundColor3=Theme.Accent; runBtn.BorderSizePixel=0; runBtn.Font=Enum.Font.GothamBold; runBtn.Text="▶ Run"; runBtn.TextSize=11
@@ -1326,7 +1622,7 @@ local function BuildUISettings()
     local sfH=Instance.new("Frame",DevL); sfH.BackgroundTransparency=1; sfH.Size=UDim2.new(1,0,0,20)
     local sfT=Instance.new("TextLabel",sfH); sfT.BackgroundTransparency=1; sfT.Size=UDim2.new(1,0,1,0)
     sfT.Font=Enum.Font.GothamBold; sfT.TextSize=10; sfT.TextColor3=Color3.fromRGB(155,155,155)
-    sfT.TextXAlignment=Enum.TextXAlignment.Left; sfT.Text="📁 Script Folder"
+    sfT.TextXAlignment=Enum.TextXAlignment.Left; sfT.Text="[F] Script Folder"
 
     local scriptList=Instance.new("ScrollingFrame",DevL); scriptList.BackgroundColor3=Color3.fromRGB(22,22,22); scriptList.BorderSizePixel=0
     scriptList.Size=UDim2.new(1,0,0,120); scriptList.CanvasSize=UDim2.new(0,0,0,0); scriptList.ScrollBarThickness=2; scriptList.ScrollBarImageColor3=Theme.Accent
@@ -1336,16 +1632,16 @@ local function BuildUISettings()
     scriptListContainer=scriptList
 
     if #savedScripts==0 then
-        table.insert(savedScripts,{name="🔍 Remote Spy",code=[[
+        table.insert(savedScripts,{name="[S] Remote Spy",code=[[
 local function startRemoteSpy()
     for _, v in pairs(game:GetDescendants()) do
         if v:IsA("RemoteEvent") then
-            v.OnClientEvent:Connect(function(...) print("📡",v.Name,...) end)
+            v.OnClientEvent:Connect(function(...) print("[E]",v.Name,...) end)
         end
     end
     game.DescendantAdded:Connect(function(v)
         if v:IsA("RemoteEvent") then
-            v.OnClientEvent:Connect(function(...) print("📡",v.Name,...) end)
+            v.OnClientEvent:Connect(function(...) print("[E]",v.Name,...) end)
         end
     end)
 end
@@ -1379,7 +1675,7 @@ startRemoteSpy(); print("Remote Spy started.")
     end
 
     local saveSBtn=Instance.new("TextButton",DevL); saveSBtn.BackgroundColor3=Color3.fromRGB(26,26,26); saveSBtn.BorderSizePixel=0
-    saveSBtn.Size=UDim2.new(1,0,0,24); saveSBtn.Font=Enum.Font.GothamBold; saveSBtn.Text="💾 Save Current Script"; saveSBtn.TextSize=10
+    saveSBtn.Size=UDim2.new(1,0,0,24); saveSBtn.Font=Enum.Font.GothamBold; saveSBtn.Text="[S] Save Current Script"; saveSBtn.TextSize=10
     saveSBtn.TextColor3=Color3.fromRGB(100,100,100); saveSBtn.AutoButtonColor=false
     Instance.new("UICorner",saveSBtn).CornerRadius=UDim.new(0,5); Instance.new("UIStroke",saveSBtn).Color=Color3.fromRGB(40,40,40)
     saveSBtn.MouseButton1Click:Connect(function()
@@ -1394,9 +1690,9 @@ startRemoteSpy(); print("Remote Spy started.")
     -- Error log
     local errH=Instance.new("Frame",DevL); errH.BackgroundTransparency=1; errH.Size=UDim2.new(1,0,0,20)
     local errT=Instance.new("TextLabel",errH); errT.BackgroundTransparency=1; errT.Size=UDim2.new(1,0,1,0)
-    errT.Font=Enum.Font.GothamBold; errT.TextSize=10; errT.TextColor3=Color3.fromRGB(155,155,155); errT.TextXAlignment=Enum.TextXAlignment.Left; errT.Text="🐛 Error Log"
+    errT.Font=Enum.Font.GothamBold; errT.TextSize=10; errT.TextColor3=Color3.fromRGB(155,155,155); errT.TextXAlignment=Enum.TextXAlignment.Left; errT.Text="[!] Error Log"
     emptyErr=Instance.new("TextLabel",DevL); emptyErr.BackgroundTransparency=1; emptyErr.Size=UDim2.new(1,0,0,24)
-    emptyErr.Font=Enum.Font.Gotham; emptyErr.TextSize=10; emptyErr.TextColor3=Color3.fromRGB(60,60,60); emptyErr.Text="No errors 🎉"; emptyErr.TextXAlignment=Enum.TextXAlignment.Center
+    emptyErr.Font=Enum.Font.Gotham; emptyErr.TextSize=10; emptyErr.TextColor3=Color3.fromRGB(60,60,60); emptyErr.Text="No errors :)"; emptyErr.TextXAlignment=Enum.TextXAlignment.Center
 
     -- redefine logError with full UI now that DevL exists
     logError=function(msg,source,line)
@@ -1415,9 +1711,9 @@ startRemoteSpy(); print("Remote Spy started.")
         sl.TextXAlignment=Enum.TextXAlignment.Left; sl.Text=(source or "?")..":"..(line or "?")
         local cpE=Instance.new("TextButton",tr); cpE.AnchorPoint=Vector2.new(1,0.5); cpE.Position=UDim2.new(1,-2,0.5,0)
         cpE.Size=UDim2.new(0,22,0,22); cpE.BackgroundColor3=Color3.fromRGB(60,60,60); cpE.BorderSizePixel=0
-        cpE.Font=Enum.Font.GothamBold; cpE.Text="📋"; cpE.TextSize=10; cpE.TextColor3=Color3.new(1,1,1); cpE.AutoButtonColor=false
+        cpE.Font=Enum.Font.GothamBold; cpE.Text="[C]"; cpE.TextSize=10; cpE.TextColor3=Color3.new(1,1,1); cpE.AutoButtonColor=false
         Instance.new("UICorner",cpE).CornerRadius=UDim.new(0,4)
-        cpE.MouseButton1Click:Connect(function() GuiService:SetClipboard(tostring(msg)); cpE.Text="✓"; task.delay(1,function() cpE.Text="📋" end) end)
+        cpE.MouseButton1Click:Connect(function() GuiService:SetClipboard(tostring(msg)); cpE.Text="✓"; task.delay(1,function() cpE.Text="[C]" end) end)
         local ml=Instance.new("TextLabel",row); ml.BackgroundTransparency=1; ml.Size=UDim2.new(1,0,0,0); ml.AutomaticSize=Enum.AutomaticSize.Y
         ml.Font=Enum.Font.Code; ml.TextSize=9; ml.TextWrapped=true; ml.TextColor3=Color3.fromRGB(255,160,160); ml.TextXAlignment=Enum.TextXAlignment.Left; ml.Text=tostring(msg)
         table.insert(errRows,row)
@@ -1444,14 +1740,14 @@ startRemoteSpy(); print("Remote Spy started.")
 
     -- Tab switching
     local swTabSetting,swTabSettingUnd=makeSwTab("⚙ Settings",4,true)
-    local swTabDev,swTabDevUnd=makeSwTab("🔒 Dev",100,false)
+    local swTabDev,swTabDevUnd=makeSwTab("[L] Dev",100,false)
     local function switchSwTab(toDev)
         SwContent.Visible=not toDev; DevPanel.Visible=toDev
         swTabSetting.TextColor3=toDev and Color3.fromRGB(120,120,120) or Theme.Accent
         swTabSettingUnd.BackgroundTransparency=toDev and 1 or 0
         swTabDev.TextColor3=toDev and Theme.Accent or Color3.fromRGB(120,120,120)
         swTabDevUnd.BackgroundTransparency=toDev and 0 or 1
-        swTabDev.Text=devUnlocked and "🔓 Dev" or "🔒 Dev"
+        swTabDev.Text=devUnlocked and "[O] Dev" or "[L] Dev"
         if toDev and not devUnlocked then LockScreen.Visible=true end
     end
     swTabSetting.MouseButton1Click:Connect(function() switchSwTab(false) end)
@@ -1550,7 +1846,7 @@ startRemoteSpy(); print("Remote Spy started.")
     local bgMain={}; for _,b in ipairs(BG) do table.insert(bgMain,b[1]) end
     addColorGrid(SwL,bgMain,function(c) for _,b in ipairs(BG) do if b[1]==c then applyTheme("WinBg",b[1]); applyTheme("TopBg",b[2]); applyTheme("CardBg",b[3]); break end end end)
     addSection(SwL,"s_preset")
-    local PRESETS={{"🖤 Dark",Color3.fromRGB(51,255,255),Color3.fromRGB(17,17,17),Color3.fromRGB(25,25,25),Color3.fromRGB(28,28,28)},{"⚫ OLED",Color3.fromRGB(255,255,255),Color3.fromRGB(0,0,0),Color3.fromRGB(8,8,8),Color3.fromRGB(12,12,12)},{"💜 Purple",Color3.fromRGB(196,148,255),Color3.fromRGB(16,8,28),Color3.fromRGB(22,12,38),Color3.fromRGB(28,18,44)},{"🌊 Ocean",Color3.fromRGB(56,189,248),Color3.fromRGB(8,18,36),Color3.fromRGB(12,26,48),Color3.fromRGB(16,32,56)},{"🌿 Forest",Color3.fromRGB(74,222,128),Color3.fromRGB(8,20,10),Color3.fromRGB(12,28,14),Color3.fromRGB(16,34,18)},{"🌅 Sunset",Color3.fromRGB(251,146,60),Color3.fromRGB(24,10,8),Color3.fromRGB(34,14,10),Color3.fromRGB(40,18,12)}}
+    local PRESETS={{"Dark",Color3.fromRGB(51,255,255),Color3.fromRGB(17,17,17),Color3.fromRGB(25,25,25),Color3.fromRGB(28,28,28)},{"OLED",Color3.fromRGB(255,255,255),Color3.fromRGB(0,0,0),Color3.fromRGB(8,8,8),Color3.fromRGB(12,12,12)},{"Purple",Color3.fromRGB(196,148,255),Color3.fromRGB(16,8,28),Color3.fromRGB(22,12,38),Color3.fromRGB(28,18,44)},{"Ocean",Color3.fromRGB(56,189,248),Color3.fromRGB(8,18,36),Color3.fromRGB(12,26,48),Color3.fromRGB(16,32,56)},{"Forest",Color3.fromRGB(74,222,128),Color3.fromRGB(8,20,10),Color3.fromRGB(12,28,14),Color3.fromRGB(16,34,18)},{"Sunset",Color3.fromRGB(251,146,60),Color3.fromRGB(24,10,8),Color3.fromRGB(34,14,10),Color3.fromRGB(40,18,12)}}
     local pw=Instance.new("Frame",SwL); pw.BackgroundTransparency=1; pw.Size=UDim2.new(1,0,0,88)
     local pg=Instance.new("UIGridLayout",pw); pg.CellSize=UDim2.new(0,120,0,26); pg.CellPadding=UDim2.new(0,6,0,5); pg.FillDirection=Enum.FillDirection.Horizontal; pg.SortOrder=Enum.SortOrder.LayoutOrder
     pw:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() local w=pw.AbsoluteSize.X; if w>20 then pg.CellSize=UDim2.new(0,math.floor((w-6)/2),0,26) end end)
@@ -1882,74 +2178,98 @@ upgradeDD.onRefresh=function()
 end
 AP:AddToggleR("Auto Upgrade Unit",_G.SST.Auto_Upgrade,function(v) _G.SST.Auto_Upgrade=v; SS() end)
 AP:AddToggleR("Auto Upgrade Yen",_G.SST.Auto_Upgtade_Maxyen,function(v) _G.SST.Auto_Upgtade_Maxyen=v; SS() end)
-
--- single game loop
-task.spawn(function()
-    local gui=plr:WaitForChild("PlayerGui")
-    local remF=ReplicatedStorage:WaitForChild("Remote",9e9):WaitForChild("Server",9e9)
-    local votePath=remF:WaitForChild("OnGame",9e9):WaitForChild("Voting",9e9)
-    local upgradeRemote=remF:WaitForChild("Units",9e9):WaitForChild("Upgrade",9e9)
-    local statsRemote=remF:WaitForChild("Gameplay",9e9):WaitForChild("StatsManager",9e9)
-    local votePlayingRemote=votePath:WaitForChild("VotePlaying",9e9)
-    local hud=gui:WaitForChild("HUD",9e9)
-    local inGameUI=hud and hud:WaitForChild("InGame",9e9)
-    local votePlayingUI=inGameUI and inGameUI:WaitForChild("VotePlaying",9e9)
-    local unitsF=plr:WaitForChild("UnitsFolder",9e9)
-    local vim2=game:GetService("VirtualInputManager")
-
-    while task.wait(0.05) do
-        local sst=_G.SST; if type(sst)~="table" then task.wait(1); continue end
-
-        -- Auto Vote
-        if sst.Auto_Vote and type(sst.Select_Vote)=="table" then
-            pcall(function()
-                local visual=workspace:FindFirstChild("Visual"); if not visual then return end
-                local rewardsUI=gui:FindFirstChild("RewardsUI"); if not rewardsUI or not rewardsUI.Enabled then return end
-                local main=rewardsUI:FindFirstChild("Main"); if not main then return end
-                local leftSide=main:FindFirstChild("LeftSide"); if not leftSide then return end
-                local RWBT=leftSide:FindFirstChild("Button"); if not RWBT then return end
-                local votes={}; for k,v in pairs(sst.Select_Vote) do if v then table.insert(votes,k) end end
-                if #votes==0 then return end
-                local voteRemote=votePath:FindFirstChild(votes[math.random(1,#votes)]); if not voteRemote then return end
-                local hasModel=false
-                for _,child in ipairs(visual:GetChildren()) do
-                    if child:IsA("Model") then hasModel=true; vim2:SendMouseButtonEvent(100,200,0,true,game,0); vim2:SendMouseButtonEvent(100,200,0,false,game,0) end
-                end
-                if not hasModel then
-                    local retryV=RWBT:FindFirstChild("Retry"); local nextV=RWBT:FindFirstChild("Next"); local leaveV=RWBT:FindFirstChild("Leave")
-                    if (retryV and retryV.Visible) or (nextV and nextV.Visible) then voteRemote:FireServer()
-                    elseif leaveV and leaveV.Visible and (not retryV or not retryV.Visible) and sst.Select_Vote["VoteLeave"] then TeleportService:Teleport(72829404259339) end
-                end
-            end)
-        end
-
-        -- Auto Upgrade
-        if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
-            pcall(function()
-                local selU=sst.Select_Unit; local allU=false
-                -- Multi-dropdown returns {unitName=true} dict
-                if type(selU)=="table" then
-                    if selU["All Unit"] then allU=true end
-                else selU={} end
-                for _,unit in ipairs(unitsF:GetChildren()) do
-                    if unit:IsA("Instance") and (allU or selU[unit.Name]==true) then
-                        pcall(function() upgradeRemote:FireServer(unit) end)
-                        task.wait(0.2)
-                    end
-                end
-            end)
-        end
-
-        -- Auto Upgrade Yen
-        if sst.Auto_Upgtade_Maxyen then pcall(function() statsRemote:FireServer("MaximumYen") end) end
-
-        -- Auto Vote Start
-        if sst.Auto_Vote_Start and votePlayingUI and votePlayingUI.Visible then
-            task.wait(sst.Select_Deley_Vote or 1); pcall(function() votePlayingRemote:FireServer() end)
+-- ค้นหา TextLabel ที่แสดงเงิน
+local function getCurrentYen()
+    local yenLabel = inGameUI:FindFirstChild("Yen") or 
+                     inGameUI:FindFirstChild("Money") or 
+                     inGameUI:FindFirstChild("Cash")
+    if not yenLabel then
+        local topBar = inGameUI:FindFirstChild("TopBar")
+        if topBar then
+            yenLabel = topBar:FindFirstChild("Yen") or topBar:FindFirstChild("Money")
         end
     end
-end)
+    if yenLabel and yenLabel:IsA("TextLabel") then
+        local text = yenLabel.Text
+        -- ดึงเฉพาะตัวเลข (เช่น "1,234 Yen" -> 1234)
+        local yen = tonumber(text:match("%d+")) or 0
+        return yen
+    end
+    return nil  -- ถ้าหาไม่เจอให้คืน nil (จะไม่ใช้ตรวจสอบ)
+end
 
+-- ตัวแปรสำหรับดีเลย์
+local upgradeCooldown = 0.5  -- วินาที ระหว่างอัปเกรดแต่ละตัว
+
+-- เปลี่ยน loop หลักให้ทำงานช้าลง
+while task.wait(0.5) do   -- เดิม 0.05 เร็วเกินไป
+    local sst = _G.SST
+    if type(sst) ~= "table" then task.wait(1); continue end
+
+    -- ========== Auto Upgrade ==========
+    if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
+        pcall(function()
+            local currentYen = getCurrentYen()
+            local selU = sst.Select_Unit
+            local allU = false
+            if type(selU) == "table" then
+                if selU["All Unit"] then allU = true end
+            else
+                selU = {}  -- fallback
+            end
+
+            -- รวบรวมยูนิตที่ต้องการอัปเกรด
+            local unitsToUpgrade = {}
+            if allU then
+                for _, u in ipairs(unitsF:GetChildren()) do
+                    table.insert(unitsToUpgrade, u)
+                end
+            else
+                for unitName, selected in pairs(selU) do
+                    if selected and unitName ~= "All Unit" then
+                        local u = unitsF:FindFirstChild(unitName)
+                        if u then table.insert(unitsToUpgrade, u) end
+                    end
+                end
+            end
+
+            -- อัปเกรดทีละตัว
+            for _, unit in ipairs(unitsToUpgrade) do
+                -- ถ้าหาเงินเจอ ให้ตรวจสอบว่าเงินพอหรือไม่
+                -- (ไม่ทราบราคาแน่ชัด ใช้วิธีตรวจสอบว่าเงินลดลงหลังอัปเกรด)
+                if currentYen then
+                    local before = getCurrentYen()
+                    if before == nil then before = currentYen end
+                    upgradeRemote:FireServer(unit)
+                    task.wait(0.2)  -- รอเซิร์ฟเวอร์ตอบสนอง
+                    local after = getCurrentYen()
+                    if after and after < before then
+                        -- อัปเกรดสำเร็จ (เงินลดลง)
+                    else
+                        -- เงินไม่ลด แสดงว่าอัปเกรดไม่สำเร็จ (เงินไม่พอ)
+                        -- ข้ามการอัปเกรดตัวนี้ไป
+                        continue
+                    end
+                else
+                    -- ถ้าหาเงินไม่เจอ ก็ส่งไปเลย (แต่ไม่ควร)
+                    upgradeRemote:FireServer(unit)
+                end
+                task.wait(upgradeCooldown)  -- รอระหว่างตัว
+            end
+        end)
+    end
+
+    -- ========== Auto Upgrade Yen ==========
+    if sst.Auto_Upgtade_Maxyen then
+        pcall(function() statsRemote:FireServer("MaximumYen") end)
+    end
+
+    -- ========== Auto Vote Start ==========
+    if sst.Auto_Vote_Start and votePlayingUI and votePlayingUI.Visible then
+        task.wait(sst.Select_Deley_Vote or 1)
+        pcall(function() votePlayingRemote:FireServer() end)
+    end
+end
 -- ═══ SHOP TAB ═════════════════════════════════════════
 SP:AddSeperatorL("Auto Buy Item")
 SP:AddLabelL("ซื้อไอเทมอัตโนมัติจาก Merchant")
@@ -2092,7 +2412,7 @@ WH:AddButtonL("Redeem All Code",function()
     local codeRemote
     pcall(function() codeRemote=ReplicatedStorage.Remote.Server.Lobby.Code end)
     if not codeRemote then
-        AddNotification("❌ Code remote not found!")
+        AddNotification("[X] Code remote not found!")
         return
     end
     local redeemed=0
@@ -2103,7 +2423,7 @@ WH:AddButtonL("Redeem All Code",function()
         end)
         task.wait(0.15)
     end
-    AddNotification("✅ Redeemed "..redeemed.." codes!")
+    AddNotification("[OK] Redeemed "..redeemed.." codes!")
 end)
 
 WH:AddSeperatorR("WebHook")
@@ -2113,7 +2433,7 @@ WH:AddToggleR("Send WebHook",_G.SST.Send_WebHook or false,function(v) _G.SST.Sen
 local function sendWebhook(Name,RewardsText,GameTime)
     local url=_G.SST.Place_WebHook_Link; if not url or url=="" then return end
     local pd=ReplicatedStorage.Player_Data:FindFirstChild(Name); if not pd then return end
-    local fields={{["name"]="📊 Total",["value"]="```Name: "..Name.."\nGem: "..pd.Data.Gem.Value.."\nGold: "..pd.Data.Gold.Value.."\nLevel: "..pd.Data.Level.Value.." Exp: "..pd.Data.Exp.Value.."\nEgg: "..pd.Data.Egg.Value.."```"},{["name"]="⌛ Time",["value"]="```"..GameTime.."```"},{["name"]="🎁 Rewards",["value"]="```"..RewardsText.."```"}}
+    local fields={{["name"]="[i] Total",["value"]="```Name: "..Name.."\nGem: "..pd.Data.Gem.Value.."\nGold: "..pd.Data.Gold.Value.."\nLevel: "..pd.Data.Level.Value.." Exp: "..pd.Data.Exp.Value.."\nEgg: "..pd.Data.Egg.Value.."```"},{["name"]="[t] Time",["value"]="```"..GameTime.."```"},{["name"]="[*] Rewards",["value"]="```"..RewardsText.."```"}}
     local data={["content"]="",["embeds"]={{["author"]={["name"]="IDekhere Hub"},["title"]="Anime Rangers X",["color"]=tonumber(0x13da),["fields"]=fields}}}
     local ok,json=pcall(HttpService.JSONEncode,HttpService,data); if not ok then return end
     local req=http_request or request or (syn and syn.request) or nil
