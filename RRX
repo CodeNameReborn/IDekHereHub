@@ -2132,32 +2132,185 @@ task.spawn(function()
     end
 end)
 
-MAIN:AddSeperatorR("Trait Reroll")
-local TraitList={"Superior I","Superior II","Superior III","Horizon I","Horizon II","Horizon III","Endure I","Endure II","Endure III","Brute","Sniper","Colossal","Investor","Jokester","Blitz","Juggernaut","Millionaire","Violent","Seraph","Capitalist","Duplicator","Sovereign"}
-local traitDD=MAIN:AddMultiDropdownR("Select Trait",TraitList,function(v) _G.SST.Select_Trait=v; SS() end)
-if type(_G.SST.Select_Trait)=="table" then task.defer(function() pcall(function() traitDD:Set(_G.SST.Select_Trait) end) end) end
-MAIN:AddToggleR("Auto Reroll Trait",_G.SST.Auto_Reroll_Trait,function(v) _G.SST.Auto_Reroll_Trait=v; SS() end)
 
--- Trait Reroll section (in MAIN tab)
+-- ============================================
+-- AUTO TRAIT REROLL + WEBHOOK (รวมในตัว)
+-- Anime Rangers X
+-- ============================================
+
+-- ส่วนที่ 1: สร้าง UI
+MAIN:AddSeperatorR("Auto Trait Reroll")
+
+local TraitList = {
+    "Superior I", "Superior II", "Superior III",
+    "Horizon I", "Horizon II", "Horizon III",
+    "Endure I", "Endure II", "Endure III",
+    "Brute", "Sniper", "Colossal", "Investor", "Jokester",
+    "Blitz", "Juggernaut", "Millionaire", "Violent",
+    "Seraph", "Capitalist", "Duplicator", "Sovereign"
+}
+
+-- เลือก Trait ที่ต้องการ
+local traitDD = MAIN:AddMultiDropdownR("Select Trait", TraitList, function(v)
+    _G.SST.Select_Trait = v
+    SS()
+end)
+
+if type(_G.SST.Select_Trait) == "table" then
+    task.defer(function()
+        pcall(function() traitDD:Set(_G.SST.Select_Trait) end)
+    end)
+end
+
+-- Auto Reroll Toggle (ตัวเดียวจบ)
+MAIN:AddToggleR("Auto Reroll Trait", _G.SST.Auto_Reroll_Trait, function(v)
+    _G.SST.Auto_Reroll_Trait = v
+    SS()
+end)
+
+-- ============================================
+-- ระบบ Auto Trait Reroll + Webhook ในตัว
+-- ============================================
+
 task.spawn(function()
-    local traitRemote
-    pcall(function() traitRemote = ReplicatedStorage.Remote.Server.Gambling.RerollTrait end)
-    while task.wait(0.5) do
+    task.wait(2)
+    
+    -- ค้นหา Remote
+    local traitRemote = ReplicatedStorage:FindFirstChild("Remote") 
+        and ReplicatedStorage.Remote:FindFirstChild("Server") 
+        and ReplicatedStorage.Remote.Server:FindFirstChild("Gambling") 
+        and ReplicatedStorage.Remote.Server.Gambling:FindFirstChild("RerollTrait")
+    
+    if not traitRemote then
+        warn("[Auto Trait] Remote not found!")
+        return
+    end
+    
+    -- ตัวแปรควบคุม
+    local lastTrait = ""
+    local lastUnit = ""
+    local cooldown = false
+    
+    -- แปลง Array -> Lookup
+    local function toLookup(t)
+        if type(t) ~= "table" then return {} end
+        local isArr = true
+        for k in pairs(t) do
+            if type(k) ~= "number" then isArr = false; break end
+        end
+        if isArr then
+            local lookup = {}
+            for _, v in ipairs(t) do lookup[v] = true end
+            return lookup
+        end
+        return t
+    end
+    
+    -- ส่ง Webhook (ทำงานอัตโนมัติเมื่อได้ Trait)
+    local function sendWebhook(unit, trait)
+        local url = _G.SST.Place_WebHook_Link
+        if not url or url == "" then return end
+        
+        task.spawn(function()
+            local player = game.Players.LocalPlayer
+            local tag = unit:FindFirstChild("Tag") and unit.Tag.Value or "?"
+            local spd = unit:FindFirstChild("SpeedPotential") and unit.SpeedPotential.Value or "?"
+            local rng = unit:FindFirstChild("RangePotential") and unit.RangePotential.Value or "?"
+            local hp = unit:FindFirstChild("HealthPotential") and unit.HealthPotential.Value or "?"
+            local dmg = unit:FindFirstChild("DamagePotential") and unit.DamagePotential.Value or "?"
+            local cd = unit:FindFirstChild("AttackCooldownPotential") and unit.AttackCooldownPotential.Value or "?"
+            local avatar = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
+            
+            local data = {
+                ["embeds"] = {{
+                    ["title"] = "✨ Auto Trait Reroll",
+                    ["description"] = string.format("**%s** ได้ Trait **%s** แล้ว!", unit.Name, trait),
+                    ["color"] = 0x00ff00,
+                    ["thumbnail"] = {["url"] = avatar},
+                    ["fields"] = {
+                        {["name"] = "👤 Player", ["value"] = player.Name, ["inline"] = true},
+                        {["name"] = "⚔️ Unit", ["value"] = unit.Name, ["inline"] = true},
+                        {["name"] = "🎯 Trait", ["value"] = trait, ["inline"] = true},
+                        {["name"] = "🏷️ Tag", ["value"] = tag, ["inline"] = true},
+                        {["name"] = "📊 Potentials", ["value"] = string.format("S:%s R:%s HP:%s D:%s CD:%s", spd, rng, hp, dmg, cd), ["inline"] = false}
+                    },
+                    ["footer"] = {["text"] = "Auto Trait Reroll System"},
+                    ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                }}
+            }
+            
+            local req = http_request or request or (syn and syn.request)
+            if req then
+                pcall(function()
+                    req({
+                        Url = url,
+                        Method = "POST",
+                        Headers = {["Content-Type"] = "application/json"},
+                        Body = HttpService:JSONEncode(data)
+                    })
+                end)
+            end
+        end)
+    end
+    
+    -- Loop หลัก
+    while true do
+        task.wait(0.5)
+        
         pcall(function()
-            if not _G.SST.Auto_Reroll_Trait or not traitRemote then return end
-            local unit = GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
-            if not unit then return end
-            local desired = _G.SST.Select_Trait or {}
+            if not _G.SST.Auto_Reroll_Trait then return end
+            if not _G.SST.Select_UnitCL or _G.SST.Select_UnitCL == "" then return end
+            
+            -- หา Unit
+            local player = game.Players.LocalPlayer
+            local unit = ReplicatedStorage:FindFirstChild("Player_Data")
+                and ReplicatedStorage.Player_Data:FindFirstChild(player.Name)
+                and ReplicatedStorage.Player_Data[player.Name]:FindFirstChild("Collection")
+                and ReplicatedStorage.Player_Data[player.Name].Collection:FindFirstChild(_G.SST.Select_UnitCL)
+            
+            if not unit or not unit:FindFirstChild("PrimaryTrait") then return end
+            
             local current = unit.PrimaryTrait.Value
-            if not desired[current] then
-                -- Pass unit object directly
-                traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {"",""})
-                task.wait(0.3)
+            local desired = toLookup(_G.SST.Select_Trait or {})
+            
+            -- เช็คว่าเลือก Trait ไว้หรือยัง
+            local hasSelect = false
+            for _, v in pairs(desired) do if v then hasSelect = true; break end end
+            if not hasSelect then return end
+            
+            -- Reset เมื่อเปลี่ยน Unit
+            if lastUnit ~= unit.Name then
+                lastUnit = unit.Name
+                lastTrait = ""
+            end
+            
+            -- ได้ Trait แล้ว
+            if desired[current] then
+                if lastTrait ~= current then
+                    lastTrait = current
+                    AddNotification("[Trait] Got " .. current .. " on " .. unit.Name)
+                    -- ส่ง Webhook อัตโนมัติ
+                    sendWebhook(unit, current)
+                    
+                    -- หยุด Auto Reroll (ให้หยุดเมื่อได้)
+                    _G.SST.Auto_Reroll_Trait = false
+                    pcall(function() MAIN:GetToggle("Auto Reroll Trait"):Set(false) end)
+                    AddNotification("[Trait] Stopped - Got " .. current)
+                end
+            else
+                -- Reroll
+                if cooldown then return end
+                cooldown = true
+                task.delay(1, function() cooldown = false end)
+                
+                traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {current, ""})
+                lastTrait = current
             end
         end)
     end
 end)
 
+print("[Auto Trait Reroll] Loaded! (Webhook included)")
 -- ═══ AUTO PLAY TAB ════════════════════════════════════
 AP:AddSeperatorL("Auto Play")
 AP:AddToggleL("Auto Play",_G.SST.Auto_Play,function(v) _G.SST.Auto_Play=v; SS() end)
