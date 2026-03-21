@@ -2167,17 +2167,19 @@ local traitDD=MAIN:AddMultiDropdownR("Select Trait",TraitList,function(v) _G.SST
 if type(_G.SST.Select_Trait)=="table" then task.defer(function() pcall(function() traitDD:Set(_G.SST.Select_Trait) end) end) end
 MAIN:AddToggleR("Auto Reroll Trait",_G.SST.Auto_Reroll_Trait,function(v) _G.SST.Auto_Reroll_Trait=v; SS() end)
 
+-- ส่วนของ Trait Reroll (ใน MAIN tab)
 task.spawn(function()
     local traitRemote
-    pcall(function() traitRemote=ReplicatedStorage.Remote.Server.Gambling.RerollTrait end)
+    pcall(function() traitRemote = ReplicatedStorage.Remote.Server.Gambling.RerollTrait end)
     while task.wait(0.5) do
         pcall(function()
             if not _G.SST.Auto_Reroll_Trait or not traitRemote then return end
-            local unit=GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
-            if not unit or not unit:FindFirstChild("Tag") then return end
-            local desired=_G.SST.Select_Trait or {}
-            local current=unit.PrimaryTrait.Value
+            local unit = GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
+            if not unit then return end
+            local desired = _G.SST.Select_Trait or {}
+            local current = unit.PrimaryTrait.Value
             if not desired[current] then
+                -- ใช้ unit object โดยตรง ไม่ต้องส่งชื่อ
                 traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {"",""})
                 task.wait(0.3)
             end
@@ -2261,20 +2263,70 @@ task.spawn(function()
         end
 
         -- Auto Upgrade
-        if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
-            pcall(function()
-                local selU=sst.Select_Unit; local allU=false
-                if type(selU)=="table" then
-                    if selU["All Unit"] then allU=true end
-                else selU={} end
-                for _,unit in ipairs(unitsF:GetChildren()) do
-                    if unit:IsA("Instance") and (allU or selU[unit.Name]==true) then
-                        pcall(function() upgradeRemote:FireServer(unit) end)
-                        task.wait(0.2)
+  -- Auto Upgrade (ตรวจสอบ Yen)
+if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
+    pcall(function()
+        -- ดึงค่า Yen ปัจจุบันจาก UI
+        local yenValue = 0
+        local hud = plr.PlayerGui:FindFirstChild("HUD")
+        if hud then
+            local inGame = hud:FindFirstChild("InGame")
+            if inGame then
+                local main = inGame:FindFirstChild("Main")
+                if main then
+                    local stats = main:FindFirstChild("Stats")
+                    if stats then
+                        local yenFrame = stats:FindFirstChild("Yen")
+                        if yenFrame then
+                            local yenValObj = yenFrame:FindFirstChild("YenValue")
+                            if yenValObj then
+                                yenValue = tonumber(yenValObj.Value) or 0
+                            end
+                        end
                     end
                 end
-            end)
+            end
         end
+
+        local selU = sst.Select_Unit
+        local allU = false
+        if type(selU) == "table" then
+            if selU["All Unit"] then allU = true end
+        else
+            selU = {} -- fallback
+        end
+
+        for _, unit in ipairs(unitsF:GetChildren()) do
+            if unit:IsA("Instance") and (allU or selU[unit.Name] == true) then
+                -- หาค่า Cost จาก UI
+                local cost = 0
+                local unitsManager = plr.PlayerGui.HUD.InGame.UnitsManager
+                if unitsManager then
+                    local mainFrame = unitsManager.Main.Main.ScrollingFrame
+                    if mainFrame then
+                        local unitFrame = mainFrame:FindFirstChild(unit.Name)
+                        if unitFrame then
+                            local costTextObj = unitFrame:FindFirstChild("CostText")
+                            if costTextObj then
+                                local costText = costTextObj.Text
+                                -- ดึงตัวเลขจากข้อความ เช่น "Cost: <font color='#ff0000'>250</font>"
+                                cost = tonumber(costText:match("Cost:</font>%s*(%d+)")) or 0
+                            end
+                        end
+                    end
+                end
+
+                -- ตรวจสอบว่ามีเงินพอหรือไม่
+                if yenValue >= cost then
+                    pcall(function()
+                        upgradeRemote:FireServer(unit)
+                        task.wait(0.2)
+                    end)
+                end
+            end
+        end
+    end)
+end
 
         -- Auto Upgrade Yen
         if sst.Auto_Upgtade_Maxyen then pcall(function() statsRemote:FireServer("MaximumYen") end) end
@@ -2350,46 +2402,20 @@ task.spawn(function()
     end
 end)
 
-SP:AddSeperatorR("Speed Set Game")
-SP:AddLabelR("ตั้งค่าความเร็วเกม (1/2/3)")
-local speedBtns={}
-local function setSpeedUI(s)
-    _G.SST.Select_Speed=s; SS()
-    for sp,btn in pairs(speedBtns) do
-        local on=(sp==s)
-        local sk=btn:FindFirstChildWhichIsA("UIStroke")
-        TweenService:Create(btn,TweenInfo.new(0.15),{
-            BackgroundColor3=on and Color3.fromRGB(35,35,35) or Color3.fromRGB(30,30,30),
-            TextColor3=on and Theme.Accent or Color3.fromRGB(140,140,140)
-        }):Play()
-        if sk then sk.Color=on and Theme.Accent or Color3.fromRGB(40,40,40) end
+AP:AddSeperatorR("Speed Set Game")
+-- ใน AP tab (Auto Play)
+local speedOptions = {"1x", "2x", "3x"}
+local speedDD = AP:AddDropdownR("Game Speed", speedOptions, _G.SST.Select_Speed and tostring(_G.SST.Select_Speed).."x" or "1x", function(v)
+    local speed = tonumber(v:gsub("x", ""))
+    if speed then
+        _G.SST.Select_Speed = speed
+        SS()
+        pcall(function()
+            ReplicatedStorage:WaitForChild("Remote"):WaitForChild("SpeedGamepass"):FireServer(speed)
+        end)
+        AddNotification("Speed set to x" .. speed)
     end
-    pcall(function()
-        local args={s}
-        ReplicatedStorage:WaitForChild("Remote"):WaitForChild("SpeedGamepass"):FireServer(unpack(args))
-    end)
-    AddNotification("Speed set to x"..s)
-end
-
-local speedRow=Instance.new("Frame",SP._rPage); speedRow.BackgroundTransparency=1; speedRow.Size=UDim2.new(1,0,0,34)
-local speedLL=Instance.new("UIListLayout",speedRow); speedLL.FillDirection=Enum.FillDirection.Horizontal; speedLL.Padding=UDim.new(0,4)
-for _,spd in ipairs({1,2,3}) do
-    local b=Instance.new("TextButton",speedRow)
-    b.Size=UDim2.new(0.32,-3,1,0); b.BackgroundColor3=Color3.fromRGB(30,30,30); b.BorderSizePixel=0
-    b.Font=Enum.Font.GothamBold; b.Text="x"..spd; b.TextSize=12; b.AutoButtonColor=false
-    b.TextColor3=Color3.fromRGB(140,140,140)
-    Instance.new("UICorner",b).CornerRadius=UDim.new(0,6)
-    local sk=Instance.new("UIStroke",b); sk.Color=Color3.fromRGB(40,40,40); sk.Thickness=1
-    local capSpd=spd; local capBtn=b; local capSk=sk
-    onThemeChange("Accent",function(c)
-        if capBtn and capBtn.Parent and _G.SST.Select_Speed==capSpd then
-            capBtn.TextColor3=c; capBtn.BackgroundColor3=Color3.fromRGB(35,35,35); capSk.Color=c
-        end
-    end)
-    speedBtns[spd]=b
-    b.MouseButton1Click:Connect(function() setSpeedUI(capSpd) end)
-end
-if _G.SST.Select_Speed then task.defer(function() setSpeedUI(_G.SST.Select_Speed) end) end
+end)
 
 SP:AddSeperatorR("Auto Summon")
 local summonModeList={"Standard","Rate Up","Sol"}
@@ -2449,7 +2475,87 @@ WH:AddToggleR("Send WebHook", _G.SST.Send_WebHook or false, function(v)
     _G.SST.Send_WebHook = v
     SS()
 end)
--- 🔥 CONTROL
+-- 🔥 Webhook sender
+local function getAvatar(userId)
+    return "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png"
+end
+
+local function sendWebhook(isWin, RewardsText, GameTime)
+    local url = _G.SST.Place_WebHook_Link
+    if not url or url == "" then return end
+
+    local PlayerDataFolder = ReplicatedStorage:FindFirstChild("Player_Data")
+    if not PlayerDataFolder then return end
+
+    local pd = PlayerDataFolder:FindFirstChild(plr.Name)
+    if not pd or not pd:FindFirstChild("Data") then return end
+
+    local dataFolder = pd.Data
+
+    local function safeVal(obj)
+        return obj and (obj.Value or obj.Text) or "0"
+    end
+
+    local resultText = isWin and "🏆 WIN" or "💀 LOSE"
+    local color = isWin and 0x00ff88 or 0xff3c3c
+
+    local payload = {
+        ["content"] = "",
+        ["embeds"] = {{
+            ["author"] = {
+                ["name"] = plr.Name,
+                ["icon_url"] = getAvatar(plr.UserId)
+            },
+            ["title"] = "Anime Rangers X - "..resultText,
+            ["thumbnail"] = {
+                ["url"] = getAvatar(plr.UserId)
+            },
+            ["color"] = color,
+            ["fields"] = {
+                {
+                    ["name"] = "📊 Stats",
+                    ["value"] =
+                        "```"..
+                        "Gem: "..safeVal(dataFolder:FindFirstChild("Gem"))..
+                        "\nGold: "..safeVal(dataFolder:FindFirstChild("Gold"))..
+                        "\nLevel: "..safeVal(dataFolder:FindFirstChild("Level"))..
+                        " (Exp: "..safeVal(dataFolder:FindFirstChild("Exp"))..")"..
+                        "\nEgg: "..safeVal(dataFolder:FindFirstChild("Egg"))..
+                        "```"
+                },
+                {
+                    ["name"] = "⏱ Time",
+                    ["value"] = "```"..tostring(GameTime).."```"
+                },
+                {
+                    ["name"] = "🎁 Rewards",
+                    ["value"] = "```"..(RewardsText ~= "" and RewardsText or "None").."```"
+                }
+            },
+            ["footer"] = {
+                ["text"] = "IDekhere Hub | Match Result"
+            }
+        }}
+    }
+
+    local success, json = pcall(function()
+        return HttpService:JSONEncode(payload)
+    end)
+    if not success then return end
+
+    local req = http_request or request or (syn and syn.request)
+    if not req then return end
+
+    pcall(function()
+        req({
+            Url = url,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = json
+        })
+    end)
+end
+
 local sentThisMatch = false
 local matchEnded = false
 
@@ -2459,13 +2565,10 @@ RunService.Heartbeat:Connect(function()
     local rUI = plr.PlayerGui:FindFirstChild("RewardsUI")
     if not rUI then return end
 
-    -- ถ้า RewardsUI เปิดอยู่ แสดงว่าเพิ่งจบเกม
     if rUI.Enabled then
         if not sentThisMatch and not matchEnded then
-            -- รอให้ข้อมูล rewards โหลดเสร็จ (0.5 วินาที)
-            task.wait(0.5)
+            task.wait(0.5) -- รอข้อมูลโหลด
 
-            -- 🔥 เช็ค Win / Lose (ปรับตามเกม)
             local isWin = true
             pcall(function()
                 local resultFrame = rUI.Main:FindFirstChild("Result") or rUI.Main.LeftSide:FindFirstChild("Result")
@@ -2476,13 +2579,11 @@ RunService.Heartbeat:Connect(function()
                 end
             end)
 
-            -- 🔥 เวลา
             local GameTime = "Unknown"
             pcall(function()
                 GameTime = rUI.Main.LeftSide.TotalTime.Text
             end)
 
-            -- 🔥 rewards
             local RewardsText = ""
             local rf = plr:FindFirstChild("RewardsShow")
             if rf then
@@ -2497,36 +2598,52 @@ RunService.Heartbeat:Connect(function()
                 end
             end
 
-            -- 🚀 ส่ง Webhook
             sendWebhook(isWin, RewardsText, GameTime)
             sentThisMatch = true
             matchEnded = true
         end
     else
-        -- เมื่อ RewardsUI ปิด (รับรางวัลแล้วหรือออก) ให้รีเซ็ต flag เพื่อรอบเกมถัดไป
         if matchEnded then
             sentThisMatch = false
             matchEnded = false
         end
     end
 end)
+
 WH:AddSeperatorR("BoostFps")
 
-local blackScreenUI=nil
+local blackScreenUI = nil
 local function toggleBlackScreen(enable)
-    if not enable then
-        if blackScreenUI then blackScreenUI.Enabled=false end
+    if enable then
+        if not blackScreenUI then
+            blackScreenUI = Instance.new("ScreenGui")
+            blackScreenUI.Name = "Blackscreen"
+            blackScreenUI.DisplayOrder = 1
+            blackScreenUI.ResetOnSpawn = false
+            blackScreenUI.IgnoreGuiInset = true
+            blackScreenUI.Parent = plr.PlayerGui
+            local f = Instance.new("Frame", blackScreenUI)
+            f.BackgroundColor3 = Color3.new(0,0,0)
+            f.Size = UDim2.new(1,0,1,0)
+            f.BorderSizePixel = 0
+        else
+            blackScreenUI.Enabled = true
+        end
+        RunService:Set3dRenderingEnabled(false)
+    else
+        if blackScreenUI then
+            blackScreenUI.Enabled = false
+        end
         RunService:Set3dRenderingEnabled(true)
-        return
     end
-    if blackScreenUI then blackScreenUI.Enabled=true; RunService:Set3dRenderingEnabled(false); return end
-    blackScreenUI=Instance.new("ScreenGui"); blackScreenUI.Name="Blackscreen"
-    blackScreenUI.DisplayOrder=1; blackScreenUI.ResetOnSpawn=false; blackScreenUI.IgnoreGuiInset=true; blackScreenUI.Parent=plr.PlayerGui
-    local f=Instance.new("Frame",blackScreenUI); f.BackgroundColor3=Color3.new(0,0,0); f.Size=UDim2.new(1,0,1,0); f.BorderSizePixel=0
-    RunService:Set3dRenderingEnabled(false)
 end
-WH:AddToggleR("Black Screen",_G.SST.Black_Screen,function(v) _G.SST.Black_Screen=v; SS(); RunService:Set3dRenderingEnabled(not v); toggleBlackScreen(v) end)
 
+-- ใน toggle (ตอนสร้าง GUI)
+WH:AddToggleR("Black Screen", _G.SST.Black_Screen, function(v)
+    _G.SST.Black_Screen = v
+    SS()
+    toggleBlackScreen(v)
+end)
 WH:AddToggleR("Boost Fps",_G.SST.Boost_Fps,function(v) _G.SST.Boost_Fps=v; SS() end)
 
 local boosted=false; local origTerrain={}; local origLighting={}; local origEffects={}
