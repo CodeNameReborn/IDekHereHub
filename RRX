@@ -35,7 +35,7 @@ local Terrain          = workspace:FindFirstChildOfClass("Terrain")
 -- ══════════════════════════════════════════════════════
 --  SETTINGS SAVE/LOAD
 -- ══════════════════════════════════════════════════════
-local fileSupport = (type(writefile)=="function"and type(readfile)=="function"and type(isfile)=="function")
+local fileSupport = (type(writefile)=="function" and type(readfile)=="function" and type(isfile)=="function")
 
 -- Default settings (will be overwritten by LoadSetting if file exists)
 _G.SST = {
@@ -72,6 +72,8 @@ _G.SST = {
     Auto_BuyItem = false,
     Select_BuyItem = "Ramen",
     BuyItem_Amount = 1,
+    BuyItem_MinYen = 0,
+    BuyItem_MaxYen = 999999,
     Select_Speed = 1,
     -- Summon / Gacha
     Auto_Summon = false,
@@ -90,9 +92,10 @@ end
 local function LoadSetting()
     if not fileSupport then return end
     pcall(function()
-        local f = "RebornXer Hub ARX ["..plr.Name.."].json"if isfile(f) then
+        local f = "RebornXer Hub ARX ["..plr.Name.."].json"
+        if isfile(f) then
             local ok, d = pcall(HttpService.JSONDecode, HttpService, readfile(f))
-            if ok and type(d)=="table"then
+            if ok and type(d)=="table" then
                 for k,v in pairs(d) do _G.SST[k]=v end
             end
         end
@@ -125,7 +128,7 @@ end
 
 -- Load saved theme values (if any) into Theme
 pcall(function()
-    local function rgb3(t) if type(t)=="table"and #t==3 then return Color3.new(t[1],t[2],t[3]) end end
+    local function rgb3(t) if type(t)=="table" and #t==3 then return Color3.new(t[1],t[2],t[3]) end end
     if _G.SST.Theme_Accent     then Theme.Accent     = rgb3(_G.SST.Theme_Accent)    or Theme.Accent    end
     if _G.SST.Theme_WinBg      then Theme.WinBg      = rgb3(_G.SST.Theme_WinBg)     or Theme.WinBg     end
     if _G.SST.Theme_TopBg      then Theme.TopBg      = rgb3(_G.SST.Theme_TopBg)     or Theme.TopBg     end
@@ -173,7 +176,8 @@ local LANG = {
         btn_th="TH Thai", btn_en="EN English",
     },
 }
-local curLang = _G.SST.curLang or "TH"local LangCBs = {}
+local curLang = _G.SST.curLang or "TH"
+local LangCBs = {}
 local function L(k) return LANG[curLang][k] or k end
 local function onLangChange(fn) table.insert(LangCBs, fn) end
 local function setLang(code)
@@ -269,8 +273,8 @@ local function makeRefreshBtn(parent, zIdx)
     btn.Position=UDim2.new(1,-2,0,2)
     btn.Size=UDim2.new(0,22,0,22)
     btn.BackgroundColor3=Color3.fromRGB(38,38,38)
-    btn.BorderSizePixel=0; btn.Font=Enum.Font.GothamBold
-    btn.Text="↻"; btn.TextSize=13; btn.AutoButtonColor=false
+    btn.BorderSizePixel=0; btn.Font=Enum.Font.Arimo
+    btn.Text="🔄"; btn.TextSize=20; btn.AutoButtonColor=false
     btn.ZIndex=zIdx or 3
     btn.TextColor3=Color3.fromRGB(150,150,150)
     Instance.new("UICorner",btn).CornerRadius=UDim.new(0,5)
@@ -297,7 +301,8 @@ end
 -- ══════════════════════════════════════════════════════
 --  MAIN FRAME
 -- ══════════════════════════════════════════════════════
-local WIN_NAME   = "IDekhere Hub"local WIN_LOGO   = 0  -- place a valid image ID here if desired
+local WIN_NAME   = "IDekhere Hub"
+local WIN_LOGO   = 0  -- place a valid image ID here if desired
 local NORMAL_SIZE = UDim2.new(0,Theme.WinW,0,Theme.WinH)
 local NORMAL_POS  = UDim2.new(0.5,0,0.5,0)
 local isIsland=false; local isMax=false
@@ -359,7 +364,8 @@ macBtn("CloseBtn", Color3.fromRGB(255,59,48), 8, function()
 
     -- floating mini pill
     local mini = Instance.new("Frame", GUI)
-    mini.Name               = "MiniBtn"mini.AnchorPoint        = Vector2.new(0.5, 0.5)
+    mini.Name               = "MiniBtn"
+    mini.AnchorPoint        = Vector2.new(0.5, 0.5)
     mini.Position           = UDim2.new(0, cx, 0, cy)
     mini.Size               = UDim2.new(0, 0, 0, 0)
     mini.BackgroundColor3   = Color3.fromRGB(16, 16, 16)
@@ -374,7 +380,8 @@ macBtn("CloseBtn", Color3.fromRGB(255,59,48), 8, function()
     local mt = Instance.new("TextLabel", mini)
     mt.Size                 = UDim2.new(1, 0, 1, 0)
     mt.BackgroundTransparency = 1
-    mt.Text                 = "◈"mt.TextColor3           = Theme.Accent
+    mt.Text                 = "◈"
+    mt.TextColor3           = Theme.Accent
     mt.Font                 = Enum.Font.GothamBold
     mt.TextSize             = 18
     mt.ZIndex               = 51
@@ -385,7 +392,8 @@ macBtn("CloseBtn", Color3.fromRGB(255,59,48), 8, function()
     local ca = Instance.new("TextButton", mini)
     ca.Size                 = UDim2.new(1, 0, 1, 0)
     ca.BackgroundTransparency = 1
-    ca.Text                 = ""ca.ZIndex               = 52
+    ca.Text                 = ""
+    ca.ZIndex               = 52
 
     ca.MouseEnter:Connect(function()
         TweenService:Create(msk,  TweenInfo.new(0.15), {Thickness = 2.5}):Play()
@@ -426,7 +434,8 @@ end)
 local islandClick = Instance.new("TextButton", Main)
 islandClick.Size               = UDim2.new(1, 0, 1, 0)
 islandClick.BackgroundTransparency = 1
-islandClick.Text               = ""islandClick.ZIndex             = 3
+islandClick.Text               = ""
+islandClick.ZIndex             = 3
 islandClick.Visible            = false
 
 -- ── live pulse dot ──────────────────────────────────
@@ -455,7 +464,8 @@ local iIcon = Instance.new("TextLabel", islandClick)
 iIcon.Position            = UDim2.new(0, 26, 0, 0)
 iIcon.Size                = UDim2.new(0, 18, 1, 0)
 iIcon.BackgroundTransparency = 1
-iIcon.Text                = "◈"iIcon.TextColor3          = Theme.Accent
+iIcon.Text                = "◈"
+iIcon.TextColor3          = Theme.Accent
 iIcon.Font                = Enum.Font.GothamBold
 iIcon.TextSize            = 13
 iIcon.ZIndex              = 5
@@ -478,7 +488,8 @@ iTime.AnchorPoint        = Vector2.new(1, 0.5)
 iTime.Position           = UDim2.new(1, -28, 0.5, 0)
 iTime.Size               = UDim2.new(0, 46, 0, 18)
 iTime.BackgroundTransparency = 1
-iTime.Text               = "--:--"iTime.TextColor3         = Color3.fromRGB(140, 140, 140)
+iTime.Text               = "--:--"
+iTime.TextColor3         = Color3.fromRGB(140, 140, 140)
 iTime.Font               = Enum.Font.Code
 iTime.TextSize           = 11
 iTime.ZIndex             = 5
@@ -505,7 +516,8 @@ iArr.AnchorPoint        = Vector2.new(1, 0.5)
 iArr.Position           = UDim2.new(1, -8, 0.5, 1)
 iArr.Size               = UDim2.new(0, 16, 0, 16)
 iArr.BackgroundTransparency = 1
-iArr.Text               = "⌄"iArr.TextColor3         = Theme.Accent
+iArr.Text               = "⌄"
+iArr.TextColor3         = Theme.Accent
 iArr.Font               = Enum.Font.GothamBold
 iArr.TextSize           = 14
 iArr.ZIndex             = 5
@@ -699,7 +711,7 @@ UserInputService.InputBegan:Connect(function(inp, gp)
         restoreIsland()
     elseif GUI:FindFirstChild("MiniBtn") then
         restoreFromMini()
-    elseif kbModeRef[1] == "mini"then
+    elseif kbModeRef[1] == "mini" then
         -- collapse to mini pill via keybind
         if GUI:FindFirstChild("MiniBtn") then return end
 
@@ -714,7 +726,8 @@ UserInputService.InputBegan:Connect(function(inp, gp)
         Main.Visible = false
 
         local mini = Instance.new("Frame", GUI)
-        mini.Name               = "MiniBtn"mini.AnchorPoint        = Vector2.new(0.5, 0.5)
+        mini.Name               = "MiniBtn"
+        mini.AnchorPoint        = Vector2.new(0.5, 0.5)
         mini.Position           = UDim2.new(0, 36, 0, 72)
         mini.Size               = UDim2.new(0, 0, 0, 0)
         mini.BackgroundColor3   = Color3.fromRGB(16, 16, 16)
@@ -729,7 +742,8 @@ UserInputService.InputBegan:Connect(function(inp, gp)
         local mt = Instance.new("TextLabel", mini)
         mt.Size                 = UDim2.new(1, 0, 1, 0)
         mt.BackgroundTransparency = 1
-        mt.Text                 = "◈"mt.TextColor3           = Theme.Accent
+        mt.Text                 = "◈"
+        mt.TextColor3           = Theme.Accent
         mt.Font                 = Enum.Font.GothamBold
         mt.TextSize             = 18
         mt.ZIndex               = 51
@@ -740,7 +754,8 @@ UserInputService.InputBegan:Connect(function(inp, gp)
         local ca = Instance.new("TextButton", mini)
         ca.Size                 = UDim2.new(1, 0, 1, 0)
         ca.BackgroundTransparency = 1
-        ca.Text                 = ""ca.ZIndex               = 52
+        ca.Text                 = ""
+        ca.ZIndex               = 52
         ca.MouseButton1Click:Connect(restoreFromMini)
     else
         goIsland()
@@ -754,13 +769,13 @@ local Pages={};local firstTab=true;local activePg=nil
 
 local function tabAnim_in(lPage,rPage,dir)
     for _,p in ipairs({lPage,rPage}) do
-        if Theme.TabAnim=="slide"then
+        if Theme.TabAnim=="slide" then
             p.Position=UDim2.new(dir*0.06,0,0,0)
             TweenService:Create(p,TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(0,0,0,0)}):Play()
-        elseif Theme.TabAnim=="bounce"then
+        elseif Theme.TabAnim=="bounce" then
             p.Position=UDim2.new(0,0,0.04,0)
             TweenService:Create(p,TweenInfo.new(0.4,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Position=UDim2.new(0,0,0,0)}):Play()
-        elseif Theme.TabAnim=="stagger"then
+        elseif Theme.TabAnim=="stagger" then
             p.Position=UDim2.new(0,0,0,0)
             local kids={}
             for _,c in ipairs(p:GetChildren()) do if c:IsA("Frame") then table.insert(kids,c) end end
@@ -771,11 +786,11 @@ local function tabAnim_in(lPage,rPage,dir)
                     if cc and cc.Parent then cc.Visible=true end
                 end)
             end
-        elseif Theme.TabAnim=="scale"then
+        elseif Theme.TabAnim=="scale" then
             p.Position=UDim2.new(0,0,0,0)
             local siz=p.Size; p.Size=UDim2.new(siz.X.Scale*0.92,siz.X.Offset,siz.Y.Scale,siz.Y.Offset)
             TweenService:Create(p,TweenInfo.new(0.22,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=siz}):Play()
-        elseif Theme.TabAnim=="zoom"then
+        elseif Theme.TabAnim=="zoom" then
             p.Position=UDim2.new(0,0,0.02,0)
             TweenService:Create(p,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Position=UDim2.new(0,0,0,0)}):Play()
         else -- fade
@@ -806,14 +821,14 @@ local function selectPage(pageData)
     if oldPg then TweenService:Create(oldPg.btn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(38,38,38),TextColor3=Color3.fromRGB(180,180,180)}):Play() end
     TweenService:Create(pageData.btn,TweenInfo.new(0.15),{BackgroundColor3=Theme.Accent,TextColor3=Color3.fromRGB(15,15,15)}):Play()
     activePg=pageData
-    local OUT=(Theme.TabAnim=="slide"or Theme.TabAnim=="bounce"or Theme.TabAnim=="zoom") and 0.14 or 0
+    local OUT=(Theme.TabAnim=="slide" or Theme.TabAnim=="bounce" or Theme.TabAnim=="zoom") and 0.14 or 0
     isSwitching=true
     if oldPg then
-        if Theme.TabAnim=="slide"then
+        if Theme.TabAnim=="slide" then
             for _,p in ipairs({oldPg.left,oldPg.right}) do
                 TweenService:Create(p,TweenInfo.new(0.14,Enum.EasingStyle.Sine,Enum.EasingDirection.In),{Position=UDim2.new(dir*-0.06,0,0,0)}):Play()
             end
-        elseif Theme.TabAnim=="zoom"then
+        elseif Theme.TabAnim=="zoom" then
             for _,p in ipairs({oldPg.left,oldPg.right}) do
                 TweenService:Create(p,TweenInfo.new(0.14,Enum.EasingStyle.Sine,Enum.EasingDirection.In),{Position=UDim2.new(0,0,dir*-0.02,0)}):Play()
             end
@@ -1050,7 +1065,7 @@ local function AddTab(tabname)
             local q=sb.Text:lower(); local vis=0
             for i,ib in ipairs(iBtns) do
                 if ib and ib.Parent then
-                    local show=q==""or (curList[i] and curList[i]:lower():find(q,1,true)~=nil)
+                    local show=q=="" or (curList[i] and curList[i]:lower():find(q,1,true)~=nil)
                     ib.Visible=show; if show then vis=vis+1 end
                 end
             end
@@ -1082,7 +1097,7 @@ local function AddTab(tabname)
             task.spawn(spinFn)
             if obj.onRefresh then
                 local ok,newList=pcall(obj.onRefresh)
-                if ok and type(newList)=="table"then obj:Update(newList) end
+                if ok and type(newList)=="table" then obj:Update(newList) end
             end
         end)
 
@@ -1100,7 +1115,7 @@ local function AddTab(tabname)
 
         local hdr=Instance.new("TextButton",base); hdr.BackgroundTransparency=1
         hdr.Size=UDim2.new(1,-28,0,26); hdr.Text=""; hdr.ZIndex=2
-        mkTxt(hdr," "..title,8,12)
+        mkTxt(hdr,""..title,8,12)
         local arr=Instance.new("TextLabel",hdr); arr.BackgroundTransparency=1
         arr.AnchorPoint=Vector2.new(1,0.5); arr.Position=UDim2.new(1,-4,0.5,0)
         arr.Size=UDim2.new(0,14,0,14); arr.Font=Enum.Font.GothamBold
@@ -1112,7 +1127,7 @@ local function AddTab(tabname)
 
         local sel=Instance.new("TextLabel",base); sel.BackgroundColor3=Color3.fromRGB(38,38,38); sel.BorderSizePixel=0
         sel.Position=UDim2.new(0,4,0,28); sel.Size=UDim2.new(1,-8,0,20)
-        sel.Font=Enum.Font.Gotham; sel.Text="เลือกหลายรายการ..."; sel.TextColor3=Color3.fromRGB(90,90,90); sel.TextSize=10
+        sel.Font=Enum.Font.Gotham; sel.Text=" Select..."; sel.TextColor3=Color3.fromRGB(90,90,90); sel.TextSize=10
         Instance.new("UICorner",sel).CornerRadius=UDim.new(0,4)
 
         local sb=Instance.new("TextBox",wrap); sb.BackgroundColor3=Color3.fromRGB(35,35,35); sb.BorderSizePixel=0
@@ -1147,11 +1162,12 @@ local function AddTab(tabname)
                 chk.BackgroundColor3=selected[item] and Theme.Accent or Color3.fromRGB(50,50,50); chk.BorderSizePixel=0
                 Instance.new("UICorner",chk).CornerRadius=UDim.new(0,4)
                 local ct=Instance.new("TextLabel",chk); ct.Size=UDim2.new(1,0,1,0); ct.BackgroundTransparency=1
-                ct.Text=""; ct.TextColor3=Color3.fromRGB(15,15,15); ct.Font=Enum.Font.GothamBold; ct.TextSize=10; ct.Visible=selected[item]==true
+                ct.Text="✓"; ct.TextColor3=Color3.fromRGB(15,15,15); ct.Font=Enum.Font.GothamBold; ct.TextSize=10; ct.Visible=selected[item]==true
                 local il=Instance.new("TextLabel",row); il.BackgroundTransparency=1
                 il.Position=UDim2.new(0,28,0,0); il.Size=UDim2.new(1,-32,1,0)
                 il.Font=Enum.Font.Gotham; il.Text=item; il.TextColor3=Color3.fromRGB(195,195,195); il.TextSize=11; il.TextXAlignment=Enum.TextXAlignment.Left
-                local btn=Instance.new("TextButton",row); btn.Size=UDim2.new(1,0,1,0); btn.BackgroundTransparency=1; btn.Text=""local capI,capC,capCt,capR=item,chk,ct,row
+                local btn=Instance.new("TextButton",row); btn.Size=UDim2.new(1,0,1,0); btn.BackgroundTransparency=1; btn.Text=""
+                local capI,capC,capCt,capR=item,chk,ct,row
                 btn.MouseButton1Click:Connect(function()
                     if selected[capI] then
                         selected[capI]=nil
@@ -1172,7 +1188,7 @@ local function AddTab(tabname)
             local q=sb.Text:lower(); local vis=0
             for _,d in ipairs(rows) do
                 if d.row and d.row.Parent then
-                    local show=q==""or d.item:lower():find(q,1,true)~=nil
+                    local show=q=="" or d.item:lower():find(q,1,true)~=nil
                     d.row.Visible=show; if show then vis=vis+1 end
                 end
             end
@@ -1211,7 +1227,7 @@ local function AddTab(tabname)
             task.spawn(spinFn)
             if obj.onRefresh then
                 local ok,newList=pcall(obj.onRefresh)
-                if ok and type(newList)=="table"then obj:Update(newList) end
+                if ok and type(newList)=="table" then obj:Update(newList) end
             end
         end)
 
@@ -1335,7 +1351,8 @@ local function AddNotification(txt)
         iIco.Position            = UDim2.new(0, 10, 0, 0)
         iIco.Size                = UDim2.new(0, 18, 1, 0)
         iIco.BackgroundTransparency = 1
-        iIco.Text                = "◈"iIco.TextColor3          = Theme.Accent
+        iIco.Text                = "◈"
+        iIco.TextColor3          = Theme.Accent
         iIco.Font                = Enum.Font.GothamBold
         iIco.TextSize            = 12
         iIco.ZIndex              = 202
@@ -1400,7 +1417,8 @@ end
 -- ══════════════════════════════════════════════════════
 --  SETTINGS WINDOW
 -- ══════════════════════════════════════════════════════
-local SettingsWin=Instance.new("Frame",GUI); SettingsWin.Name="SettingsWin"SettingsWin.AnchorPoint=Vector2.new(0.5,0.5); SettingsWin.BackgroundColor3=Theme.WinBg
+local SettingsWin=Instance.new("Frame",GUI); SettingsWin.Name="SettingsWin"
+SettingsWin.AnchorPoint=Vector2.new(0.5,0.5); SettingsWin.BackgroundColor3=Theme.WinBg
 SettingsWin.Position=UDim2.new(0.5,0,0.5,0); SettingsWin.Size=UDim2.new(0,580,0,400)
 SettingsWin.BorderSizePixel=0; SettingsWin.Visible=false; SettingsWin.ZIndex=50
 local SwCorner=Instance.new("UICorner",SettingsWin); SwCorner.CornerRadius=UDim.new(0,Theme.WinRadius)
@@ -1421,13 +1439,14 @@ local SwTitle=Instance.new("TextLabel",SwTop); SwTitle.BackgroundTransparency=1
 SwTitle.Position=UDim2.new(0,12,0,0); SwTitle.Size=UDim2.new(1,-50,1,0)
 SwTitle.Font=Enum.Font.GothamBold; SwTitle.TextColor3=Theme.Accent; SwTitle.TextSize=12; SwTitle.ZIndex=52
 SwTitle.TextXAlignment=Enum.TextXAlignment.Left
-local function updSwTitle() SwTitle.Text="[=] "..(curLang=="TH"and "ตั้งค่า UI"or "UI Settings") end
+local function updSwTitle() SwTitle.Text="[=] "..(curLang=="TH" and "ตั้งค่า UI" or "UI Settings") end
 updSwTitle(); onLangChange(updSwTitle)
 onThemeChange("Accent",function(c) if SwTitle and SwTitle.Parent then SwTitle.TextColor3=c end end)
 
 local SwClose=Instance.new("TextButton",SwTop); SwClose.AnchorPoint=Vector2.new(1,0.5)
 SwClose.Position=UDim2.new(1,-8,0.5,0); SwClose.Size=UDim2.new(0,22,0,22)
-SwClose.BackgroundColor3=Color3.fromRGB(255,59,48); SwClose.BorderSizePixel=0; SwClose.Text=""SwClose.Font=Enum.Font.GothamBold; SwClose.TextColor3=Color3.new(1,1,1); SwClose.TextSize=11; SwClose.AutoButtonColor=false; SwClose.ZIndex=53
+SwClose.BackgroundColor3=Color3.fromRGB(255,59,48); SwClose.BorderSizePixel=0; SwClose.Text="✕"
+SwClose.Font=Enum.Font.GothamBold; SwClose.TextColor3=Color3.new(1,1,1); SwClose.TextSize=11; SwClose.AutoButtonColor=false; SwClose.ZIndex=53
 Instance.new("UICorner",SwClose).CornerRadius=UDim.new(1,0)
 SwClose.MouseButton1Click:Connect(function()
     TweenService:Create(SettingsWin,TweenInfo.new(0.2,Enum.EasingStyle.Sine),{Size=UDim2.new(0,0,0,0)}):Play()
@@ -1462,13 +1481,13 @@ SwContent.Position=UDim2.new(0,0,0,60); SwContent.Size=UDim2.new(1,0,1,-60); SwC
 
 local function mkSwScroll(side)
     local sf=Instance.new("ScrollingFrame",SwContent); sf.BackgroundTransparency=1
-    sf.Position=side=="L"and UDim2.new(0,0,0,0) or UDim2.new(0.5,1,0,0)
+    sf.Position=side=="L" and UDim2.new(0,0,0,0) or UDim2.new(0.5,1,0,0)
     sf.Size=UDim2.new(0.5,-1,1,0); sf.CanvasSize=UDim2.new(0,0,0,0)
     sf.ScrollBarThickness=2; sf.ScrollBarImageColor3=Theme.Accent; sf.BorderSizePixel=0; sf.ZIndex=51
     local ll=Instance.new("UIListLayout",sf); ll.SortOrder=Enum.SortOrder.LayoutOrder; ll.Padding=UDim.new(0,4)
     local pad=Instance.new("UIPadding",sf)
     pad.PaddingTop=UDim.new(0,6); pad.PaddingBottom=UDim.new(0,6)
-    if side=="L"then pad.PaddingLeft=UDim.new(0,6); pad.PaddingRight=UDim.new(0,4)
+    if side=="L" then pad.PaddingLeft=UDim.new(0,6); pad.PaddingRight=UDim.new(0,4)
     else pad.PaddingLeft=UDim.new(0,4); pad.PaddingRight=UDim.new(0,6) end
     onThemeChange("Accent",function(c) if sf and sf.Parent then sf.ScrollBarImageColor3=c end end)
     return sf, ll
@@ -1505,7 +1524,8 @@ end
 
 local settingsBtn=Instance.new("TextButton",Top); settingsBtn.AnchorPoint=Vector2.new(1,0.5)
 settingsBtn.Position=UDim2.new(1,-8,0.5,0); settingsBtn.Size=UDim2.new(0,26,0,22)
-settingsBtn.BackgroundColor3=Color3.fromRGB(35,35,35); settingsBtn.BorderSizePixel=0; settingsBtn.Text=""settingsBtn.Font=Enum.Font.GothamBold; settingsBtn.TextColor3=Theme.Accent; settingsBtn.TextSize=14; settingsBtn.AutoButtonColor=false; settingsBtn.ZIndex=6
+settingsBtn.BackgroundColor3=Color3.fromRGB(35,35,35); settingsBtn.BorderSizePixel=0; settingsBtn.Text="⚙"
+settingsBtn.Font=Enum.Font.GothamBold; settingsBtn.TextColor3=Theme.Accent; settingsBtn.TextSize=14; settingsBtn.AutoButtonColor=false; settingsBtn.ZIndex=6
 Instance.new("UICorner",settingsBtn).CornerRadius=UDim.new(0,5); Instance.new("UIStroke",settingsBtn).Color=Theme.Accent
 onThemeChange("Accent",function(c) if settingsBtn and settingsBtn.Parent then settingsBtn.TextColor3=c; local sk=settingsBtn:FindFirstChildWhichIsA("UIStroke"); if sk then sk.Color=c end end end)
 settingsBtn.MouseButton1Click:Connect(toggleSettings)
@@ -1535,7 +1555,8 @@ local function BuildUISettings()
     local pwBox=Instance.new("TextBox",LockScreen); pwBox.AnchorPoint=Vector2.new(0.5,0)
     pwBox.Position=UDim2.new(0.5,0,0,122); pwBox.Size=UDim2.new(0,180,0,28)
     pwBox.BackgroundColor3=Color3.fromRGB(28,28,28); pwBox.BorderSizePixel=0; pwBox.Font=Enum.Font.Code
-    pwBox.PlaceholderText="••••••"; pwBox.PlaceholderColor3=Color3.fromRGB(80,80,80); pwBox.Text=""pwBox.TextColor3=Color3.fromRGB(200,200,200); pwBox.TextSize=13; pwBox.ClearTextOnFocus=true; pwBox.ZIndex=53
+    pwBox.PlaceholderText="••••••"; pwBox.PlaceholderColor3=Color3.fromRGB(80,80,80); pwBox.Text=""
+    pwBox.TextColor3=Color3.fromRGB(200,200,200); pwBox.TextSize=13; pwBox.ClearTextOnFocus=true; pwBox.ZIndex=53
     Instance.new("UICorner",pwBox).CornerRadius=UDim.new(0,6); Instance.new("UIStroke",pwBox).Color=Color3.fromRGB(50,50,50)
     local pwErr=Instance.new("TextLabel",LockScreen); pwErr.BackgroundTransparency=1
     pwErr.AnchorPoint=Vector2.new(0.5,0); pwErr.Position=UDim2.new(0.5,0,0,156); pwErr.Size=UDim2.new(0.8,0,0,16)
@@ -1549,14 +1570,16 @@ local function BuildUISettings()
 
     local function tryUnlock()
         if pwBox.Text==DEV_PASSWORD then
-            devUnlocked=true; lockIcon.Text="[O]"TweenService:Create(LockScreen,TweenInfo.new(0.3,Enum.EasingStyle.Sine),{BackgroundTransparency=1}):Play()
+            devUnlocked=true; lockIcon.Text="[O]"
+            TweenService:Create(LockScreen,TweenInfo.new(0.3,Enum.EasingStyle.Sine),{BackgroundTransparency=1}):Play()
             task.delay(0.3,function() LockScreen.Visible=false end)
             AddNotification("Dev mode unlocked!")
         else
-            pwErr.Text="Incorrect password"; pwBox.Text=""TweenService:Create(pwBox,TweenInfo.new(0.05),{BackgroundColor3=Color3.fromRGB(50,20,20)}):Play()
+            pwErr.Text="Incorrect password"; pwBox.Text=""
+            TweenService:Create(pwBox,TweenInfo.new(0.05),{BackgroundColor3=Color3.fromRGB(50,20,20)}):Play()
             task.delay(0.5,function()
                 TweenService:Create(pwBox,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(28,28,28)}):Play()
-                task.delay(2,function() pwErr.Text=""end)
+                task.delay(2,function() pwErr.Text="" end)
             end)
         end
     end
@@ -1586,7 +1609,9 @@ local function BuildUISettings()
     Instance.new("UICorner",editorBg).CornerRadius=UDim.new(0,6); Instance.new("UIStroke",editorBg).Color=Color3.fromRGB(40,40,40)
     local codeBox=Instance.new("TextBox",editorBg); codeBox.BackgroundTransparency=1
     codeBox.Position=UDim2.new(0,8,0,6); codeBox.Size=UDim2.new(1,-16,1,-12); codeBox.Font=Enum.Font.Code
-    codeBox.PlaceholderText="-- เขียน script ที่นี่\nprint('Hello World')"codeBox.PlaceholderColor3=Color3.fromRGB(60,60,60); codeBox.Text=""codeBox.TextColor3=Color3.fromRGB(180,220,180); codeBox.TextSize=11; codeBox.MultiLine=true
+    codeBox.PlaceholderText="-- เขียน script ที่นี่\nprint('Hello World')"
+    codeBox.PlaceholderColor3=Color3.fromRGB(60,60,60); codeBox.Text=""
+    codeBox.TextColor3=Color3.fromRGB(180,220,180); codeBox.TextSize=11; codeBox.MultiLine=true
     codeBox.ClearTextOnFocus=false; codeBox.TextXAlignment=Enum.TextXAlignment.Left; codeBox.TextYAlignment=Enum.TextYAlignment.Top
     local outputBg=Instance.new("Frame",DevR); outputBg.BackgroundColor3=Color3.fromRGB(12,12,12); outputBg.BorderSizePixel=0
     outputBg.Position=UDim2.new(0,0,1,-60); outputBg.Size=UDim2.new(1,0,0,34)
@@ -1600,7 +1625,7 @@ local function BuildUISettings()
     copyOut.BorderSizePixel=0; copyOut.Font=Enum.Font.GothamBold; copyOut.Text="[C]"; copyOut.TextSize=12
     copyOut.TextColor3=Color3.fromRGB(15,15,15); copyOut.AutoButtonColor=false
     Instance.new("UICorner",copyOut).CornerRadius=UDim.new(0,5)
-    copyOut.MouseButton1Click:Connect(function() GuiService:SetClipboard(outputLbl.Text); copyOut.Text=""; task.delay(1,function() copyOut.Text="[C]"end) end)
+    copyOut.MouseButton1Click:Connect(function() GuiService:SetClipboard(outputLbl.Text); copyOut.Text="✓"; task.delay(1,function() copyOut.Text="[C]" end) end)
     onThemeChange("Accent",function(c) copyOut.BackgroundColor3=c end)
     local runBtn=Instance.new("TextButton",DevR); runBtn.Position=UDim2.new(0,0,1,-22); runBtn.Size=UDim2.new(1,0,0,20)
     runBtn.BackgroundColor3=Theme.Accent; runBtn.BorderSizePixel=0; runBtn.Font=Enum.Font.GothamBold; runBtn.Text="▶ Run"; runBtn.TextSize=11
@@ -1608,10 +1633,10 @@ local function BuildUISettings()
     Instance.new("UICorner",runBtn).CornerRadius=UDim.new(0,5)
     onThemeChange("Accent",function(c) if runBtn and runBtn.Parent then runBtn.BackgroundColor3=c end end)
     runBtn.MouseButton1Click:Connect(function()
-        local code=codeBox.Text; if code==""then outputLbl.Text="> (empty)"; outputLbl.TextColor3=Color3.fromRGB(120,120,120); return end
+        local code=codeBox.Text; if code=="" then outputLbl.Text="> (empty)"; outputLbl.TextColor3=Color3.fromRGB(120,120,120); return end
         outputLbl.Text="> running..."; outputLbl.TextColor3=Color3.fromRGB(200,200,100)
         local ok,err=pcall(function() local fn,ce=loadstring(code); if not fn then error(ce) end; fn() end)
-        if ok then outputLbl.Text="> OK "; outputLbl.TextColor3=Color3.fromRGB(100,220,100)
+        if ok then outputLbl.Text="> OK ✓"; outputLbl.TextColor3=Color3.fromRGB(100,220,100)
         else outputLbl.Text="> "..tostring(err); outputLbl.TextColor3=Color3.fromRGB(255,100,100); logError(tostring(err),"ScriptRunner","—") end
     end)
 
@@ -1628,7 +1653,9 @@ local function BuildUISettings()
     local sfH=Instance.new("Frame",DevL); sfH.BackgroundTransparency=1; sfH.Size=UDim2.new(1,0,0,20)
     local sfT=Instance.new("TextLabel",sfH); sfT.BackgroundTransparency=1; sfT.Size=UDim2.new(1,0,1,0)
     sfT.Font=Enum.Font.GothamBold; sfT.TextSize=10; sfT.TextColor3=Color3.fromRGB(155,155,155)
-    sfT.TextXAlignment=Enum.TextXAlignment.Left; sfT.Text="[F] Script Folder"local scriptList=Instance.new("ScrollingFrame",DevL); scriptList.BackgroundColor3=Color3.fromRGB(22,22,22); scriptList.BorderSizePixel=0
+    sfT.TextXAlignment=Enum.TextXAlignment.Left; sfT.Text="[F] Script Folder"
+
+    local scriptList=Instance.new("ScrollingFrame",DevL); scriptList.BackgroundColor3=Color3.fromRGB(22,22,22); scriptList.BorderSizePixel=0
     scriptList.Size=UDim2.new(1,0,0,120); scriptList.CanvasSize=UDim2.new(0,0,0,0); scriptList.ScrollBarThickness=2; scriptList.ScrollBarImageColor3=Theme.Accent
     Instance.new("UICorner",scriptList).CornerRadius=UDim.new(0,6)
     onThemeChange("Accent",function(c) if scriptList and scriptList.Parent then scriptList.ScrollBarImageColor3=c end end)
@@ -1671,7 +1698,7 @@ startRemoteSpy(); print("Remote Spy started.")
             lb.MouseButton1Click:Connect(function() codeBox.Text=scr.code; outputLbl.Text="> loaded: "..scr.name; outputLbl.TextColor3=Color3.fromRGB(100,220,100) end)
             local db=Instance.new("TextButton",row); db.AnchorPoint=Vector2.new(1,0.5); db.Position=UDim2.new(1,-2,0.5,0)
             db.Size=UDim2.new(0,20,0,20); db.BackgroundColor3=Color3.fromRGB(200,50,50); db.BorderSizePixel=0
-            db.Font=Enum.Font.GothamBold; db.Text=""; db.TextSize=10; db.TextColor3=Color3.new(1,1,1); db.AutoButtonColor=false
+            db.Font=Enum.Font.GothamBold; db.Text="✕"; db.TextSize=10; db.TextColor3=Color3.new(1,1,1); db.AutoButtonColor=false
             Instance.new("UICorner",db).CornerRadius=UDim.new(0,4)
             local capI=i; db.MouseButton1Click:Connect(function() table.remove(savedScripts,capI); refreshScriptList(); SaveAll() end)
         end
@@ -1683,7 +1710,7 @@ startRemoteSpy(); print("Remote Spy started.")
     saveSBtn.TextColor3=Color3.fromRGB(100,100,100); saveSBtn.AutoButtonColor=false
     Instance.new("UICorner",saveSBtn).CornerRadius=UDim.new(0,5); Instance.new("UIStroke",saveSBtn).Color=Color3.fromRGB(40,40,40)
     saveSBtn.MouseButton1Click:Connect(function()
-        local code=codeBox.Text; if code==""then outputLbl.Text="> nothing to save"; outputLbl.TextColor3=Color3.fromRGB(255,100,100); return end
+        local code=codeBox.Text; if code=="" then outputLbl.Text="> nothing to save"; outputLbl.TextColor3=Color3.fromRGB(255,100,100); return end
         local name="Script "..(#savedScripts+1)
         table.insert(savedScripts,{name=name,code=code}); refreshScriptList(); SaveAll()
         outputLbl.Text="> saved as "..name; outputLbl.TextColor3=Color3.fromRGB(100,220,100)
@@ -1694,7 +1721,8 @@ startRemoteSpy(); print("Remote Spy started.")
     -- Error log
     local errH=Instance.new("Frame",DevL); errH.BackgroundTransparency=1; errH.Size=UDim2.new(1,0,0,20)
     local errT=Instance.new("TextLabel",errH); errT.BackgroundTransparency=1; errT.Size=UDim2.new(1,0,1,0)
-    errT.Font=Enum.Font.GothamBold; errT.TextSize=10; errT.TextColor3=Color3.fromRGB(155,155,155); errT.TextXAlignment=Enum.TextXAlignment.Left; errT.Text="[!] Error Log"emptyErr=Instance.new("TextLabel",DevL); emptyErr.BackgroundTransparency=1; emptyErr.Size=UDim2.new(1,0,0,24)
+    errT.Font=Enum.Font.GothamBold; errT.TextSize=10; errT.TextColor3=Color3.fromRGB(155,155,155); errT.TextXAlignment=Enum.TextXAlignment.Left; errT.Text="[!] Error Log"
+    emptyErr=Instance.new("TextLabel",DevL); emptyErr.BackgroundTransparency=1; emptyErr.Size=UDim2.new(1,0,0,24)
     emptyErr.Font=Enum.Font.Gotham; emptyErr.TextSize=10; emptyErr.TextColor3=Color3.fromRGB(60,60,60); emptyErr.Text="No errors :)"; emptyErr.TextXAlignment=Enum.TextXAlignment.Center
 
     -- redefine logError with full UI now that DevL exists
@@ -1716,7 +1744,7 @@ startRemoteSpy(); print("Remote Spy started.")
         cpE.Size=UDim2.new(0,22,0,22); cpE.BackgroundColor3=Color3.fromRGB(60,60,60); cpE.BorderSizePixel=0
         cpE.Font=Enum.Font.GothamBold; cpE.Text="[C]"; cpE.TextSize=10; cpE.TextColor3=Color3.new(1,1,1); cpE.AutoButtonColor=false
         Instance.new("UICorner",cpE).CornerRadius=UDim.new(0,4)
-        cpE.MouseButton1Click:Connect(function() GuiService:SetClipboard(tostring(msg)); cpE.Text=""; task.delay(1,function() cpE.Text="[C]"end) end)
+        cpE.MouseButton1Click:Connect(function() GuiService:SetClipboard(tostring(msg)); cpE.Text="✓"; task.delay(1,function() cpE.Text="[C]" end) end)
         local ml=Instance.new("TextLabel",row); ml.BackgroundTransparency=1; ml.Size=UDim2.new(1,0,0,0); ml.AutomaticSize=Enum.AutomaticSize.Y
         ml.Font=Enum.Font.Code; ml.TextSize=9; ml.TextWrapped=true; ml.TextColor3=Color3.fromRGB(255,160,160); ml.TextXAlignment=Enum.TextXAlignment.Left; ml.Text=tostring(msg)
         table.insert(errRows,row)
@@ -1742,7 +1770,7 @@ startRemoteSpy(); print("Remote Spy started.")
     DevDiv.Position=UDim2.new(0.5,0,0,0); DevDiv.Size=UDim2.new(0,1,1,0); DevDiv.ZIndex=51
 
     -- Tab switching
-    local swTabSetting,swTabSettingUnd=makeSwTab("Settings",4,true)
+    local swTabSetting,swTabSettingUnd=makeSwTab("⚙ Settings",4,true)
     local swTabDev,swTabDevUnd=makeSwTab("[L] Dev",100,false)
     local function switchSwTab(toDev)
         SwContent.Visible=not toDev; DevPanel.Visible=toDev
@@ -1750,7 +1778,8 @@ startRemoteSpy(); print("Remote Spy started.")
         swTabSettingUnd.BackgroundTransparency=toDev and 1 or 0
         swTabDev.TextColor3=toDev and Theme.Accent or Color3.fromRGB(120,120,120)
         swTabDevUnd.BackgroundTransparency=toDev and 0 or 1
-        swTabDev.Text=devUnlocked and "[O] Dev"or "[L] Dev"if toDev and not devUnlocked then LockScreen.Visible=true end
+        swTabDev.Text=devUnlocked and "[O] Dev" or "[L] Dev"
+        if toDev and not devUnlocked then LockScreen.Visible=true end
     end
     swTabSetting.MouseButton1Click:Connect(function() switchSwTab(false) end)
     swTabDev.MouseButton1Click:Connect(function() switchSwTab(true) end)
@@ -1896,11 +1925,12 @@ startRemoteSpy(); print("Remote Spy started.")
     do -- language toggle
         addSection(SwR,"s_language")
         local row=Instance.new("Frame",SwR); row.BackgroundTransparency=1; row.Size=UDim2.new(1,0,0,30)
-        local bTH=Instance.new("TextButton",row); bTH.Size=UDim2.new(0.5,-3,1,0); bTH.BackgroundColor3=curLang=="TH"and Theme.Accent or Color3.fromRGB(30,30,30); bTH.BorderSizePixel=0; bTH.Font=Enum.Font.GothamBold; bTH.TextSize=11; bTH.AutoButtonColor=false; bTH.TextColor3=curLang=="TH"and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140); Instance.new("UICorner",bTH).CornerRadius=UDim.new(0,6); local skTH=Instance.new("UIStroke",bTH); skTH.Color=curLang=="TH"and Theme.Accent or Color3.fromRGB(40,40,40); skTH.Thickness=1
-        local bEN=Instance.new("TextButton",row); bEN.Size=UDim2.new(0.5,-3,1,0); bEN.Position=UDim2.new(0.5,3,0,0); bEN.BackgroundColor3=curLang=="EN"and Theme.Accent or Color3.fromRGB(30,30,30); bEN.BorderSizePixel=0; bEN.Font=Enum.Font.GothamBold; bEN.TextSize=11; bEN.AutoButtonColor=false; bEN.TextColor3=curLang=="EN"and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140); Instance.new("UICorner",bEN).CornerRadius=UDim.new(0,6); local skEN=Instance.new("UIStroke",bEN); skEN.Color=curLang=="EN"and Theme.Accent or Color3.fromRGB(40,40,40); skEN.Thickness=1
+        local bTH=Instance.new("TextButton",row); bTH.Size=UDim2.new(0.5,-3,1,0); bTH.BackgroundColor3=curLang=="TH" and Theme.Accent or Color3.fromRGB(30,30,30); bTH.BorderSizePixel=0; bTH.Font=Enum.Font.GothamBold; bTH.TextSize=11; bTH.AutoButtonColor=false; bTH.TextColor3=curLang=="TH" and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140); Instance.new("UICorner",bTH).CornerRadius=UDim.new(0,6); local skTH=Instance.new("UIStroke",bTH); skTH.Color=curLang=="TH" and Theme.Accent or Color3.fromRGB(40,40,40); skTH.Thickness=1
+        local bEN=Instance.new("TextButton",row); bEN.Size=UDim2.new(0.5,-3,1,0); bEN.Position=UDim2.new(0.5,3,0,0); bEN.BackgroundColor3=curLang=="EN" and Theme.Accent or Color3.fromRGB(30,30,30); bEN.BorderSizePixel=0; bEN.Font=Enum.Font.GothamBold; bEN.TextSize=11; bEN.AutoButtonColor=false; bEN.TextColor3=curLang=="EN" and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140); Instance.new("UICorner",bEN).CornerRadius=UDim.new(0,6); local skEN=Instance.new("UIStroke",bEN); skEN.Color=curLang=="EN" and Theme.Accent or Color3.fromRGB(40,40,40); skEN.Thickness=1
         local function updTxt() bTH.Text=L("btn_th"); bEN.Text=L("btn_en") end; updTxt(); onLangChange(updTxt)
         local function pick(code)
-            setLang(code); local isTH=code=="TH"TweenService:Create(bTH,TweenInfo.new(0.15),{BackgroundColor3=isTH and Theme.Accent or Color3.fromRGB(30,30,30),TextColor3=isTH and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140)}):Play(); skTH.Color=isTH and Theme.Accent or Color3.fromRGB(40,40,40)
+            setLang(code); local isTH=code=="TH"
+            TweenService:Create(bTH,TweenInfo.new(0.15),{BackgroundColor3=isTH and Theme.Accent or Color3.fromRGB(30,30,30),TextColor3=isTH and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140)}):Play(); skTH.Color=isTH and Theme.Accent or Color3.fromRGB(40,40,40)
             TweenService:Create(bEN,TweenInfo.new(0.15),{BackgroundColor3=(not isTH) and Theme.Accent or Color3.fromRGB(30,30,30),TextColor3=(not isTH) and Color3.fromRGB(15,15,15) or Color3.fromRGB(140,140,140)}):Play(); skEN.Color=(not isTH) and Theme.Accent or Color3.fromRGB(40,40,40)
             AddNotification(L("lang_changed"))
         end
@@ -1962,11 +1992,11 @@ if refreshScriptList then refreshScriptList() end
 -- ══════════════════════════════════════════════════════
 --  TABS
 -- ══════════════════════════════════════════════════════
-local MAIN = AddTab("📋 Info")
-local AP   = AddTab("⚔️ Auto Play")
-local SP   = AddTab("🛒 Shop")
-local CH   = AddTab("🎒 Item Check")
-local WH   = AddTab("🔗 WebHook - FPS")
+local MAIN = AddTab("Info")
+local AP   = AddTab("Auto Play")
+local SP   = AddTab("Shop")
+local CH   = AddTab("Item Check")
+local WH   = AddTab("WebHook - BoostFps")
 
 -- shared refs
 local GetUnitPlayer = ReplicatedStorage.Player_Data[plr.Name].Collection
@@ -2080,9 +2110,9 @@ unitDD.onRefresh=function()
 end
 
 local potDD=MAIN:AddMultiDropdownR("Select Potential",{"Speed","Range","Health","Damage","AttackCooldown"},function(v) _G.SST.Select_Potential=v; SS() end)
-if type(_G.SST.Select_Potential)=="table"then task.defer(function() pcall(function() potDD:Set(_G.SST.Select_Potential) end) end) end
+if type(_G.SST.Select_Potential)=="table" then task.defer(function() pcall(function() potDD:Set(_G.SST.Select_Potential) end) end) end
 local statDD=MAIN:AddMultiDropdownR("Select Stats",{"C-","C","C+","B-","B","B+","A-","A","A+","S-","S","S+","SS","SSS","O-","O","O+"},function(v) _G.SST.Select_Stats=v; SS() end)
-if type(_G.SST.Select_Stats)=="table"then task.defer(function() pcall(function() statDD:Set(_G.SST.Select_Stats) end) end) end
+if type(_G.SST.Select_Stats)=="table" then task.defer(function() pcall(function() statDD:Set(_G.SST.Select_Stats) end) end) end
 
 MAIN:AddToggleR("Auto ReRoll Stats Potential",_G.SST.Auto_ReRoll_Stats_Potential,function(v) _G.SST.Auto_ReRoll_Stats_Potential=v; SS() end)
 task.spawn(function()
@@ -2090,11 +2120,11 @@ task.spawn(function()
         pcall(function()
             if not _G.SST.Auto_ReRoll_Stats_Potential or not _G.SST.Select_UnitCL then return end
             local pList=_G.SST.Select_Potential
-            if type(pList)~="table"then return end
+            if type(pList)~="table" then return end
             local unit=GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
             if not unit or not unit:FindFirstChild("Tag") then return end
             local tag=unit.Tag.Value
-            local desired= type(_G.SST.Select_Stats)=="table"and _G.SST.Select_Stats or {}
+            local desired= type(_G.SST.Select_Stats)=="table" and _G.SST.Select_Stats or {}
             for potName,enabled in pairs(pList) do
                 if enabled then
                     local pot=unit:FindFirstChild(potName.."Potential")
@@ -2111,7 +2141,7 @@ end)
 local NameUnit  = MAIN:AddLabelR(""); local CodeUnit=MAIN:AddLabelR("")
 local SpeedPot  = MAIN:AddLabelR(""); local RangePot=MAIN:AddLabelR("")
 local HealthPot = MAIN:AddLabelR(""); local DamagePot=MAIN:AddLabelR("")
-local CooldownPot=MAIN:AddLabelR(""); local TraitLbl=MAIN:AddLabelR("")
+local CooldownPot=MAIN:AddLabelR("")
 
 task.spawn(function()
     while task.wait(0.5) do
@@ -2124,33 +2154,154 @@ task.spawn(function()
             RangePot:Set("Range : "..unit.RangePotential.Value)
             HealthPot:Set("HP    : "..unit.HealthPotential.Value)
             DamagePot:Set("DMG   : "..unit.DamagePotential.Value)
-            CooldownPot:Set("⏱ CD    : "..unit.AttackCooldownPotential.Value)
+            CooldownPot:Set("CD    : "..unit.AttackCooldownPotential.Value)
             TraitLbl:Set("Trait : "..unit.PrimaryTrait.Value)
         end)
     end
 end)
 
+
+-- ══════════════════════════════════════════════════════
+--  WEBHOOK HELPERS  (ต้องนิยามก่อนใช้ในทุก tab)
+-- ══════════════════════════════════════════════════════
+
+-- ── Avatar fetcher with cache ────────────────────────
+local _avatarCache = {}
+local function getAvatar(userId)
+    if _avatarCache[userId] then return _avatarCache[userId] end
+    local fallback = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
+    local req = http_request or request or (syn and syn.request)
+    if not req then return fallback end
+    local ok, res = pcall(function()
+        return req({ Url="https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png", Method="GET" })
+    end)
+    if not ok or not res or not res.Body then return fallback end
+    local parsed; pcall(function() parsed = HttpService:JSONDecode(res.Body) end)
+    local url = parsed and parsed.data and parsed.data[1] and parsed.data[1].imageUrl
+    local result = (url and url ~= "") and url or fallback
+    _avatarCache[userId] = result
+    return result
+end
+
+-- ── Match Result Webhook ─────────────────────────────
+local function sendWebhook(isWin, RewardsText, GameTime)
+    local url = _G.SST.Place_WebHook_Link
+    if not url or url == "" then return end
+    local pd = ReplicatedStorage:FindFirstChild("Player_Data") and ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
+    if not pd or not pd:FindFirstChild("Data") then return end
+    local dataFolder = pd.Data
+    local function safeVal(obj) return obj and tostring(obj.Value or obj.Text or "0") or "0" end
+    local resultDesc = isWin
+        and "# 🏆  VICTORY\n> The battle is won. Rangers stand victorious!"
+        or  "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger."
+    local color = isWin and 0x00E676 or 0xFF1744
+    local avatarUrl = getAvatar(plr.UserId)
+    local payload = {
+        ["content"] = "",
+        ["embeds"] = {{
+            ["author"]      = { ["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile" },
+            ["title"]       = "Anime Rangers X  ·  Match Result",
+            ["description"] = resultDesc,
+            ["thumbnail"]   = { ["url"]=avatarUrl },
+            ["color"]       = color,
+            ["fields"] = {
+                { ["name"]="💎  Gem",    ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Gem")).."\n```",  ["inline"]=true  },
+                { ["name"]="🪙  Gold",   ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Gold")).."\n```", ["inline"]=true  },
+                { ["name"]="⭐  Level",  ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Level")).."  (EXP: "..safeVal(dataFolder:FindFirstChild("Exp"))..")\n```", ["inline"]=false },
+                { ["name"]="⏱️  Match Time", ["value"]="```\n"..tostring(GameTime).."\n```", ["inline"]=false },
+                { ["name"]="🎁  Rewards",    ["value"]="```\n"..(RewardsText ~= "" and RewardsText or "— none —").."\n```", ["inline"]=false },
+            },
+            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
+            ["footer"]    = { ["text"]="IDekhere Hub  ·  v4f  |  Anime Rangers X", ["icon_url"]=avatarUrl },
+        }}
+    }
+    local ok, json = pcall(function() return HttpService:JSONEncode(payload) end)
+    if not ok then return end
+    local req = http_request or request or (syn and syn.request)
+    if not req then return end
+    pcall(function() req({ Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json }) end)
+end
+
 MAIN:AddSeperatorR("Trait Reroll")
+local TraitLbl=MAIN:AddLabelR("")
 local TraitList={"Superior I","Superior II","Superior III","Horizon I","Horizon II","Horizon III","Endure I","Endure II","Endure III","Brute","Sniper","Colossal","Investor","Jokester","Blitz","Juggernaut","Millionaire","Violent","Seraph","Capitalist","Duplicator","Sovereign"}
 local traitDD=MAIN:AddMultiDropdownR("Select Trait",TraitList,function(v) _G.SST.Select_Trait=v; SS() end)
-if type(_G.SST.Select_Trait)=="table"then task.defer(function() pcall(function() traitDD:Set(_G.SST.Select_Trait) end) end) end
+if type(_G.SST.Select_Trait)=="table" then task.defer(function() pcall(function() traitDD:Set(_G.SST.Select_Trait) end) end) end
 MAIN:AddToggleR("Auto Reroll Trait",_G.SST.Auto_Reroll_Trait,function(v) _G.SST.Auto_Reroll_Trait=v; SS() end)
 
--- ส่วนของ Trait Reroll (ใน MAIN tab)
+-- ── Trait Reroll loop ────────────────────────────────
 task.spawn(function()
     local traitRemote
     pcall(function() traitRemote = ReplicatedStorage.Remote.Server.Gambling.RerollTrait end)
+    local lastTrait    = ""
+    local lastUnitName = ""
     while task.wait(0.5) do
         pcall(function()
             if not _G.SST.Auto_Reroll_Trait or not traitRemote then return end
             local unit = GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
             if not unit or not unit:FindFirstChild("Tag") then return end
-            local tag = unit.Tag.Value
             local desired = _G.SST.Select_Trait or {}
             local current = unit.PrimaryTrait.Value
-            if not desired[current] then
-                -- ส่ง tag (string) แทน unit object เพื่อให้ remote รับถูก
-                traitRemote:FireServer(tag, "Reroll", "Main", "Shards", {"",""})
+            -- reset เมื่อเปลี่ยน unit
+            if lastUnitName ~= unit.Name then
+                lastUnitName = unit.Name
+                lastTrait    = ""
+            end
+            -- ตรวจว่าเลือก trait ไว้ไหม
+            local hasDesired = false
+            for _, v in pairs(desired) do if v then hasDesired=true; break end end
+            if not hasDesired then return end
+
+            if desired[current] then
+                -- ได้ trait ที่ต้องการ → แจ้งเตือนครั้งเดียวแล้วหยุด
+                if lastTrait ~= current then
+                    lastTrait = current
+                    AddNotification("[Trait] Got: "..current.." on "..unit.Name.."!")
+                    -- ส่ง Webhook ถ้าเปิด Send_WebHook อยู่
+                    if _G.SST.Send_WebHook and _G.SST.Place_WebHook_Link ~= "" then
+                        local url      = _G.SST.Place_WebHook_Link
+                        -- getAvatar มี cache อยู่แล้ว → ได้ CDN URL จริง ไม่ใช่ redirect
+                        local avatarUrl = getAvatar(plr.UserId)
+                        local tag = unit:FindFirstChild("Tag") and unit.Tag.Value or "?"
+                        local spd = unit:FindFirstChild("SpeedPotential") and unit.SpeedPotential.Value or "?"
+                        local rng = unit:FindFirstChild("RangePotential") and unit.RangePotential.Value or "?"
+                        local hp  = unit:FindFirstChild("HealthPotential") and unit.HealthPotential.Value or "?"
+                        local dmg = unit:FindFirstChild("DamagePotential") and unit.DamagePotential.Value or "?"
+                        local cd  = unit:FindFirstChild("AttackCooldownPotential") and unit.AttackCooldownPotential.Value or "?"
+                        local payload = {
+                            ["content"] = "",
+                            ["embeds"] = {{
+                                ["author"]      = { ["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile" },
+                                ["title"]       = "Anime Rangers X  ·  Trait Reroll",
+                                ["description"] = "# ✨  TRAIT UNLOCKED!\n> **"..unit.Name.."** got the desired trait.",
+                                ["thumbnail"]   = { ["url"]=avatarUrl },
+                                ["color"]       = 0xA855F7,
+                                ["fields"] = {
+                                    { ["name"]="✨  Trait",     ["value"]="```fix\n"..current.."\n```",  ["inline"]=false },
+                                    { ["name"]="🪪  Unit",       ["value"]="```fix\n"..unit.Name.."\n```", ["inline"]=true  },
+                                    { ["name"]="🔑  Tag",        ["value"]="```fix\n"..tag.."\n```",       ["inline"]=true  },
+                                    { ["name"]="📊  Potentials", ["value"]="```fix\nSpeed: "..spd.."  Range: "..rng.."\nHP:    "..hp.."   DMG:   "..dmg.."\nCD:    "..cd.."\n```", ["inline"]=false },
+                                },
+                                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
+                                ["footer"]    = { ["text"]="IDekhere Hub  ·  v4f  |  Trait Reroll", ["icon_url"]=avatarUrl },
+                            }}
+                        }
+                        local ok, json = pcall(function() return HttpService:JSONEncode(payload) end)
+                        if ok then
+                            local req = http_request or request or (syn and syn.request)
+                            if req then
+                                pcall(function() req({ Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json }) end)
+                            end
+                        end
+                    end
+                    -- หยุด reroll หลัง success เสมอ
+                    _G.SST.Auto_Reroll_Trait = false
+                    SS()
+                end
+            else
+                -- ยังไม่ได้ → reroll ต่อ
+                lastTrait = current
+                traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {"",""})
                 task.wait(0.5)
             end
         end)
@@ -2159,7 +2310,7 @@ end)
 
 -- ═══ AUTO PLAY TAB ════════════════════════════════════
 AP:AddSeperatorL("Auto Play")
-AP:AddToggleL("▶ Auto Play",_G.SST.Auto_Play,function(v) _G.SST.Auto_Play=v; SS() end)
+AP:AddToggleL("Auto Play",_G.SST.Auto_Play,function(v) _G.SST.Auto_Play=v; SS() end)
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
@@ -2173,23 +2324,23 @@ end)
 
 AP:AddSeperatorR("Game Server")
 local voteDD=AP:AddMultiDropdownR("Select Vote",{"VoteRetry","VoteNext","VoteLeave"},function(v) _G.SST.Select_Vote=v; SS() end)
-if type(_G.SST.Select_Vote)=="table"then task.defer(function() pcall(function() voteDD:Set(_G.SST.Select_Vote) end) end) end
+if type(_G.SST.Select_Vote)=="table" then task.defer(function() pcall(function() voteDD:Set(_G.SST.Select_Vote) end) end) end
 AP:AddToggleR("Auto Vote",_G.SST.Auto_Vote,function(v) _G.SST.Auto_Vote=v; SS() end)
 AP:AddSeperatorR("Vote Start")
-AP:AddSliderR("⏱ Delay Vote",0,10,_G.SST.Select_Deley_Vote or 1,function(v) _G.SST.Select_Deley_Vote=v; SS() end)
-AP:AddToggleR("▶ Auto Vote Start",_G.SST.Auto_Vote_Start,function(v) _G.SST.Auto_Vote_Start=v; SS() end)
+AP:AddSliderR("Delay Vote",0,10,_G.SST.Select_Deley_Vote or 1,function(v) _G.SST.Select_Deley_Vote=v; SS() end)
+AP:AddToggleR("Auto Vote Start",_G.SST.Auto_Vote_Start,function(v) _G.SST.Auto_Vote_Start=v; SS() end)
 
 AP:AddSeperatorR("Unit Upgrade")
 local unitsFolder=plr:FindFirstChild("UnitsFolder")
 local unitNames={"All Unit"}
 if unitsFolder then for _,u in ipairs(unitsFolder:GetChildren()) do table.insert(unitNames,u.Name) end end
 local upgradeDD=AP:AddMultiDropdownR("Select Unit to Upgrade",unitNames,function(v) _G.SST.Select_Unit=v; SS() end)
-if type(_G.SST.Select_Unit)=="table"then task.defer(function() pcall(function() upgradeDD:Set(_G.SST.Select_Unit) end) end) end
+if type(_G.SST.Select_Unit)=="table" then task.defer(function() pcall(function() upgradeDD:Set(_G.SST.Select_Unit) end) end) end
 upgradeDD.onRefresh=function()
     local nl={"All Unit"}; local uf=plr:FindFirstChild("UnitsFolder")
     if uf then for _,u in ipairs(uf:GetChildren()) do table.insert(nl,u.Name) end end; return nl
 end
-AP:AddToggleR("⬆ Auto Upgrade Unit",_G.SST.Auto_Upgrade,function(v) _G.SST.Auto_Upgrade=v; SS() end)
+AP:AddToggleR("Auto Upgrade Unit",_G.SST.Auto_Upgrade,function(v) _G.SST.Auto_Upgrade=v; SS() end)
 AP:AddToggleR("Auto Upgrade Yen",_G.SST.Auto_Upgtade_Maxyen,function(v) _G.SST.Auto_Upgtade_Maxyen=v; SS() end)
 
 -- single game loop
@@ -2207,10 +2358,10 @@ task.spawn(function()
     local vim2=game:GetService("VirtualInputManager")
 
     while task.wait(0.05) do
-        local sst=_G.SST; if type(sst)~="table"then task.wait(1); continue end
+        local sst=_G.SST; if type(sst)~="table" then task.wait(1); continue end
 
         -- Auto Vote
-        if sst.Auto_Vote and type(sst.Select_Vote)=="table"then
+        if sst.Auto_Vote and type(sst.Select_Vote)=="table" then
             pcall(function()
                 local visual=workspace:FindFirstChild("Visual"); if not visual then return end
                 local rewardsUI=gui:FindFirstChild("RewardsUI"); if not rewardsUI or not rewardsUI.Enabled then return end
@@ -2260,7 +2411,7 @@ if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
 
         local selU = sst.Select_Unit
         local allU = false
-        if type(selU) == "table"then
+        if type(selU) == "table" then
             if selU["All Unit"] then allU = true end
         else
             selU = {} -- fallback
@@ -2279,7 +2430,8 @@ if sst.Auto_Upgrade and sst.Select_Unit and unitsF then
                             local costTextObj = unitFrame:FindFirstChild("CostText")
                             if costTextObj then
                                 local costText = costTextObj.Text
-                                -- ดึงตัวเลขจากข้อความ เช่น "Cost: <font color='#ff0000'>250</font>"cost = tonumber(costText:match("Cost:</font>%s*(%d+)")) or 0
+                                -- ดึงตัวเลขจากข้อความ เช่น "Cost: <font color='#ff0000'>250</font>"
+                                cost = tonumber(costText:match("Cost:</font>%s*(%d+)")) or 0
                             end
                         end
                     end
@@ -2325,7 +2477,7 @@ end)
 if #buyItemList==0 then buyItemList={"Ramen","Soda","Potion","Shield","Ticket"} end
 
 local buyItemDD=SP:AddMultiDropdownL("Select Item",buyItemList,function(v) _G.SST.Select_BuyItem=v; SS() end)
-if type(_G.SST.Select_BuyItem)=="table"then
+if type(_G.SST.Select_BuyItem)=="table" then
     task.defer(function() pcall(function() buyItemDD:Set(_G.SST.Select_BuyItem) end) end)
 end
 buyItemDD.onRefresh=function()
@@ -2340,6 +2492,8 @@ buyItemDD.onRefresh=function()
     return items
 end
 
+SP:AddSliderL("Min Yen Limit",0,100000,_G.SST.BuyItem_MinYen or 0,function(v) _G.SST.BuyItem_MinYen=v; SS() end)
+SP:AddSliderL("Max Yen Limit",0,100000000000000000,_G.SST.BuyItem_MaxYen or 999999,function(v) _G.SST.BuyItem_MaxYen=v; SS() end)
 SP:AddSliderL("Amount to Buy",1,99,_G.SST.BuyItem_Amount or 1,function(v) _G.SST.BuyItem_Amount=v; SS() end)
 SP:AddToggleL("Auto Buy Item",_G.SST.Auto_BuyItem or false,function(v) _G.SST.Auto_BuyItem=v; SS() end)
 
@@ -2349,8 +2503,13 @@ task.spawn(function()
     while task.wait(1) do
         pcall(function()
             if not _G.SST.Auto_BuyItem or not merchantRemote then return end
+            local pd=ReplicatedStorage.Player_Data:FindFirstChild(plr.Name); if not pd then return end
+            local gold=tonumber(pd.Data.Gold.Value) or 0
+            local minY=_G.SST.BuyItem_MinYen or 0
+            local maxY=_G.SST.BuyItem_MaxYen or 999999
+            if gold < minY or gold > maxY then return end
             local selected=_G.SST.Select_BuyItem
-            if type(selected)~="table"then return end
+            if type(selected)~="table" then return end
             local amount=_G.SST.BuyItem_Amount or 1
             for itemName,enabled in pairs(selected) do
                 if enabled then
@@ -2367,35 +2526,15 @@ end)
 AP:AddSeperatorR("Speed Set Game")
 -- ใน AP tab (Auto Play)
 local speedOptions = {"1x", "2x", "3x"}
-local speedDD = AP:AddDropdownR("Game Speed", speedOptions, _G.SST.Select_Speed and tostring(_G.SST.Select_Speed).."x"or "1x", function(v)
+local speedDD = AP:AddDropdownR("Game Speed", speedOptions, _G.SST.Select_Speed and tostring(_G.SST.Select_Speed).."x" or "1x", function(v)
     local speed = tonumber(v:gsub("x", ""))
     if speed then
         _G.SST.Select_Speed = speed
         SS()
-        -- ยิง remote ทันทีเมื่อเปลี่ยน
         pcall(function()
-            local statsR = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("Gameplay"):WaitForChild("StatsManager")
-            statsR:FireServer("SpeedGamepass", speed)
+            ReplicatedStorage:WaitForChild("Remote"):WaitForChild("SpeedGamepass"):FireServer(speed)
         end)
         AddNotification("Speed set to x" .. speed)
-    end
-end)
-
--- persistent loop คงค่า speed ระหว่างเล่น (เพราะ game reset ทุก round)
-task.spawn(function()
-    local statsR
-    pcall(function()
-        statsR = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("Gameplay"):WaitForChild("StatsManager")
-    end)
-    while task.wait(1) do
-        pcall(function()
-            if not statsR then return end
-            local speed = _G.SST.Select_Speed or 1
-            if speed > 1 and workspace:FindFirstChild("Visual") then
-                -- อยู่ในเกม → คงค่า speed
-                statsR:FireServer("SpeedGamepass", speed)
-            end
-        end)
     end
 end)
 
@@ -2412,7 +2551,9 @@ task.spawn(function()
     while task.wait(1) do
         pcall(function()
             if not _G.SST.Auto_Summon or not summonRemote then return end
-            local count=_G.SST.Select_SummonCount or "10x"local banner=_G.SST.Select_SummonMode or "Standard"summonRemote:FireServer(count, banner, {})
+            local count=_G.SST.Select_SummonCount or "10x"
+            local banner=_G.SST.Select_SummonMode or "Standard"
+            summonRemote:FireServer(count, banner, {})
             task.wait(0.3)
         end)
     end
@@ -2431,7 +2572,7 @@ WH:AddButtonL("Redeem All Code",function()
     local codeRemote
     pcall(function() codeRemote=ReplicatedStorage.Remote.Server.Lobby.Code end)
     if not codeRemote then
-        AddNotification("Code remote not found!")
+        AddNotification("[X] Code remote not found!")
         return
     end
     local redeemed=0
@@ -2442,7 +2583,7 @@ WH:AddButtonL("Redeem All Code",function()
         end)
         task.wait(0.15)
     end
-    AddNotification("Redeemed "..redeemed.."codes!")
+    AddNotification("[OK] Redeemed "..redeemed.." codes!")
 end)
 
 WH:AddSeperatorR("WebHook")
@@ -2455,188 +2596,60 @@ WH:AddToggleR("Send WebHook", _G.SST.Send_WebHook or false, function(v)
     _G.SST.Send_WebHook = v
     SS()
 end)
--- Webhook sender
-local function getAvatar(userId)
-    return "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png"
-end
 
-local function sendWebhook(isWin, RewardsText, GameTime)
-    local url = _G.SST.Place_WebHook_Link
-    if not url or url == "" then return end
-
-    local PlayerDataFolder = ReplicatedStorage:FindFirstChild("Player_Data")
-    if not PlayerDataFolder then return end
-
-    local pd = PlayerDataFolder:FindFirstChild(plr.Name)
-    if not pd or not pd:FindFirstChild("Data") then return end
-
-    local dataFolder = pd.Data
-
-    local function safeVal(obj)
-        return obj and tostring(obj.Value or obj.Text or "0") or "0"
-    end
-
-    -- ── Result styling ───────────────────────────────────
-    local resultText  = isWin and "🏆  VICTORY" or "💀  DEFEAT"
-    local resultBadge = isWin and "```diff\n+ " or "```diff\n- "
-    local color       = isWin and 0x00E676 or 0xFF1744   -- material green / red
-
-    -- ── Player stats ─────────────────────────────────────
-    local gem   = safeVal(dataFolder:FindFirstChild("Gem"))
-    local gold  = safeVal(dataFolder:FindFirstChild("Gold"))
-    local level = safeVal(dataFolder:FindFirstChild("Level"))
-    local exp   = safeVal(dataFolder:FindFirstChild("Exp"))
-
-    -- ── Timestamp (Unix) ─────────────────────────────────
-    local ts = os.time()
-
-    -- ── Rewards block ────────────────────────────────────
-    local rewardDisplay = (RewardsText ~= "" and RewardsText or "— none —")
-
-    local payload = {
-        ["content"] = "",
-        ["embeds"] = {{
-
-            -- Author row: avatar + player name
-            ["author"] = {
-                ["name"]     = "👤  " .. plr.Name,
-                ["icon_url"] = getAvatar(plr.UserId),
-                ["url"]      = "https://www.roblox.com/users/" .. plr.UserId .. "/profile"
-            },
-
-            -- Big title
-            ["title"] = "Anime Rangers X  ·  Match Result",
-
-            -- Result as description (big coloured block)
-            ["description"] = resultBadge .. resultText .. "\n```",
-
-            -- Player avatar as thumbnail (right side)
-            ["thumbnail"] = { ["url"] = getAvatar(plr.UserId) },
-
-            ["color"] = color,
-
-            ["fields"] = {
-                -- Row 1: Gem | Gold  (inline)
-                {
-                    ["name"]   = "💎  Gem",
-                    ["value"]  = "```fix\n" .. gem .. "\n```",
-                    ["inline"] = true
-                },
-                {
-                    ["name"]   = "🪙  Gold",
-                    ["value"]  = "```fix\n" .. gold .. "\n```",
-                    ["inline"] = true
-                },
-                -- Row 2: Level | Egg  (inline)
-                {
-                    ["name"]   = "⭐  Level",
-                    ["value"]  = "```fix\n" .. level .. "  (EXP: " .. exp .. ")\n```",
-                    ["inline"] = true
-                },
-                -- Row 3: Time  (full width)
-                {
-                    ["name"]   = "⏱️  Match Time",
-                    ["value"]  = "```\n" .. tostring(GameTime) .. "\n```",
-                    ["inline"] = false
-                },
-                -- Row 4: Rewards (full width)
-                {
-                    ["name"]   = "🎁  Rewards",
-                    ["value"]  = "```\n" .. rewardDisplay .. "\n```",
-                    ["inline"] = false
-                },
-            },
-
-            -- Timestamp (Discord renders this as local time)
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ", ts),
-
-            ["footer"] = {
-                ["text"]     = "IDekhere Hub  ·  V2  |  Anime Rangers X",
-                ["icon_url"] = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=" .. plr.UserId .. "&size=48x48&format=Png"
-            }
-        }}
-    }
-
-    local success, json = pcall(function()
-        return HttpService:JSONEncode(payload)
-    end)
-    if not success then return end
-
-    local req = http_request or request or (syn and syn.request)
-    if not req then return end
-
-    pcall(function()
-        req({
-            Url     = url,
-            Method  = "POST",
-            Headers = { ["Content-Type"] = "application/json" },
-            Body    = json
-        })
-    end)
-end
-
+-- ── Match result webhook loop ────────────────────────
 local sentThisMatch = false
-local matchEnded = false
+local matchEnded    = false
 
 task.spawn(function()
     while task.wait(0.5) do
         pcall(function()
             if not _G.SST.Send_WebHook then return end
-
             local rUI = plr.PlayerGui:FindFirstChild("RewardsUI")
             if not rUI then return end
-
             if rUI.Enabled then
                 if not sentThisMatch and not matchEnded then
-                    task.wait(0.5) -- รอข้อมูลโหลด
-
+                    task.wait(0.5)
                     local isWin = true
                     pcall(function()
                         local resultFrame = rUI.Main:FindFirstChild("Result") or rUI.Main.LeftSide:FindFirstChild("Result")
                         if resultFrame and resultFrame.Text then
-                            if string.find(string.lower(resultFrame.Text), "lose") then
-                                isWin = false
-                            end
+                            if string.find(string.lower(resultFrame.Text), "lose") then isWin = false end
                         end
                     end)
-
-                    local GameTime = "Unknown"pcall(function()
-                        GameTime = rUI.Main.LeftSide.TotalTime.Text
-                    end)
-
-                    local RewardsText = ""local rf = plr:FindFirstChild("RewardsShow")
+                    local GameTime = "Unknown"
+                    pcall(function() GameTime = rUI.Main.LeftSide.TotalTime.Text end)
+                    local RewardsText = ""
+                    local rf = plr:FindFirstChild("RewardsShow")
                     if rf then
                         for _, ri in ipairs(rf:GetChildren()) do
                             if ri:IsA("Folder") then
                                 local a = ri:FindFirstChild("Amount")
-                                if a then
-                                    local val = a.Value or a.Text or "0"RewardsText = RewardsText .. ri.Name .. ": " .. tostring(val) .. "\n"end
+                                if a then RewardsText = RewardsText..ri.Name..": "..tostring(a.Value or a.Text or "0").."\n" end
                             end
                         end
                     end
-
                     sendWebhook(isWin, RewardsText, GameTime)
                     sentThisMatch = true
-                    matchEnded = true
+                    matchEnded    = true
                 end
             else
                 if matchEnded then
                     sentThisMatch = false
-                    matchEnded = false
+                    matchEnded    = false
                 end
             end
         end)
     end
 end)
 
-WH:AddSeperatorR("Boost FPS")
-
 local blackScreenUI = nil
 local function toggleBlackScreen(enable)
     if enable then
         if not blackScreenUI then
             blackScreenUI = Instance.new("ScreenGui")
-            blackScreenUI.Name = "Blackscreen"blackScreenUI.DisplayOrder = 1
+            blackScreenUI.Name = "Blackscreen"
+            blackScreenUI.DisplayOrder = 1
             blackScreenUI.ResetOnSpawn = false
             blackScreenUI.IgnoreGuiInset = true
             blackScreenUI.Parent = plr.PlayerGui
@@ -2683,7 +2696,7 @@ task.spawn(function()
 end)
 
 WH:AddSliderR("Select Frame Rate",0,240,_G.SST.Select_Frame_Rate or 60,function(v) _G.SST.Select_Frame_Rate=v; SS() end)
-task.spawn(function() while task.wait(1) do pcall(function() if type(_G.SST.Select_Frame_Rate)=="number"and _G.SST.Select_Frame_Rate>0 then setfpscap(_G.SST.Select_Frame_Rate) end end) end end)
+task.spawn(function() while task.wait(1) do pcall(function() if type(_G.SST.Select_Frame_Rate)=="number" and _G.SST.Select_Frame_Rate>0 then setfpscap(_G.SST.Select_Frame_Rate) end end) end end)
 
 WH:AddSeperatorR("Misc")
 WH:AddToggleR("Anti AFK",_G.SST.Anti_AFK,function(v) _G.SST.Anti_AFK=v; SS() end)
@@ -2716,7 +2729,7 @@ do
         if kickConn then return end
         pcall(function()
             kickConn=game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
-                if child.Name=="ErrorPrompt"and child:FindFirstChild("MessageArea") and _G.SST.Auto_Kick_Rejoin then
+                if child.Name=="ErrorPrompt" and child:FindFirstChild("MessageArea") and _G.SST.Auto_Kick_Rejoin then
                     TeleportService:Teleport(111446873000464) -- Game ID of Anime Rangers X
                 end
             end)
@@ -2735,7 +2748,7 @@ task.spawn(function()
     while task.wait(1) do
         pcall(function()
             local pd=ReplicatedStorage.Player_Data:FindFirstChild(plr.Name); if not pd then return end
-            LV:Set("⭐ Level : "..pd.Data.Level.Value.."Exp : "..pd.Data.Exp.Value)
+            LV:Set("Level : "..pd.Data.Level.Value.."  Exp : "..pd.Data.Exp.Value)
             GemAmt:Set("Gem   : "..pd.Data.Gem.Value)
             GoldAmt:Set("Gold  : "..pd.Data.Gold.Value)
             EggAmt:Set("Egg   : "..pd.Data.Egg.Value)
@@ -2753,10 +2766,10 @@ task.spawn(function()
         pcall(function()
             for _,item in ipairs(itemsFolder:GetChildren()) do
                 local amt=item:FindFirstChild("Amount"); local lbl=itemLabels[item.Name]
-                if lbl and amt then lbl:Set(" "..item.Name.." : "..tostring(amt.Value)) end
+                if lbl and amt then lbl:Set(item.Name.." : "..tostring(amt.Value)) end
             end
         end)
     end
 end)
 
-AddNotification(" "..L("welcome"))
+AddNotification(L("welcome"))
