@@ -79,6 +79,13 @@ _G.SST = {
     Auto_Summon = false,
     Select_SummonMode = "Standard",
     Select_SummonCount = "10x",
+    -- WebHook Custom Builder
+    WH_Color_Preset  = "Green / Red",
+    WH_Ping_Type     = "None",
+    WH_Role_ID       = "",
+    WH_Embed_Info    = {ResultEmoji=true, PlayerName=true, MatchTime=true, RewardsSummary=false},
+    WH_Show_Fields   = {Gem=true, Gold=true, Level=true, EXP=true, Time=true, Rewards=true},
+    WH_Footer_Info   = {HubName=true, PlayerName=false, Result=false},
 }
 
 local function SS()
@@ -2005,42 +2012,112 @@ local function getAvatar(userId)
     _avatarCache[userId] = result
     return result
 end
+-- ── Color preset map ─────────────────────────────────────────
+local WH_COLOR_PRESETS = {
+    ["Green / Red"]     = {win=0x00E676, lose=0xFF1744},
+    ["Blue / Orange"]   = {win=0x3B82F6, lose=0xF97316},
+    ["Purple / Yellow"] = {win=0xA855F7, lose=0xEAB308},
+    ["Cyan / Pink"]     = {win=0x06B6D4, lose=0xEC4899},
+    ["White / Black"]   = {win=0xFFFFFF, lose=0x111111},
+    ["Gold / Dark"]     = {win=0xF59E0B, lose=0x374151},
+}
+
 local function sendWebhook(isWin, RewardsText, GameTime)
     local url = _G.SST.Place_WebHook_Link
     if not url or url == "" then return end
+
+    -- ── Win/Lose filter ───────────────────────────────────
+    local whType = _G.SST.Select_WebHook_Type or "Both"
+    if whType == "Win"  and not isWin then return end
+    if whType == "Lose" and isWin     then return end
+
     local pd = ReplicatedStorage:FindFirstChild("Player_Data") and ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
     if not pd or not pd:FindFirstChild("Data") then return end
     local dataFolder = pd.Data
     local function safeVal(obj) return obj and tostring(obj.Value or obj.Text or "0") or "0" end
-    local resultDesc = isWin
-        and "# 🏆  VICTORY\n> The battle is won. Rangers stand victorious!"
-        or  "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger."
-    local color = isWin and 0x00E676 or 0xFF1744
+
+    local gemVal   = safeVal(dataFolder:FindFirstChild("Gem"))
+    local goldVal  = safeVal(dataFolder:FindFirstChild("Gold"))
+    local levelVal = safeVal(dataFolder:FindFirstChild("Level"))
+    local expVal   = safeVal(dataFolder:FindFirstChild("Exp"))
+
+    -- ── สี จาก Color Preset ───────────────────────────────
+    local preset   = WH_COLOR_PRESETS[_G.SST.WH_Color_Preset or "Green / Red"]
+                     or WH_COLOR_PRESETS["Green / Red"]
+    local colorInt = isWin and preset.win or preset.lose
+
+    -- ── Description จาก WH_Embed_Info ────────────────────
+    local ei = type(_G.SST.WH_Embed_Info)=="table" and _G.SST.WH_Embed_Info
+               or {ResultEmoji=true, PlayerName=true}
+    local descParts = {}
+    if ei["Result Emoji"] or ei["ResultEmoji"] then
+        if isWin then table.insert(descParts, "# 🏆  VICTORY\n> The battle is won. Rangers stand victorious!")
+        else          table.insert(descParts, "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger.") end
+    end
+    if ei["Player Name"] or ei["PlayerName"] then
+        table.insert(descParts, "> 👤  **"..plr.Name.."**") end
+    if ei["Match Time"] or ei["MatchTime"] then
+        table.insert(descParts, "> ⏱️  Match Time : **"..tostring(GameTime).."**") end
+    if ei["Rewards Summary"] or ei["RewardsSummary"] then
+        local short = RewardsText ~= "" and RewardsText:gsub("\n"," | "):gsub(" | $","") or "— none —"
+        table.insert(descParts, "> 🎁  "..short) end
+    local embedDesc = #descParts > 0 and table.concat(descParts,"\n") or (isWin and "# 🏆  VICTORY" or "# 💀  DEFEAT")
+
+    -- ── Fields จาก WH_Show_Fields ────────────────────────
+    local sf = type(_G.SST.WH_Show_Fields)=="table" and _G.SST.WH_Show_Fields
+               or {Gem=true,Gold=true,Level=true,EXP=true,Time=true,Rewards=true}
+    local fields = {}
+    if sf["Gem"]  or sf["gem"]  then table.insert(fields,{["name"]="💎  Gem",  ["value"]="```fix\n"..gemVal.."\n```",  ["inline"]=true}) end
+    if sf["Gold"] or sf["gold"] then table.insert(fields,{["name"]="🪙  Gold", ["value"]="```fix\n"..goldVal.."\n```", ["inline"]=true}) end
+    if sf["Level"] or sf["level"] then
+        local lvLine = levelVal..(( sf["EXP"] or sf["exp"] ) and ("  (EXP: "..expVal..")") or "")
+        table.insert(fields,{["name"]="⭐  Level",["value"]="```fix\n"..lvLine.."\n```",["inline"]=false})
+    elseif sf["EXP"] or sf["exp"] then
+        table.insert(fields,{["name"]="✨  EXP",["value"]="```fix\n"..expVal.."\n```",["inline"]=false})
+    end
+    if sf["Time"] or sf["time"] then
+        table.insert(fields,{["name"]="⏱️  Match Time",["value"]="```\n"..tostring(GameTime).."\n```",["inline"]=false}) end
+    if sf["Rewards"] or sf["rewards"] then
+        table.insert(fields,{["name"]="🎁  Rewards",["value"]="```\n"..(RewardsText~="" and RewardsText or "— none —").."\n```",["inline"]=false}) end
+
+    -- ── Footer จาก WH_Footer_Info ─────────────────────────
+    local fi = type(_G.SST.WH_Footer_Info)=="table" and _G.SST.WH_Footer_Info
+               or {HubName=true}
+    local footerParts = {}
+    if fi["Hub Name"]   or fi["HubName"]   then table.insert(footerParts, "Anitary Hub") end
+    if fi["Player Name"] or fi["PlayerName"] then table.insert(footerParts, plr.Name) end
+    if fi["Result"]     or fi["result"]    then table.insert(footerParts, isWin and "Victory" or "Defeat") end
+    local footerText = #footerParts > 0 and table.concat(footerParts," | ") or "Anitary Hub"
+
+    -- ── Ping ──────────────────────────────────────────────
+    local pingType = _G.SST.WH_Ping_Type or "None"
+    local contentStr = ""
+    if     pingType == "@everyone" then contentStr = "@everyone"
+    elseif pingType == "@here"     then contentStr = "@here"
+    elseif pingType == "Role ID"   then
+        local rid = _G.SST.WH_Role_ID or ""
+        if rid ~= "" then contentStr = "<@&"..rid..">" end
+    end
+
     local avatarUrl = getAvatar(plr.UserId)
     local payload = {
-        ["content"] = "",
-        ["embeds"] = {{
-            ["author"]      = { ["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile" },
+        ["content"] = contentStr,
+        ["embeds"]  = {{
+            ["author"]      = {["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile"},
             ["title"]       = "Anime Rangers X  ·  Match Result",
-            ["description"] = resultDesc,
-            ["thumbnail"]   = { ["url"]=avatarUrl },
-            ["color"]       = color,
-            ["fields"] = {
-                { ["name"]="💎  Gem",    ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Gem")).."\n```",  ["inline"]=true  },
-                { ["name"]="🪙  Gold",   ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Gold")).."\n```", ["inline"]=true  },
-                { ["name"]="⭐  Level",  ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Level")).."  (EXP: "..safeVal(dataFolder:FindFirstChild("Exp"))..")\n```", ["inline"]=false },
-                { ["name"]="⏱️  Match Time", ["value"]="```\n"..tostring(GameTime).."\n```", ["inline"]=false },
-                { ["name"]="🎁  Rewards",    ["value"]="```\n"..(RewardsText ~= "" and RewardsText or "— none —").."\n```", ["inline"]=false },
-            },
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
-            ["footer"]    = { ["text"]="Anitary Hub    |  Anime Rangers X", ["icon_url"]=avatarUrl },
+            ["description"] = embedDesc,
+            ["thumbnail"]   = {["url"]=avatarUrl},
+            ["color"]       = colorInt,
+            ["fields"]      = fields,
+            ["timestamp"]   = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
+            ["footer"]      = {["text"]=footerText, ["icon_url"]=avatarUrl},
         }}
     }
-    local ok, json = pcall(function() return HttpService:JSONEncode(payload) end)
-    if not ok then return end
+    local ok2, json = pcall(function() return HttpService:JSONEncode(payload) end)
+    if not ok2 then return end
     local req = http_request or request or (syn and syn.request)
     if not req then return end
-    pcall(function() req({ Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json }) end)
+    pcall(function() req({Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json}) end)
 end
 
 
@@ -2636,31 +2713,48 @@ task.spawn(function()
             if not rUI then return end
             if rUI.Enabled then
                 if not sentThisMatch and not matchEnded then
-                    task.wait(0.5)
+                    task.wait(0.5) -- รอให้ UI โหลดเนื้อหาก่อน
+                    -- ── ตรวจผล Win / Lose ─────────────────────────────
                     local isWin = true
                     pcall(function()
-                        local resultFrame = rUI.Main:FindFirstChild("Result") or rUI.Main.LeftSide:FindFirstChild("Result")
+                        -- ลองหาจากหลาย path
+                        local resultFrame =
+                            (rUI.Main and rUI.Main:FindFirstChild("Result")) or
+                            (rUI.Main and rUI.Main.LeftSide and rUI.Main.LeftSide:FindFirstChild("Result")) or
+                            rUI:FindFirstChildWhichIsA("TextLabel", true)
                         if resultFrame and resultFrame.Text then
-                            if string.find(string.lower(resultFrame.Text), "lose") then isWin = false end
-                        end
-                    end)
-                    local GameTime = "Unknown"
-                    pcall(function() GameTime = rUI.Main.LeftSide.TotalTime.Text end)
-                    local RewardsText = ""
-                    local rf = plr:FindFirstChild("RewardsShow")
-                    if rf then
-                        for _, ri in ipairs(rf:GetChildren()) do
-                            if ri:IsA("Folder") then
-                                local a = ri:FindFirstChild("Amount")
-                                if a then RewardsText = RewardsText..ri.Name..": "..tostring(a.Value or a.Text or "0").."\n" end
+                            local t = string.lower(resultFrame.Text)
+                            if string.find(t,"lose") or string.find(t,"defeat") or string.find(t,"fail") then
+                                isWin = false
                             end
                         end
-                    end
+                    end)
+                    -- ── ดึง GameTime ──────────────────────────────────
+                    local GameTime = "Unknown"
+                    pcall(function()
+                        GameTime = rUI.Main.LeftSide.TotalTime.Text
+                    end)
+                    -- ── ดึง Rewards ───────────────────────────────────
+                    local RewardsText = ""
+                    pcall(function()
+                        local rf = plr:FindFirstChild("RewardsShow")
+                        if rf then
+                            for _, ri in ipairs(rf:GetChildren()) do
+                                if ri:IsA("Folder") then
+                                    local a = ri:FindFirstChild("Amount")
+                                    if a then
+                                        RewardsText = RewardsText..ri.Name..": "..tostring(a.Value or a.Text or "0").."\n"
+                                    end
+                                end
+                            end
+                        end
+                    end)
                     sendWebhook(isWin, RewardsText, GameTime)
                     sentThisMatch = true
                     matchEnded    = true
                 end
             else
+                -- RewardsUI ปิด → reset รอ match ใหม่
                 if matchEnded then
                     sentThisMatch = false
                     matchEnded    = false
@@ -2671,9 +2765,67 @@ task.spawn(function()
 end)
 
 WebHook_Misc:AddSeperatorL("WebHook Settings")
-WebHook_Misc:AddDropdownL("Select Win/Lose WebHook",{"Win","Lose","Both"},_G.SST.Select_WebHook_Type or "Both",function(v) _G.SST.Select_WebHook_Type=v; SS() end)
-WebHook_Misc:AddMultiDropdownL("Select To Shown On WebHook",{"Rewards","GameTime","Both"},_G.SST.Select_WebHook_Info or "Both",function(v) _G.SST.Select_WebHook_Info=v; SS() end)
-WebHook_Misc:AddToggleL("Tag roll on discord", _G.SST.Tag_Roll_Discord or false, function(v) _G.SST.Tag_Roll_Discord = v; SS() end)
+WebHook_Misc:AddDropdownL("ส่งเมื่อ",{"Win","Lose","Both"},_G.SST.Select_WebHook_Type or "Both",function(v)
+    _G.SST.Select_WebHook_Type = v; SS()
+end)
+
+WebHook_Misc:AddSeperatorL("Description (ติ๊กสิ่งที่อยากให้แสดง)")
+local embedInfoDD = WebHook_Misc:AddMultiDropdownL(
+    "Embed Description",
+    {"Result Emoji","Player Name","Match Time","Rewards Summary"},
+    function(v) _G.SST.WH_Embed_Info = v; SS() end
+)
+if type(_G.SST.WH_Embed_Info)=="table" then
+    task.defer(function() pcall(function() embedInfoDD:Set(_G.SST.WH_Embed_Info) end) end)
+end
+
+WebHook_Misc:AddSeperatorL("Fields (ข้อมูลเพิ่มเติม)")
+local showFieldsDD = WebHook_Misc:AddMultiDropdownL(
+    "Show Fields",
+    {"Gem","Gold","Level","EXP","Time","Rewards"},
+    function(v) _G.SST.WH_Show_Fields = v; SS() end
+)
+if type(_G.SST.WH_Show_Fields)=="table" then
+    task.defer(function() pcall(function() showFieldsDD:Set(_G.SST.WH_Show_Fields) end) end)
+end
+
+WebHook_Misc:AddSeperatorL("Footer")
+local footerDD = WebHook_Misc:AddMultiDropdownL(
+    "Footer Info",
+    {"Hub Name","Player Name","Result"},
+    function(v) _G.SST.WH_Footer_Info = v; SS() end
+)
+if type(_G.SST.WH_Footer_Info)=="table" then
+    task.defer(function() pcall(function() footerDD:Set(_G.SST.WH_Footer_Info) end) end)
+end
+
+WebHook_Misc:AddSeperatorL("Embed Color")
+WebHook_Misc:AddDropdownL(
+    "Color Preset (Win / Lose)",
+    {"Green / Red","Blue / Orange","Purple / Yellow","Cyan / Pink","White / Black","Gold / Dark"},
+    _G.SST.WH_Color_Preset or "Green / Red",
+    function(v) _G.SST.WH_Color_Preset = v; SS() end
+)
+
+WebHook_Misc:AddSeperatorL("Ping")
+WebHook_Misc:AddDropdownL(
+    "Ping Type",
+    {"None","@everyone","@here","Role ID"},
+    _G.SST.WH_Ping_Type or "None",
+    function(v) _G.SST.WH_Ping_Type = v; SS() end
+)
+WebHook_Misc:AddTextboxL("Role ID", _G.SST.WH_Role_ID or "", "ใส่เฉพาะตอนเลือก Role ID", function(v)
+    _G.SST.WH_Role_ID = v; SS()
+end)
+
+WebHook_Misc:AddSeperatorL("Test")
+WebHook_Misc:AddButtonL("📤 Test Send Webhook", function()
+    if not _G.SST.Place_WebHook_Link or _G.SST.Place_WebHook_Link == "" then
+        AddNotification("[X] ใส่ WebHook Link ก่อน!"); return
+    end
+    sendWebhook(true, "TestItem: 5\nTestGem: 10\n", "02:30")
+    AddNotification("[OK] ส่ง Test Webhook แล้ว!")
+end)
 
 WebHook_Misc:AddSeperatorR("Code")
 WebHook_Misc:AddButtonR("Redeem All Code",function()
