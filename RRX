@@ -2330,8 +2330,8 @@ task.spawn(function()
                 end
             else
                 -- ยังไม่ได้ → reroll ต่อ
-                lastTrait = current
-                lastSecondTrait = secondTrait
+                lastTrait = "" ..current
+                lastSecondTrait = "" ..secondTrait  
                 traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {current,secondTrait})
                 task.wait(0.5)
             end
