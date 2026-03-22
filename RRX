@@ -2088,7 +2088,6 @@ task.spawn(function()
                     ev:FireServer("Boss-Event")
                     if not plr.PlayerGui:FindFirstChild("SystemMessage") then
                         ev:FireServer("Start")
-                    end
                 end
             end
         end)
