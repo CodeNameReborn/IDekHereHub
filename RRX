@@ -2036,8 +2036,6 @@ task.spawn(function()
         end)
     end
 end)
-
-MAIN:AddSeperatorL("Join Ranger")
 MAIN:AddToggleL("Auto Join Ranger",_G.SST.Auto_Join_Ranger,function(v) _G.SST.Auto_Join_Ranger=v; SS() end)
 
 task.spawn(function()
@@ -2061,30 +2059,37 @@ task.spawn(function()
     end
 end)
 
-
---MAIN:AddToggleL("Auto Join Challenge",_G.SST.Auto_Join_Challenge,function(v) _G.SST.Auto_Join_Challenge=v; SS() end)
+MAIN:AddSeperatorL("CHALLENGES")
+MAIN:AddToggleL("Auto Join Challenge",_G.SST.Auto_Join_Challenge,function(v) _G.SST.Auto_Join_Challenge=v; SS() end)
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
             if not _G.SST.Auto_Join_Challenge or not workspace:FindFirstChild("Lobby") then return end
             local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-            if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+            if workspace:FindFirstChild("Lobby") and not plr.PlayerGui:FindFirstChild("SystemMessage") then
                 ev:FireServer("Create",{CreateChallengeRoom=true})
-                ev:FireServer("Start")
+                if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                    ev:FireServer("Start")
+                end
             end
         end)
     end
 end)
 
---MAIN:AddToggleL("Auto Join Boss Event",_G.SST.Auto_Join_BossEvent,function(v) _G.SST.Auto_Join_BossEvent=v; SS() end)
+MAIN:AddSeperatorL("EVENT")
+MAIN:AddToggleL("Auto Join Boss Event",_G.SST.Auto_Join_BossEvent,function(v) _G.SST.Auto_Join_BossEvent=v; SS() end)
+
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
             if not _G.SST.Auto_Join_BossEvent or not workspace:FindFirstChild("Lobby") then return end
-            local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-            if not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                ev:FireServer("Boss-Event")
-                ev:FireServer("Start")
+                local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
+                if workspace:FindFirstChild("Lobby") and not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                    ev:FireServer("Boss-Event")
+                    if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                        ev:FireServer("Start")
+                    end
+                end
             end
         end)
     end
@@ -2148,7 +2153,6 @@ task.spawn(function()
             HealthPot:Set("HP    : "..unit.HealthPotential.Value)
             DamagePot:Set("DMG   : "..unit.DamagePotential.Value)
             CooldownPot:Set("CD    : "..unit.AttackCooldownPotential.Value)
-            TraitLbl:Set("Trait : "..unit.PrimaryTrait.Value)
         end)
     end
 end)
@@ -2216,7 +2220,38 @@ local function sendWebhook(isWin, RewardsText, GameTime)
 end
 
 MAIN:AddSeperatorR("Trait Reroll")
-local TraitLbl=MAIN:AddLabelR("")
+task.spawn(function()
+    -- Define the path to the player's units folder (adjust if different)
+    local unitsFolder = ReplicatedStorage:FindFirstChild("Player_Data") and
+                        ReplicatedStorage.Player_Data[plr.Name] and
+                        ReplicatedStorage.Player_Data[plr.Name]:FindFirstChild("Units")
+    if not unitsFolder then
+        warn("Units folder not found – trait label won't update")
+        return
+    end
+
+    while task.wait(0.5) do  -- Update every 0.5 seconds (adjust as needed)
+        pcall(function()
+            local selectedUnitName = _G.SST.Select_UnitCL
+            if not selectedUnitName then return end
+
+            local unit = unitsFolder:FindFirstChild(selectedUnitName)
+            if not unit then return end
+
+            local trait = unit:FindFirstChild("PrimaryTrait")
+            if trait then
+                -- Assuming TraitLbl is a UI label object
+                if TraitLbl and TraitLbl.Set then
+                    TraitLbl:Set("Trait : " .. trait.Value)
+                else
+                    -- If it's a TextLabel, use .Text
+                    TraitLbl.Text = "Trait : " .. trait.Value
+                end
+            end
+        end)
+    end
+end)
+local TraitLbl = MAIN:AddLabelR("")
 local TraitList={"Superior I","Superior II","Superior III","Horizon I","Horizon II","Horizon III","Endure I","Endure II","Endure III","Brute","Sniper","Colossal","Investor","Jokester","Blitz","Juggernaut","Millionaire","Violent","Seraph","Capitalist","Duplicator","Sovereign"}
 local traitDD=MAIN:AddMultiDropdownR("Select Trait",TraitList,function(v) _G.SST.Select_Trait=v; SS() end)
 if type(_G.SST.Select_Trait)=="table" then task.defer(function() pcall(function() traitDD:Set(_G.SST.Select_Trait) end) end) end
@@ -2647,38 +2682,87 @@ task.spawn(function()
     end
 end)
 
+WH:AddSeperatorR("Performance")
+-- Get services and local player
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+
 local blackScreenUI = nil
+local blackScreenFrame = nil
+
 local function toggleBlackScreen(enable)
-    if enable then
-        if not blackScreenUI then
+    pcall(function()
+        if enable then
+            -- ถ้ามี UI อยู่แล้ว แต่ถูกปิด ให้เปิดใหม่
+            if blackScreenUI then
+                blackScreenUI.Enabled = true
+                blackScreenUI.Parent = plr:WaitForChild("PlayerGui", 5)
+                return
+            end
+            
+            -- รอ PlayerGui ให้พร้อม
+            local playerGui = plr:FindFirstChild("PlayerGui")
+            if not playerGui then
+                playerGui = plr:WaitForChild("PlayerGui", 5)
+                if not playerGui then return end
+            end
+            
+            -- สร้าง black screen ใหม่
             blackScreenUI = Instance.new("ScreenGui")
             blackScreenUI.Name = "Blackscreen"
-            blackScreenUI.DisplayOrder = 1
+            blackScreenUI.DisplayOrder = 999  -- ให้อยู่ข้างบนสุด
             blackScreenUI.ResetOnSpawn = false
             blackScreenUI.IgnoreGuiInset = true
-            blackScreenUI.Parent = plr.PlayerGui
-            local f = Instance.new("Frame", blackScreenUI)
-            f.BackgroundColor3 = Color3.new(0,0,0)
-            f.Size = UDim2.new(1,0,1,0)
-            f.BorderSizePixel = 0
+            blackScreenUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+            blackScreenUI.Parent = playerGui
+            
+            blackScreenFrame = Instance.new("Frame", blackScreenUI)
+            blackScreenFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+            blackScreenFrame.Size = UDim2.new(1, 0, 1, 0)
+            blackScreenFrame.BorderSizePixel = 0
+            blackScreenFrame.BackgroundTransparency = 0
+            
+            -- ปิด 3D rendering ถ้าใช้ได้
+            local success, err = pcall(function() 
+                RunService:Set3dRenderingEnabled(false) 
+            end)
+            if not success then
+                -- ถ้าใช้ไม่ได้ ไม่เป็นไร แค่มีหน้าจอดำก็พอ
+            end
         else
-            blackScreenUI.Enabled = true
+            -- ปิด black screen
+            if blackScreenUI then
+                blackScreenUI.Enabled = false
+                -- ไม่ต้องทำลาย GUI ไว้ใช้ครั้งหน้า
+            end
+            
+            -- เปิด 3D rendering กลับ
+            pcall(function() 
+                RunService:Set3dRenderingEnabled(true) 
+            end)
         end
-        RunService:Set3dRenderingEnabled(false)
-    else
-        if blackScreenUI then
-            blackScreenUI.Enabled = false
-        end
-        RunService:Set3dRenderingEnabled(true)
-    end
+    end)
 end
 
--- ใน toggle (ตอนสร้าง GUI)
-WH:AddToggleR("Black Screen", _G.SST.Black_Screen, function(v)
+-- เพิ่ม toggle ใน UI
+WH:AddToggleR("Black Screen", _G.SST.Black_Screen or false, function(v)
     _G.SST.Black_Screen = v
     SS()
+    -- รอสักครู่ให้ UI สร้างเสร็จก่อน
+    task.wait(0.1)
     toggleBlackScreen(v)
 end)
+
+-- ใช้ task.spawn เพื่อไม่ให้บล็อคสคริปต์หลัก
+task.spawn(function()
+    -- รอให้ UI พร้อม
+    task.wait(1)
+    if _G.SST.Black_Screen then
+        toggleBlackScreen(true)
+    end
+end)
+
 WH:AddToggleR("Boost Fps",_G.SST.Boost_Fps,function(v) _G.SST.Boost_Fps=v; SS() end)
 
 local boosted=false; local origTerrain={}; local origLighting={}; local origEffects={}
@@ -2749,7 +2833,6 @@ task.spawn(function()
             LV:Set("Level : "..pd.Data.Level.Value.."  Exp : "..pd.Data.Exp.Value)
             GemAmt:Set("Gem   : "..pd.Data.Gem.Value)
             GoldAmt:Set("Gold  : "..pd.Data.Gold.Value)
-            EggAmt:Set("Egg   : "..pd.Data.Egg.Value)
         end)
     end
 end)
