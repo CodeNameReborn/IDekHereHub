@@ -2309,7 +2309,7 @@ end
 end)
 
 AutoPlay_Function:AddSeperatorL("Set Speed Game")
-AutoPlay_Function:AddDropdownL("Select Speed",{"1","2","3"},_G.SST.Select_Speed,function(v) _G.SST.Select_Speed=v; SS() end)
+AutoPlay_Function:AddDropdownL("Select Speed",{"x1","x2","x3"},_G.SST.Select_Speed,function(v) _G.SST.Select_Speed=v; SS() end)
 
 task.spawn(function()
     while task.wait(0.5) do
@@ -2446,12 +2446,13 @@ Traits_Potential:AddSeperatorL("Trait Roroll")
 local rerollRemote=ReplicatedStorage.Remote.Server.Gambling.RerollPotential
 local UnitList={}
 for _,unit in ipairs(GetUnitPlayer:GetChildren()) do table.insert(UnitList,unit.Name) end
-local MainTraitUnit = Traits_Potential:AddLabelL("")
-local SubTraitUnit = Traits_Potential:AddLabelL("")
-local UnitTrait = Traits_Potential:AddDropdownL("Select Unit",UnitList,_G.SST.Select_UnitTrait,function(v) _G.SST.Select_UnitTrait=v; SS() end)
+
+local UnitTrait = Traits_Potential:AddDropdownL("Select Unit For trait",UnitList,_G.SST.Select_UnitTrait,function(v) _G.SST.Select_UnitTrait=v; SS() end)
 UnitTrait.onRefresh=function()
     local nl={}; for _,u in ipairs(GetUnitPlayer:GetChildren()) do table.insert(nl,u.Name) end; return nl
 end
+local MainTraitUnit = Traits_Potential:AddLabelL("")
+local SubTraitUnit = Traits_Potential:AddLabelL("")
 task.spawn(function()
     while task.wait(0.5) do
         pcall(function()
@@ -2553,6 +2554,11 @@ end)
 
 
 Traits_Potential:AddSeperatorR("Stats Potential Reroll")
+
+local UnitPotential = Traits_Potential:AddDropdownR("Select Unit For Potential",UnitList,_G.SST.Select_UnitPotential,function(v) _G.SST.Select_UnitPotential=v; SS() end)
+UnitPotential.onRefresh=function()
+    local nl={}; for _,u in ipairs(GetUnitPlayer:GetChildren()) do table.insert(nl,u.Name) end; return nl
+end
 local NameUnit  = Traits_Potential:AddLabelR(""); local CodeUnit=Traits_Potential:AddLabelR("")
 local SpeedPot  = Traits_Potential:AddLabelR(""); local RangePot=Traits_Potential:AddLabelR("")
 local HealthPot = Traits_Potential:AddLabelR(""); local DamagePot=Traits_Potential:AddLabelR("")
@@ -2573,11 +2579,6 @@ task.spawn(function()
         end)
     end
 end)
-
-local UnitPotential = Traits_Potential:AddDropdownR("Select Unit For Potential",UnitList,_G.SST.Select_UnitPotential,function(v) _G.SST.Select_UnitPotential=v; SS() end)
-UnitPotential.onRefresh=function()
-    local nl={}; for _,u in ipairs(GetUnitPlayer:GetChildren()) do table.insert(nl,u.Name) end; return nl
-end
 local potDD=Traits_Potential:AddMultiDropdownR("Select Potential",{"Speed","Range","Health","Damage","AttackCooldown"},function(v) _G.SST.Select_Potential=v; SS() end)
 if type(_G.SST.Select_Potential)=="table" then task.defer(function() pcall(function() potDD:Set(_G.SST.Select_Potential) end) end) end
 local statDD=Traits_Potential:AddMultiDropdownR("Select Stats",{"C-","C","C+","B-","B","B+","A-","A","A+","S-","S","S+","SS","SSS","O-","O","O+"},function(v) _G.SST.Select_Stats=v; SS() end)
@@ -2826,14 +2827,16 @@ task.spawn(function()
     end
 end)
 
-WebHook_Misc:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin,function(v) _G.SST.Auto_Kick_Rejoin=v; SS() end)
+WebHook_Misc:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin ,function(v) _G.SST.Auto_Kick_Rejoin=v; SS() end)
 
 task.spawn(function()
-    game.CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
-        if _G.SST.Auto_Kick_Rejoin and child.Name == 'ErrorPrompt' then
-            TeleportService:Teleport(111446873000464)
-        end
-    end)
+    if _G.SST.Auto_Kick_Rejoin then
+        game.CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+            if _G.SST.Auto_Kick_Rejoin and child.Name == 'ErrorPrompt' then
+                TeleportService:Teleport(111446873000464)
+            end
+        end)
+    end
 end)
 
 
