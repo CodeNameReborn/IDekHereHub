@@ -74,7 +74,7 @@ _G.SST = {
     BuyItem_Amount = 1,
     BuyItem_MinYen = 0,
     BuyItem_MaxYen = 999999,
-    Select_Speed = 1,
+    Select_Speed = "x1",
     -- Summon / Gacha
     Auto_Summon = false,
     Select_SummonMode = "Standard",
@@ -86,6 +86,31 @@ _G.SST = {
     WH_Embed_Info    = {ResultEmoji=true, PlayerName=true, MatchTime=true, RewardsSummary=false},
     WH_Show_Fields   = {Gem=true, Gold=true, Level=true, EXP=true, Time=true, Rewards=true},
     WH_Footer_Info   = {HubName=true, PlayerName=false, Result=false},
+    -- Claim Systems
+    Auto_Claim_Quest      = false,
+    Auto_Claim_Index      = false,
+    Auto_Claim_BattlePass = false,
+    Auto_Claim_Level      = false,
+    -- Upgrade Stats
+    Auto_Upgrade_YenGen   = false,
+    Auto_Upgrade_TowerHP  = false,
+    -- Ghoul Shop
+    Auto_Buy_Ghoul        = false,
+    Select_GhoulItem      = "Gourmet Meal",
+    BuyGhoul_Amount       = 1,
+    -- Raid Shop
+    Auto_Buy_Raid         = false,
+    Select_RaidType       = "JJK",
+    Select_RaidItem       = "Dr. Megga Punk",
+    BuyRaid_Amount        = 1,
+    -- Calamity Shop
+    Auto_Buy_Calamity     = false,
+    Select_CalamityType   = "JJK",
+    Select_CalamityItem   = "Perfect Stats Key",
+    BuyCalamity_Amount    = 1,
+    -- Special Events
+    Auto_Ghoul_Event      = false,
+    Auto_Boss_Attack      = false,
 }
 
 local function SS()
@@ -508,10 +533,7 @@ task.spawn(function()
         task.wait(1)
         pcall(function()
             if islandClick.Visible then
-                local t  = os.time()
-                local hh = math.floor(t / 3600) % 24
-                local mm = math.floor(t / 60)   % 60
-                iTime.Text = string.format("%02d:%02d", hh, mm)
+                iTime.Text = os.date("%H:%M")
             end
         end)
     end
@@ -2153,43 +2175,50 @@ local stageDD=Main_Event:AddDropdownL("Select Stage",StageList,_G.SST.Select_Sta
 Main_Event:AddToggleL("Auto Join Story",_G.SST.Auto_Join_Story,function(v) _G.SST.Auto_Join_Story=v; SS() end)
 
 task.spawn(function()
+    local ev = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
+    local busy = false
     while task.wait(1) do
         pcall(function()
-            if not _G.SST.Auto_Join_Story or not _G.SST.Select_Chapter or not _G.SST.Select_Stage then return end
-            local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-            -- Only attempt if in lobby and no game active
-            if workspace:FindFirstChild("Lobby") and not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                ev:FireServer("Create")
-                ev:FireServer("Change-World",{World=_G.SST.Select_Chapter})
-                ev:FireServer("Change-Chapter",{Chapter=_G.SST.Select_Chapter.."_Chapter".._G.SST.Select_Stage})
-                ev:FireServer("Submit")
-                task.wait(0.5)
-                if not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                    ev:FireServer("Start")
-                end
+            if busy or not _G.SST.Auto_Join_Story then return end
+            if not _G.SST.Select_Chapter or not _G.SST.Select_Stage then return end
+            if not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage") then return end
+            busy = true
+            ev:FireServer("Create")
+            ev:FireServer("Change-World",  {World   = _G.SST.Select_Chapter})
+            ev:FireServer("Change-Chapter",{Chapter = _G.SST.Select_Chapter.."_Chapter".._G.SST.Select_Stage})
+            ev:FireServer("Submit")
+            task.wait(0.5)
+            if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                ev:FireServer("Start")
             end
+            task.wait(2)
+            busy = false
         end)
     end
 end)
+
 Main_Event:AddToggleL("Auto Join Ranger",_G.SST.Auto_Join_Ranger,function(v) _G.SST.Auto_Join_Ranger=v; SS() end)
 
 task.spawn(function()
+    local ev = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
+    local busy = false
     while task.wait(1) do
         pcall(function()
-            if not _G.SST.Auto_Join_Ranger or not _G.SST.Select_Chapter or not _G.SST.Select_Stage then return end
-                local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-            -- Only attempt if in lobby and no game active
-                if workspace:FindFirstChild("Lobby") and not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                    ev:FireServer("Create")
-                    ev:FireServer("Change-Mode",{Mode="Ranger Stage"})
-                    ev:FireServer("Change-World",{World=_G.SST.Select_Chapter})
-                    ev:FireServer("Change-Chapter",{Chapter=_G.SST.Select_Chapter.."_RangerStage".._G.SST.Select_Stage})
-                    ev:FireServer("Submit")
-                    task.wait(0.1)
-                    if not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                        ev:FireServer("Start")
-                end
+            if busy or not _G.SST.Auto_Join_Ranger then return end
+            if not _G.SST.Select_Chapter or not _G.SST.Select_Stage then return end
+            if not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage") then return end
+            busy = true
+            ev:FireServer("Create")
+            ev:FireServer("Change-Mode",   {Mode    = "Ranger Stage"})
+            ev:FireServer("Change-World",  {World   = _G.SST.Select_Chapter})
+            ev:FireServer("Change-Chapter",{Chapter = _G.SST.Select_Chapter.."_RangerStage".._G.SST.Select_Stage})
+            ev:FireServer("Submit")
+            task.wait(0.5)
+            if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                ev:FireServer("Start")
             end
+            task.wait(2)
+            busy = false
         end)
     end
 end)
@@ -2197,40 +2226,155 @@ end)
 Main_Event:AddSeperatorL("CHALLENGES")
 Main_Event:AddToggleL("Auto Join Challenge",_G.SST.Auto_Join_Challenge,function(v) _G.SST.Auto_Join_Challenge=v; SS() end)
 task.spawn(function()
+    local ev = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
+    local busy = false
     while task.wait(1) do
         pcall(function()
-            if not _G.SST.Auto_Join_Challenge or not workspace:FindFirstChild("Lobby") then return end
-            local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-            if workspace:FindFirstChild("Lobby") and not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                ev:FireServer("Create",{CreateChallengeRoom=true})
-                if not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                    ev:FireServer("Start")
-                end
+            if busy or not _G.SST.Auto_Join_Challenge then return end
+            if not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage") then return end
+            busy = true
+            ev:FireServer("Create",{CreateChallengeRoom=true})
+            task.wait(0.5)
+            if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                ev:FireServer("Start")
             end
+            task.wait(2)
+            busy = false
         end)
     end
 end)
 
-Main_Event:AddSeperatorR("EVENT")
-Main_Event:AddToggleR("Auto Join Boss Event",_G.SST.Auto_Join_BossEvent,function(v) _G.SST.Auto_Join_BossEvent=v; SS() end)
+Main_Event:AddSeperatorR("SPECIAL EVENTS")
+Main_Event:AddToggleR("Auto Ghoul Event",  _G.SST.Auto_Ghoul_Event,  function(v) _G.SST.Auto_Ghoul_Event=v;  SS() end)
+Main_Event:AddToggleR("Auto Boss Attack",  _G.SST.Auto_Boss_Attack,  function(v) _G.SST.Auto_Boss_Attack=v;  SS() end)
 
 task.spawn(function()
+    local ev = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server")
+        :WaitForChild("PlayRoom"):WaitForChild("Event")
+    local busyG = false
+    local busyB = false
     while task.wait(1) do
         pcall(function()
-            if not _G.SST.Auto_Join_BossEvent or not workspace:FindFirstChild("Lobby") then return end
-                local ev=ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-                if workspace:FindFirstChild("Lobby") and not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                    ev:FireServer("Boss-Event")
-                    if not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                        ev:FireServer("Start")
-                end
+            if not busyG and _G.SST.Auto_Ghoul_Event
+            and workspace:FindFirstChild("Lobby")
+            and not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                busyG = true
+                ev:FireServer("Fate Mode")
+                task.wait(2); busyG = false
+            end
+            if not busyB and _G.SST.Auto_Boss_Attack
+            and workspace:FindFirstChild("Lobby")
+            and not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                busyB = true
+                ev:FireServer("Boss-Attack-2.5")
+                task.wait(2); busyB = false
             end
         end)
     end
 end)
 
--- ══════════════════════════════════════════════════════
---  AutoPlay_Function TABS
+Main_Event:AddSeperatorR("CLAIM")
+
+-- ── Level Reward ──────────────────────────────────────
+local claimLevelStatusLbl = Main_Event:AddLabelR("Level Reward : -")
+
+local function claimAllLevelMilestones()
+    local lvlRemote = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server")
+        :WaitForChild("Gameplay"):WaitForChild("LevelMilestone")
+    local pd = ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
+    if not pd or not pd:FindFirstChild("Data") then
+        AddNotification("[X] ไม่พบข้อมูล Player!")
+        return
+    end
+    local currentLevel = tonumber(pd.Data.Level.Value) or 0
+    if currentLevel <= 0 then
+        AddNotification("[X] ระดับผู้เล่นไม่ถูกต้อง!")
+        return
+    end
+    -- เคลมทุก 5 เลเวล ตั้งแต่ 5 → currentLevel
+    local maxMilestone = math.floor(currentLevel / 5) * 5
+    if maxMilestone <= 0 then
+        AddNotification("[!] ยังไม่ถึง Level 5")
+        return
+    end
+    local claimed = 0
+    for milestone = 5, maxMilestone, 5 do
+        pcall(function()
+            lvlRemote:FireServer(milestone)
+            claimed = claimed + 1
+        end)
+        task.wait(0.15)
+    end
+    AddNotification("[OK] Claimed "..claimed.." Level Rewards! (Lv.5–"..maxMilestone..")")
+end
+
+Main_Event:AddToggleR("Auto Claim Level Rewards", _G.SST.Auto_Claim_Level, function(v)
+    _G.SST.Auto_Claim_Level = v; SS()
+end)
+
+-- อัปเดต label แสดง level และ milestone ถัดไป
+task.spawn(function()
+    while task.wait(3) do
+        pcall(function()
+            local pd = ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
+            if not pd then return end
+            local lv = tonumber(pd.Data.Level.Value) or 0
+            local next5 = math.ceil((lv + 1) / 5) * 5
+            claimLevelStatusLbl:Set(
+                "Level : <font color='#33ffff'>"..lv.."</font>"
+                .."  |  Next Milestone : <font color='#ffcc00'>Lv."..next5.."</font>"
+            )
+        end)
+    end
+end)
+
+-- Auto Claim loop — เช็คทุก 30 วิ
+task.spawn(function()
+    local lvlRemote = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server")
+        :WaitForChild("Gameplay"):WaitForChild("LevelMilestone")
+    while task.wait(30) do
+        pcall(function()
+            if not _G.SST.Auto_Claim_Level then return end
+            local pd = ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
+            if not pd then return end
+            local currentLevel = tonumber(pd.Data.Level.Value) or 0
+            local maxMilestone = math.floor(currentLevel / 5) * 5
+            for milestone = 5, maxMilestone, 5 do
+                pcall(function() lvlRemote:FireServer(milestone) end)
+                task.wait(0.15)
+            end
+        end)
+    end
+end)
+
+Main_Event:AddToggleR("Claim Battle Pass", _G.SST.Claim_Battle_Pass, function(v) _G.SST.Claim_Battle_Pass=v; SS() end)
+
+spawn(function()
+    while task.wait(5) do
+        pcall(function()
+            ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Events")
+                :WaitForChild("ClaimBp"):FireServer("Claim All")
+        end)
+    end
+end)
+
+Main_Event:AddToggleR("Auto Claim All Quests", _G.SST.Auto_Claim_Quest, function(v) _G.SST.Auto_Claim_Quest=v; SS() end)
+Main_Event:AddToggleR("Auto Claim All Index",  _G.SST.Auto_Claim_Index, function(v) _G.SST.Auto_Claim_Index=v; SS() end)
+
+task.spawn(function()
+    local questR = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server")
+        :WaitForChild("Gameplay"):WaitForChild("QuestEvent")
+    local indexR = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server")
+        :WaitForChild("UnitsIndex"):WaitForChild("RemoteEvent")
+    while task.wait(5) do
+        pcall(function()
+            if _G.SST.Auto_Claim_Quest then questR:FireServer("ClaimAll") end
+            if _G.SST.Auto_Claim_Index then indexR:FireServer("ClaimAll") end
+        end)
+    end
+end)
+
+
 -- ══════════════════════════════════════════════════════
 
 AutoPlay_Function:AddSeperatorL("Auto Play")
@@ -2267,6 +2411,23 @@ upgradeDD.onRefresh=function()
 end
 AutoPlay_Function:AddToggleR("Auto Upgrade Unit",_G.SST.Auto_Upgrade,function(v) _G.SST.Auto_Upgrade=v; SS() end)
 AutoPlay_Function:AddToggleR("Auto Upgrade Yen",_G.SST.Auto_Upgtade_Maxyen,function(v) _G.SST.Auto_Upgtade_Maxyen=v; SS() end)
+
+AutoPlay_Function:AddSeperatorL("Player Stats Upgrade")
+AutoPlay_Function:AddToggleL("Auto Upgrade Max Yen",   _G.SST.Auto_Upgtade_Maxyen, function(v) _G.SST.Auto_Upgtade_Maxyen=v; SS() end)
+AutoPlay_Function:AddToggleL("Auto Upgrade Yen Gen",   _G.SST.Auto_Upgrade_YenGen, function(v) _G.SST.Auto_Upgrade_YenGen=v; SS() end)
+AutoPlay_Function:AddToggleL("Auto Upgrade Tower HP",  _G.SST.Auto_Upgrade_TowerHP,function(v) _G.SST.Auto_Upgrade_TowerHP=v; SS() end)
+
+task.spawn(function()
+    local statsR = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server")
+        :WaitForChild("Gameplay"):WaitForChild("PlayerStats")
+    while task.wait(1) do
+        pcall(function()
+            if _G.SST.Auto_Upgtade_Maxyen  then statsR:FireServer("YenMaxLevel")      end
+            if _G.SST.Auto_Upgrade_YenGen  then statsR:FireServer("YenGenarateLevel") end
+            if _G.SST.Auto_Upgrade_TowerHP then statsR:FireServer("BaseHealthLevel")  end
+        end)
+    end
+end)
 
 -- single game loop
 task.spawn(function()
@@ -2377,10 +2538,12 @@ end
         -- Auto Upgrade Yen
         if sst.Auto_Upgtade_Maxyen then pcall(function() statsRemote:FireServer("MaximumYen") end) end
 
-        -- Auto Vote Start
+        -- Auto Vote Start — แยก task.spawn ป้องกันบล็อก loop หลัก
         if sst.Auto_Vote_Start and votePlayingUI and votePlayingUI.Visible then
-            task.wait(sst.Select_Deley_Vote or 1)
-            pcall(function() votePlayingRemote:FireServer() end)
+            task.spawn(function()
+                task.wait(sst.Select_Deley_Vote or 1)
+                pcall(function() votePlayingRemote:FireServer() end)
+            end)
         end
     end
 end)
@@ -2389,11 +2552,11 @@ AutoPlay_Function:AddSeperatorL("Set Speed Game")
 AutoPlay_Function:AddDropdownL("Select Speed",{"x1","x2","x3"},_G.SST.Select_Speed,function(v) _G.SST.Select_Speed=v; SS() end)
 
 task.spawn(function()
+    local speedRemote = ReplicatedStorage:WaitForChild("Remote",9e9):WaitForChild("Server",9e9):WaitForChild("Gameplay",9e9):WaitForChild("SetGameSpeed",9e9)
     while task.wait(0.5) do
         pcall(function()
             if not _G.SST.Select_Speed then return end
-            local speedRemote=ReplicatedStorage:WaitForChild("Remote",9e9):WaitForChild("Server",9e9):WaitForChild("Gameplay",9e9):WaitForChild("SetGameSpeed",9e9)
-            local speedVal = tonumber(tostring(_G.SST.Select_Speed or "1"):gsub("x","")) or 1
+            local speedVal = tonumber(tostring(_G.SST.Select_Speed or "x1"):gsub("x","")) or 1
             speedRemote:FireServer(speedVal)
         end)
     end
@@ -2444,8 +2607,6 @@ task.spawn(function()
         pcall(function()
             if not _G.SST.Auto_BuyItem or not merchantRemote then return end
             local pd=ReplicatedStorage.Player_Data:FindFirstChild(plr.Name); if not pd then return end
-            local gold=tonumber(pd.Data.Gold.Value) or 0
-            -- Removed Min/Max Yen checks
             local selected=_G.SST.Select_BuyItem
             if type(selected)~="table" then return end
             local amount=_G.SST.BuyItem_Amount or 1
@@ -2479,6 +2640,91 @@ task.spawn(function()
             local banner=_G.SST.Select_SummonMode or "Standard"
             summonRemote:FireServer(count, banner, {})
             task.wait(0.3)
+        end)
+    end
+end)
+
+-- ── Ghoul Shop ────────────────────────────────────────
+Shop_UserInfo:AddSeperatorL("Ghoul Hunt Shop")
+local ghoulItems = {"Gourmet Meal","Premium Meal","Deluxe Meal","RC Cell","Kakuhou","Ghoul Flesh"}
+Shop_UserInfo:AddDropdownL("Ghoul Item", ghoulItems, _G.SST.Select_GhoulItem or "Gourmet Meal", function(v)
+    _G.SST.Select_GhoulItem = v; SS()
+end)
+Shop_UserInfo:AddSliderL("Ghoul Amount", 1, 99, _G.SST.BuyGhoul_Amount or 1, function(v)
+    _G.SST.BuyGhoul_Amount = v; SS()
+end)
+Shop_UserInfo:AddToggleL("Auto Buy Ghoul Shop", _G.SST.Auto_Buy_Ghoul, function(v)
+    _G.SST.Auto_Buy_Ghoul = v; SS()
+end)
+task.spawn(function()
+    local ghoulR = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server")
+        :WaitForChild("Gameplay"):WaitForChild("GhoulHuntExchange")
+    while task.wait(0.5) do
+        pcall(function()
+            if not _G.SST.Auto_Buy_Ghoul then return end
+            ghoulR:FireServer(_G.SST.Select_GhoulItem or "Gourmet Meal", _G.SST.BuyGhoul_Amount or 1)
+        end)
+    end
+end)
+
+-- ── Raid Shop ─────────────────────────────────────────
+Shop_UserInfo:AddSeperatorL("Raid Shop")
+local raidTypes = {"JJK","AOT","BleachSR","NarutoSR"}
+local raidItems = {"Dr. Megga Punk","Perfect Stats Key","Trial Key","Raid Token"}
+Shop_UserInfo:AddDropdownL("Raid Type", raidTypes, _G.SST.Select_RaidType or "JJK", function(v)
+    _G.SST.Select_RaidType = v; SS()
+end)
+Shop_UserInfo:AddDropdownL("Raid Item", raidItems, _G.SST.Select_RaidItem or "Dr. Megga Punk", function(v)
+    _G.SST.Select_RaidItem = v; SS()
+end)
+Shop_UserInfo:AddSliderL("Raid Amount", 1, 99, _G.SST.BuyRaid_Amount or 1, function(v)
+    _G.SST.BuyRaid_Amount = v; SS()
+end)
+Shop_UserInfo:AddToggleL("Auto Buy Raid Shop", _G.SST.Auto_Buy_Raid, function(v)
+    _G.SST.Auto_Buy_Raid = v; SS()
+end)
+task.spawn(function()
+    local raidR = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server")
+        :WaitForChild("Gameplay"):WaitForChild("JJK_RaidShop")
+    while task.wait(0.5) do
+        pcall(function()
+            if not _G.SST.Auto_Buy_Raid then return end
+            raidR:FireServer(
+                _G.SST.Select_RaidType or "JJK",
+                _G.SST.Select_RaidItem or "Dr. Megga Punk",
+                _G.SST.BuyRaid_Amount  or 1
+            )
+        end)
+    end
+end)
+
+-- ── Calamity Shop ─────────────────────────────────────
+Shop_UserInfo:AddSeperatorL("Calamity Shop")
+local calamityTypes = {"JJK","AOT","BleachSR","NarutoSR"}
+local calamityItems = {"Perfect Stats Key","Unique Shard","Mythic Shard","Calamity Token"}
+Shop_UserInfo:AddDropdownL("Calamity Type", calamityTypes, _G.SST.Select_CalamityType or "JJK", function(v)
+    _G.SST.Select_CalamityType = v; SS()
+end)
+Shop_UserInfo:AddDropdownL("Calamity Item", calamityItems, _G.SST.Select_CalamityItem or "Perfect Stats Key", function(v)
+    _G.SST.Select_CalamityItem = v; SS()
+end)
+Shop_UserInfo:AddSliderL("Calamity Amount", 1, 99, _G.SST.BuyCalamity_Amount or 1, function(v)
+    _G.SST.BuyCalamity_Amount = v; SS()
+end)
+Shop_UserInfo:AddToggleL("Auto Buy Calamity Shop", _G.SST.Auto_Buy_Calamity, function(v)
+    _G.SST.Auto_Buy_Calamity = v; SS()
+end)
+task.spawn(function()
+    local calamR = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server")
+        :WaitForChild("Gameplay"):WaitForChild("Calamity_Shop")
+    while task.wait(0.5) do
+        pcall(function()
+            if not _G.SST.Auto_Buy_Calamity then return end
+            calamR:FireServer(
+                _G.SST.Select_CalamityType or "JJK",
+                _G.SST.Select_CalamityItem or "Perfect Stats Key",
+                _G.SST.BuyCalamity_Amount  or 1
+            )
         end)
     end
 end)
@@ -2519,7 +2765,7 @@ end)
 -- ══════════════════════════════════════════════════════
 --  Traits_Potential TABS
 -- ══════════════════════════════════════════════════════
-Traits_Potential:AddSeperatorL("Trait Roroll")
+Traits_Potential:AddSeperatorL("Trait Reroll")
 local rerollRemote=ReplicatedStorage.Remote.Server.Gambling.RerollPotential
 local UnitList={}
 for _,unit in ipairs(GetUnitPlayer:GetChildren()) do table.insert(UnitList,unit.Name) end
@@ -2622,8 +2868,8 @@ task.spawn(function()
                 end
             else
                 -- ยังไม่ได้ → reroll ต่อ
-                lastTrait = "" ..current
-                lastSecondTrait = "" ..secondTrait  
+                lastTrait       = current
+                lastSecondTrait = secondTrait
                 traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {current,secondTrait})
                 task.wait(0.5)
             end
@@ -2987,6 +3233,5 @@ task.spawn(function()
         end)
     end)
 end)
-
 
 AddNotification(L("welcome"))
