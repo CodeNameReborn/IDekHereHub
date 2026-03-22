@@ -2727,20 +2727,14 @@ task.spawn(function()
 end)
 
 WH:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin,function(v) _G.SST.Auto_Kick_Rejoin=v; SS() end)
-do
-    local kickConn=nil
-    local function setupKick()
-        if kickConn then return end
-        pcall(function()
-            kickConn=game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
-                if child.Name=="ErrorPrompt" and child:FindFirstChild("MessageArea") and _G.SST.Auto_Kick_Rejoin then
-                    TeleportService:Teleport(111446873000464) -- Game ID of Anime Rangers X
-                end
-            end)
-        end)
-    end
-    setupKick()
-end
+
+task.spawn(function()
+    game.CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+        if _G.SST.Auto_Kick_Rejoin and child.Name == 'ErrorPrompt' then
+            TeleportService:Teleport(111446873000464)
+        end
+    end)
+end)
 
 -- ═══ ITEM CHECK TAB ═══════════════════════════════════
 CH:AddSeperatorL("Item")
