@@ -1,5 +1,5 @@
 --[[
-    RebornXer Hub for Anime Rangers X
+    Anitary Hub for Anime Rangers X
     Fixed and Optimized Version
 ]]
 
@@ -39,7 +39,7 @@ local fileSupport = (type(writefile)=="function" and type(readfile)=="function" 
 
 -- Default settings (will be overwritten by LoadSetting if file exists)
 _G.SST = {
-    Select_UnitCL = "Select",
+    Select_UnitTrait = "Select",
     Select_Vote = {},
     Auto_Upgrade = false,
     Auto_Play = false,
@@ -84,7 +84,7 @@ _G.SST = {
 local function SS()
     if not fileSupport then return end
     pcall(function()
-        writefile("RebornXer Hub ARX ["..plr.Name.."].json",
+        writefile("Anitary Hub ARX ["..plr.Name.."].json",
             HttpService:JSONEncode(_G.SST))
     end)
 end
@@ -92,7 +92,7 @@ end
 local function LoadSetting()
     if not fileSupport then return end
     pcall(function()
-        local f = "RebornXer Hub ARX ["..plr.Name.."].json"
+        local f = "Anitary Hub ARX ["..plr.Name.."].json"
         if isfile(f) then
             local ok, d = pcall(HttpService.JSONDecode, HttpService, readfile(f))
             if ok and type(d)=="table" then
@@ -142,7 +142,7 @@ pcall(function()
 end)
 
 -- ── ลบ GUI เก่า
-local _old = game.CoreGui:FindFirstChild("IDekhere Hub")
+local _old = game.CoreGui:FindFirstChild("Anitary Hub")
 if _old then _old:Destroy() end
 
 -- ══════════════════════════════════════════════════════
@@ -150,7 +150,7 @@ if _old then _old:Destroy() end
 -- ══════════════════════════════════════════════════════
 local LANG = {
     TH={
-        welcome="ยินดีต้อนรับสู่ IDekhere Hub!", reset_done="รีเซ็ต UI เรียบร้อยแล้ว!",
+        welcome="ยินดีต้อนรับสู่ Anitary Hub!", reset_done="รีเซ็ต UI เรียบร้อยแล้ว!",
         lang_changed="เปลี่ยนภาษาแล้ว", s_accent=">> สีหลัก", s_bg=">> พื้นหลัง",
         s_preset=">> ธีมสำเร็จรูป", s_corner=">> มุมโค้ง", s_anim=">> Tab อนิเมชั่น",
         s_opacity=">> ความโปร่งใส", s_size=">> ขนาด Window", s_language=">> ภาษา",
@@ -163,7 +163,7 @@ local LANG = {
         btn_th="TH ไทย", btn_en="EN English",
     },
     EN={
-        welcome="Welcome to IDekhere Hub!", reset_done="UI has been reset!",
+        welcome="Welcome to Anitary Hub!", reset_done="UI has been reset!",
         lang_changed="Language changed", s_accent=">> Accent Color", s_bg=">> Background",
         s_preset=">> Theme Presets", s_corner=">> Corner Radius", s_anim=">> Tab Animation",
         s_opacity=">> Transparency", s_size=">> Window Size", s_language=">> Language",
@@ -239,7 +239,7 @@ end
 --  SCREEN GUI
 -- ══════════════════════════════════════════════════════
 local GUI = Instance.new("ScreenGui")
-GUI.Name="IDekhere Hub"; GUI.Parent=game.CoreGui
+GUI.Name="Anitary Hub"; GUI.Parent=game.CoreGui
 GUI.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
 GUI.ResetOnSpawn=false; GUI.IgnoreGuiInset=true
 
@@ -301,7 +301,7 @@ end
 -- ══════════════════════════════════════════════════════
 --  MAIN FRAME
 -- ══════════════════════════════════════════════════════
-local WIN_NAME   = "IDekhere Hub"
+local WIN_NAME   = "Anitary Hub"
 local WIN_LOGO   = 0  -- place a valid image ID here if desired
 local NORMAL_SIZE = UDim2.new(0,Theme.WinW,0,Theme.WinH)
 local NORMAL_POS  = UDim2.new(0.5,0,0.5,0)
@@ -1395,7 +1395,7 @@ local function AddNotification(txt)
     onThemeChange("Accent",function(c) if ns and ns.Parent then ns.Color=c end end)
     local nt=Instance.new("TextLabel",nf); nt.BackgroundTransparency=1
     nt.Position=UDim2.new(0,12,0,10); nt.Size=UDim2.new(1,-24,0,18)
-    nt.Font=Enum.Font.GothamBold; nt.Text="IDekhere Hub"; nt.TextColor3=Theme.Accent; nt.TextSize=13; nt.ZIndex=201; nt.TextXAlignment=Enum.TextXAlignment.Left
+    nt.Font=Enum.Font.GothamBold; nt.Text="Anitary Hub"; nt.TextColor3=Theme.Accent; nt.TextSize=13; nt.ZIndex=201; nt.TextXAlignment=Enum.TextXAlignment.Left
     onThemeChange("Accent",function(c) if nt and nt.Parent then nt.TextColor3=c end end)
     local nd=Instance.new("TextLabel",nf); nd.BackgroundTransparency=1
     nd.Position=UDim2.new(0,12,0,30); nd.Size=UDim2.new(1,-24,0,46)
@@ -1989,33 +1989,37 @@ BuildUISettings()
 uiReady=true
 if refreshScriptList then refreshScriptList() end
 
--- ══════════════════════════════════════════════════════
---  TABS
--- ══════════════════════════════════════════════════════
-local MAIN = AddTab("Info")
-local AP   = AddTab("Auto Play")
-local SP   = AddTab("Shop")
-local CH   = AddTab("Item Check")
-local WH   = AddTab("WebHook - BoostFps")
-
 -- shared refs
 local GetUnitPlayer = ReplicatedStorage.Player_Data[plr.Name].Collection
 local PlayerDataRef = ReplicatedStorage.Player_Data[plr.Name]
 local AutoPlayRemote= ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("Units"):WaitForChild("AutoPlay")
 
--- ═══ INFO TAB ═════════════════════════════════════════
-MAIN:AddSeperatorL("INFO")
-MAIN:AddLabelL("<b>Welcome</b> To RebornXer Hub")
-MAIN:AddLabelL("Map : <font color='#33ffff'>Re: Rangers X</font>")
-MAIN:AddLabelL("Day : "..os.date("%d %B %Y"))
-MAIN:AddLineL()
 
-MAIN:AddSeperatorL("JOIN STORY")
+-- ══════════════════════════════════════════════════════
+--  TABS
+-- ══════════════════════════════════════════════════════
+
+local Main_Event = AddTab("Main - Event")
+local AutoPlay_Function   = AddTab("AutoPlay Function")
+local Shop_UserInfo   = AddTab("Shop - UserInfo")
+local Traits_Potential   = AddTab("Traits - Potential")
+local WebHook_Misc   = AddTab("WebHook - Misc")
+
+-- ══════════════════════════════════════════════════════
+--  Main_Event TABS
+-- ══════════════════════════════════════════════════════
+Main_Event:AddSeperatorL("INFO")
+Main_Event:AddLabelL("<b>Welcome</b> To Anitary Hub")
+Main_Event:AddLabelL("Map : <font color='#33ffff'>Re: Rangers X</font>")
+Main_Event:AddLabelL("Day : "..os.date("%d %B %Y"))
+Main_Event:AddLineL()
+
+Main_Event:AddSeperatorL("JOIN STORY")
 local ChapterList={"OnePiece","Namek","DemonSlayer","Naruto","OPM","TokyoGhoul","JoJo"}
-local chapterDD=MAIN:AddDropdownL("Select Chapter",ChapterList,_G.SST.Select_Chapter,function(v) _G.SST.Select_Chapter=v; SS() end)
+local chapterDD=Main_Event:AddDropdownL("Select Chapter",ChapterList,_G.SST.Select_Chapter,function(v) _G.SST.Select_Chapter=v; SS() end)
 local StageList={"1","2","3","4","5","6","7","8","9","10"}
-local stageDD=MAIN:AddDropdownL("Select Stage",StageList,_G.SST.Select_Stage,function(v) _G.SST.Select_Stage=v; SS() end)
-MAIN:AddToggleL("Auto Join Story",_G.SST.Auto_Join_Story,function(v) _G.SST.Auto_Join_Story=v; SS() end)
+local stageDD=Main_Event:AddDropdownL("Select Stage",StageList,_G.SST.Select_Stage,function(v) _G.SST.Select_Stage=v; SS() end)
+Main_Event:AddToggleL("Auto Join Story",_G.SST.Auto_Join_Story,function(v) _G.SST.Auto_Join_Story=v; SS() end)
 
 task.spawn(function()
     while task.wait(1) do
@@ -2036,7 +2040,7 @@ task.spawn(function()
         end)
     end
 end)
-MAIN:AddToggleL("Auto Join Ranger",_G.SST.Auto_Join_Ranger,function(v) _G.SST.Auto_Join_Ranger=v; SS() end)
+Main_Event:AddToggleL("Auto Join Ranger",_G.SST.Auto_Join_Ranger,function(v) _G.SST.Auto_Join_Ranger=v; SS() end)
 
 task.spawn(function()
     while task.wait(1) do
@@ -2059,8 +2063,8 @@ task.spawn(function()
     end
 end)
 
-MAIN:AddSeperatorL("CHALLENGES")
-MAIN:AddToggleL("Auto Join Challenge",_G.SST.Auto_Join_Challenge,function(v) _G.SST.Auto_Join_Challenge=v; SS() end)
+Main_Event:AddSeperatorL("CHALLENGES")
+Main_Event:AddToggleL("Auto Join Challenge",_G.SST.Auto_Join_Challenge,function(v) _G.SST.Auto_Join_Challenge=v; SS() end)
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
@@ -2076,8 +2080,8 @@ task.spawn(function()
     end
 end)
 
-MAIN:AddSeperatorL("EVENT")
-MAIN:AddToggleL("Auto Join Boss Event",_G.SST.Auto_Join_BossEvent,function(v) _G.SST.Auto_Join_BossEvent=v; SS() end)
+Main_Event:AddSeperatorR("EVENT")
+Main_Event:AddToggleR("Auto Join Boss Event",_G.SST.Auto_Join_BossEvent,function(v) _G.SST.Auto_Join_BossEvent=v; SS() end)
 
 task.spawn(function()
     while task.wait(1) do
@@ -2094,254 +2098,12 @@ task.spawn(function()
     end
 end)
 
--- ─── Stats Potential ────────────────────────────────
-MAIN:AddSeperatorR("Stats Potential")
-local rerollRemote=ReplicatedStorage.Remote.Server.Gambling.RerollPotential
-local UnitList={}
-for _,unit in ipairs(GetUnitPlayer:GetChildren()) do table.insert(UnitList,unit.Name) end
-
-local unitDD=MAIN:AddDropdownR("Select Unit",UnitList,_G.SST.Select_UnitCL,function(v) _G.SST.Select_UnitCL=v; SS() end)
--- Refresh unit list from Collection
-unitDD.onRefresh=function()
-    local nl={}; for _,u in ipairs(GetUnitPlayer:GetChildren()) do table.insert(nl,u.Name) end; return nl
-end
-
-local potDD=MAIN:AddMultiDropdownR("Select Potential",{"Speed","Range","Health","Damage","AttackCooldown"},function(v) _G.SST.Select_Potential=v; SS() end)
-if type(_G.SST.Select_Potential)=="table" then task.defer(function() pcall(function() potDD:Set(_G.SST.Select_Potential) end) end) end
-local statDD=MAIN:AddMultiDropdownR("Select Stats",{"C-","C","C+","B-","B","B+","A-","A","A+","S-","S","S+","SS","SSS","O-","O","O+"},function(v) _G.SST.Select_Stats=v; SS() end)
-if type(_G.SST.Select_Stats)=="table" then task.defer(function() pcall(function() statDD:Set(_G.SST.Select_Stats) end) end) end
-
-MAIN:AddToggleR("Auto ReRoll Stats Potential",_G.SST.Auto_ReRoll_Stats_Potential,function(v) _G.SST.Auto_ReRoll_Stats_Potential=v; SS() end)
-task.spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            if not _G.SST.Auto_ReRoll_Stats_Potential or not _G.SST.Select_UnitCL then return end
-            local pList=_G.SST.Select_Potential
-            if type(pList)~="table" then return end
-            local unit=GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
-            if not unit or not unit:FindFirstChild("Tag") then return end
-            local tag=unit.Tag.Value
-            local desired= type(_G.SST.Select_Stats)=="table" and _G.SST.Select_Stats or {}
-            for potName,enabled in pairs(pList) do
-                if enabled then
-                    local pot=unit:FindFirstChild(potName.."Potential")
-                    if pot and not desired[pot.Value] then
-                        rerollRemote:FireServer(potName,tag,"Selective")
-                        task.wait(0.3)
-                    end
-                end
-            end
-        end)
-    end
-end)
-
-local NameUnit  = MAIN:AddLabelR(""); local CodeUnit=MAIN:AddLabelR("")
-local SpeedPot  = MAIN:AddLabelR(""); local RangePot=MAIN:AddLabelR("")
-local HealthPot = MAIN:AddLabelR(""); local DamagePot=MAIN:AddLabelR("")
-local CooldownPot=MAIN:AddLabelR("")
-
-task.spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            local unit=GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
-            if not unit then return end
-            NameUnit:Set("Name  : "..unit.Name)
-            CodeUnit:Set("Code  : "..unit.Tag.Value)
-            SpeedPot:Set("Speed : "..unit.SpeedPotential.Value)
-            RangePot:Set("Range : "..unit.RangePotential.Value)
-            HealthPot:Set("HP    : "..unit.HealthPotential.Value)
-            DamagePot:Set("DMG   : "..unit.DamagePotential.Value)
-            CooldownPot:Set("CD    : "..unit.AttackCooldownPotential.Value)
-        end)
-    end
-end)
-
-
 -- ══════════════════════════════════════════════════════
---  WEBHOOK HELPERS  (ต้องนิยามก่อนใช้ในทุก tab)
+--  AutoPlay_Function TABS
 -- ══════════════════════════════════════════════════════
 
--- ── Avatar fetcher with cache ────────────────────────
-local _avatarCache = {}
-local function getAvatar(userId)
-    if _avatarCache[userId] then return _avatarCache[userId] end
-    local fallback = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
-    local req = http_request or request or (syn and syn.request)
-    if not req then return fallback end
-    local ok, res = pcall(function()
-        return req({ Url="https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png", Method="GET" })
-    end)
-    if not ok or not res or not res.Body then return fallback end
-    local parsed; pcall(function() parsed = HttpService:JSONDecode(res.Body) end)
-    local url = parsed and parsed.data and parsed.data[1] and parsed.data[1].imageUrl
-    local result = (url and url ~= "") and url or fallback
-    _avatarCache[userId] = result
-    return result
-end
-
--- ── Match Result Webhook ─────────────────────────────
-local function sendWebhook(isWin, RewardsText, GameTime)
-    local url = _G.SST.Place_WebHook_Link
-    if not url or url == "" then return end
-    local pd = ReplicatedStorage:FindFirstChild("Player_Data") and ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
-    if not pd or not pd:FindFirstChild("Data") then return end
-    local dataFolder = pd.Data
-    local function safeVal(obj) return obj and tostring(obj.Value or obj.Text or "0") or "0" end
-    local resultDesc = isWin
-        and "# 🏆  VICTORY\n> The battle is won. Rangers stand victorious!"
-        or  "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger."
-    local color = isWin and 0x00E676 or 0xFF1744
-    local avatarUrl = getAvatar(plr.UserId)
-    local payload = {
-        ["content"] = "",
-        ["embeds"] = {{
-            ["author"]      = { ["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile" },
-            ["title"]       = "Anime Rangers X  ·  Match Result",
-            ["description"] = resultDesc,
-            ["thumbnail"]   = { ["url"]=avatarUrl },
-            ["color"]       = color,
-            ["fields"] = {
-                { ["name"]="💎  Gem",    ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Gem")).."\n```",  ["inline"]=true  },
-                { ["name"]="🪙  Gold",   ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Gold")).."\n```", ["inline"]=true  },
-                { ["name"]="⭐  Level",  ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Level")).."  (EXP: "..safeVal(dataFolder:FindFirstChild("Exp"))..")\n```", ["inline"]=false },
-                { ["name"]="⏱️  Match Time", ["value"]="```\n"..tostring(GameTime).."\n```", ["inline"]=false },
-                { ["name"]="🎁  Rewards",    ["value"]="```\n"..(RewardsText ~= "" and RewardsText or "— none —").."\n```", ["inline"]=false },
-            },
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
-            ["footer"]    = { ["text"]="IDekhere Hub  ·  v4f  |  Anime Rangers X", ["icon_url"]=avatarUrl },
-        }}
-    }
-    local ok, json = pcall(function() return HttpService:JSONEncode(payload) end)
-    if not ok then return end
-    local req = http_request or request or (syn and syn.request)
-    if not req then return end
-    pcall(function() req({ Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json }) end)
-end
-
-MAIN:AddSeperatorR("Trait Reroll")
-task.spawn(function()
-    -- Define the path to the player's units folder (adjust if different)
-    local unitsFolder = ReplicatedStorage:FindFirstChild("Player_Data") and
-                        ReplicatedStorage.Player_Data[plr.Name] and
-                        ReplicatedStorage.Player_Data[plr.Name]:FindFirstChild("Units")
-    if not unitsFolder then
-        warn("Units folder not found – trait label won't update")
-        return
-    end
-
-    while task.wait(0.5) do  -- Update every 0.5 seconds (adjust as needed)
-        pcall(function()
-            local selectedUnitName = _G.SST.Select_UnitCL
-            if not selectedUnitName then return end
-
-            local unit = unitsFolder:FindFirstChild(selectedUnitName)
-            if not unit then return end
-
-            local trait = unit:FindFirstChild("PrimaryTrait")
-            if trait then
-                -- Assuming TraitLbl is a UI label object
-                if TraitLbl and TraitLbl.Set then
-                    TraitLbl:Set("Trait : " .. trait.Value)
-                else
-                    -- If it's a TextLabel, use .Text
-                    TraitLbl.Text = "Trait : " .. trait.Value
-                end
-            end
-        end)
-    end
-end)
-local TraitLbl = MAIN:AddLabelR("")
-local TraitList={"Superior I","Superior II","Superior III","Horizon I","Horizon II","Horizon III","Endure I","Endure II","Endure III","Brute","Sniper","Colossal","Investor","Jokester","Blitz","Juggernaut","Millionaire","Violent","Seraph","Capitalist","Duplicator","Sovereign"}
-local traitDD=MAIN:AddMultiDropdownR("Select Trait",TraitList,function(v) _G.SST.Select_Trait=v; SS() end)
-if type(_G.SST.Select_Trait)=="table" then task.defer(function() pcall(function() traitDD:Set(_G.SST.Select_Trait) end) end) end
-MAIN:AddToggleR("Auto Reroll Trait",_G.SST.Auto_Reroll_Trait,function(v) _G.SST.Auto_Reroll_Trait=v; SS() end)
-
--- ── Trait Reroll loop ────────────────────────────────
-task.spawn(function()
-    local traitRemote
-    pcall(function() traitRemote = ReplicatedStorage.Remote.Server.Gambling.RerollTrait end)
-    local lastTrait    = ""
-    local lastUnitName = ""
-    while task.wait(0.5) do
-        pcall(function()
-            if not _G.SST.Auto_Reroll_Trait or not traitRemote then return end
-            local unit = GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitCL)
-            if not unit or not unit:FindFirstChild("Tag") then return end
-            local desired = _G.SST.Select_Trait or {}
-            local current = unit.PrimaryTrait.Value
-            local secondTrait = unit.SecondaryTrait.Value
-            -- reset เมื่อเปลี่ยน unit
-            if lastUnitName ~= unit.Name then
-                lastUnitName = unit.Name
-                lastTrait    = ""
-            end
-            -- ตรวจว่าเลือก trait ไว้ไหม
-            local hasDesired = false
-            for _, v in pairs(desired) do if v then hasDesired=true; break end end
-            if not hasDesired then return end
-
-            if desired[current] or desired[secondTrait] then
-                -- ได้ trait ที่ต้องการ → แจ้งเตือนครั้งเดียวแล้วหยุด
-                if lastTrait ~= current and lastSecondTrait ~= secondTrait then
-                    lastTrait = current
-                    lastSecondTrait = secondTrait
-                    AddNotification("[Trait] Got: "..current.."[SubTrait] Got: "  ..secondTrait.." on "..unit.Name.."!")
-                    -- ส่ง Webhook ถ้าเปิด Send_WebHook อยู่
-                    if _G.SST.Send_WebHook and _G.SST.Place_WebHook_Link ~= "" then
-                        local url      = _G.SST.Place_WebHook_Link
-                        -- getAvatar มี cache อยู่แล้ว → ได้ CDN URL จริง ไม่ใช่ redirect
-                        local avatarUrl = getAvatar(plr.UserId)
-                        local tag = unit:FindFirstChild("Tag") and unit.Tag.Value or "?"
-                        local spd = unit:FindFirstChild("SpeedPotential") and unit.SpeedPotential.Value or "?"
-                        local rng = unit:FindFirstChild("RangePotential") and unit.RangePotential.Value or "?"
-                        local hp  = unit:FindFirstChild("HealthPotential") and unit.HealthPotential.Value or "?"
-                        local dmg = unit:FindFirstChild("DamagePotential") and unit.DamagePotential.Value or "?"
-                        local cd  = unit:FindFirstChild("AttackCooldownPotential") and unit.AttackCooldownPotential.Value or "?"
-                        local payload = {
-                            ["content"] = "",
-                            ["embeds"] = {{
-                                ["author"]      = { ["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile" },
-                                ["title"]       = "Anime Rangers X  ·  Trait Reroll",
-                                ["description"] = "# ✨  TRAIT UNLOCKED!\n> **"..unit.Name.."** got the desired trait.",
-                                ["thumbnail"]   = { ["url"]=avatarUrl },
-                                ["color"]       = 0xA855F7,
-                                ["fields"] = {
-                                    { ["name"]="✨  Trait",     ["value"]="```fix\n"..current.."\n```",  ["inline"]=false },
-                                    { ["name"]="✨  SubTrait",  ["value"]="```fix\n"..secondTrait.."\n```",  ["inline"]=false },
-                                    { ["name"]="🪪  Unit",       ["value"]="```fix\n"..unit.Name.."\n```", ["inline"]=true  },
-                                    { ["name"]="🔑  Tag",        ["value"]="```fix\n"..tag.."\n```",       ["inline"]=true  },
-                                    { ["name"]="📊  Potentials", ["value"]="```fix\nSpeed: "..spd.."  Range: "..rng.."\nHP:    "..hp.."   DMG:   "..dmg.."\nCD:    "..cd.."\n```", ["inline"]=false },
-                                },
-                                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
-                                ["footer"]    = { ["text"]="IDekhere Hub  ·  v4f  |  Trait Reroll", ["icon_url"]=avatarUrl },
-                            }}
-                        }
-                        local ok, json = pcall(function() return HttpService:JSONEncode(payload) end)
-                        if ok then
-                            local req = http_request or request or (syn and syn.request)
-                            if req then
-                                pcall(function() req({ Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json }) end)
-                            end
-                        end
-                    end
-                    -- หยุด reroll หลัง success เสมอ
-                    _G.SST.Auto_Reroll_Trait = false
-                    SS()
-                end
-            else
-                -- ยังไม่ได้ → reroll ต่อ
-                lastTrait = "" ..current
-                lastSecondTrait = "" ..secondTrait  
-                traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {current,secondTrait})
-                task.wait(0.5)
-            end
-        end)
-    end
-end)
-
--- ═══ AUTO PLAY TAB ════════════════════════════════════
-AP:AddSeperatorL("Auto Play")
-AP:AddToggleL("Auto Play",_G.SST.Auto_Play,function(v) _G.SST.Auto_Play=v; SS() end)
+AutoPlay_Function:AddSeperatorL("Auto Play")
+AutoPlay_Function:AddToggleL("Auto Play",_G.SST.Auto_Play,function(v) _G.SST.Auto_Play=v; SS() end)
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
@@ -2353,26 +2115,26 @@ task.spawn(function()
     end
 end)
 
-AP:AddSeperatorR("Game Server")
-local voteDD=AP:AddMultiDropdownR("Select Vote",{"VoteRetry","VoteNext","VoteLeave"},function(v) _G.SST.Select_Vote=v; SS() end)
+AutoPlay_Function:AddSeperatorR("Game Server")
+local voteDD=AutoPlay_Function:AddMultiDropdownR("Select Vote",{"VoteRetry","VoteNext","VoteLeave"},function(v) _G.SST.Select_Vote=v; SS() end)
 if type(_G.SST.Select_Vote)=="table" then task.defer(function() pcall(function() voteDD:Set(_G.SST.Select_Vote) end) end) end
-AP:AddToggleR("Auto Vote",_G.SST.Auto_Vote,function(v) _G.SST.Auto_Vote=v; SS() end)
-AP:AddSeperatorR("Vote Start")
-AP:AddSliderR("Delay Vote",0,10,_G.SST.Select_Deley_Vote or 1,function(v) _G.SST.Select_Deley_Vote=v; SS() end)
-AP:AddToggleR("Auto Vote Start",_G.SST.Auto_Vote_Start,function(v) _G.SST.Auto_Vote_Start=v; SS() end)
+AutoPlay_Function:AddToggleR("Auto Vote",_G.SST.Auto_Vote,function(v) _G.SST.Auto_Vote=v; SS() end)
+AutoPlay_Function:AddSeperatorR("Vote Start")
+AutoPlay_Function:AddSliderR("Delay Vote",0,10,_G.SST.Select_Deley_Vote or 1,function(v) _G.SST.Select_Deley_Vote=v; SS() end)
+AutoPlay_Function:AddToggleR("Auto Vote Start",_G.SST.Auto_Vote_Start,function(v) _G.SST.Auto_Vote_Start=v; SS() end)
 
-AP:AddSeperatorR("Unit Upgrade")
+AutoPlay_Function:AddSeperatorR("Unit Upgrade")
 local unitsFolder=plr:FindFirstChild("UnitsFolder")
 local unitNames={"All Unit"}
 if unitsFolder then for _,u in ipairs(unitsFolder:GetChildren()) do table.insert(unitNames,u.Name) end end
-local upgradeDD=AP:AddMultiDropdownR("Select Unit to Upgrade",unitNames,function(v) _G.SST.Select_Unit=v; SS() end)
+local upgradeDD=AutoPlay_Function:AddMultiDropdownR("Select Unit to Upgrade",unitNames,function(v) _G.SST.Select_Unit=v; SS() end)
 if type(_G.SST.Select_Unit)=="table" then task.defer(function() pcall(function() upgradeDD:Set(_G.SST.Select_Unit) end) end) end
 upgradeDD.onRefresh=function()
     local nl={"All Unit"}; local uf=plr:FindFirstChild("UnitsFolder")
     if uf then for _,u in ipairs(uf:GetChildren()) do table.insert(nl,u.Name) end end; return nl
 end
-AP:AddToggleR("Auto Upgrade Unit",_G.SST.Auto_Upgrade,function(v) _G.SST.Auto_Upgrade=v; SS() end)
-AP:AddToggleR("Auto Upgrade Yen",_G.SST.Auto_Upgtade_Maxyen,function(v) _G.SST.Auto_Upgtade_Maxyen=v; SS() end)
+AutoPlay_Function:AddToggleR("Auto Upgrade Unit",_G.SST.Auto_Upgrade,function(v) _G.SST.Auto_Upgrade=v; SS() end)
+AutoPlay_Function:AddToggleR("Auto Upgrade Yen",_G.SST.Auto_Upgtade_Maxyen,function(v) _G.SST.Auto_Upgtade_Maxyen=v; SS() end)
 
 -- single game loop
 task.spawn(function()
@@ -2491,8 +2253,25 @@ end
     end
 end)
 
--- ═══ SHOP TAB ═════════════════════════════════════════
-SP:AddSeperatorL("Auto Buy Item")
+AutoPlay_Function:AddSeperatorL("Set Speed Game")
+AutoPlay_Function:AddDropdownL("Select Speed",{"1","2","3"},_G.SST.Select_Speed,function(v) _G.SST.Select_Speed=v; SS() end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            if not _G.SST.Select_Speed then return end
+            local speedRemote=ReplicatedStorage:WaitForChild("Remote",9e9):WaitForChild("Server",9e9):WaitForChild("Gameplay",9e9):WaitForChild("SetGameSpeed",9e9)
+            local speedVal=tonumber(_G.SST.Select_Speed) or 1
+            speedRemote:FireServer(speedVal)
+        end)
+    end
+end)
+
+-- ══════════════════════════════════════════════════════
+--  Shop_UserInfo TABS
+-- ══════════════════════════════════════════════════════
+
+Shop_UserInfo:AddSeperatorL("Auto Buy Item")
 -- Load item list from player's Merchant folder
 local buyItemList={}
 pcall(function()
@@ -2503,9 +2282,9 @@ pcall(function()
         end
     end
 end)
-if #buyItemList==0 then buyItemList={"Ramen","Soda","Potion","Shield","Ticket"} end
+if #buyItemList==0 then buyItemList={"Ramen"} end
 
-local buyItemDD=SP:AddMultiDropdownL("Select Item",buyItemList,function(v) _G.SST.Select_BuyItem=v; SS() end)
+local buyItemDD=Shop_UserInfo:AddMultiDropdownL("Select Item",buyItemList,function(v) _G.SST.Select_BuyItem=v; SS() end)
 if type(_G.SST.Select_BuyItem)=="table" then
     task.defer(function() pcall(function() buyItemDD:Set(_G.SST.Select_BuyItem) end) end)
 end
@@ -2523,13 +2302,13 @@ end
 
 -- Removed Min Yen Limit and Max Yen Limit sliders
 
-SP:AddSliderL("Amount to Buy",1,99,_G.SST.BuyItem_Amount or 1,function(v) _G.SST.BuyItem_Amount=v; SS() end)
-SP:AddToggleL("Auto Buy Item",_G.SST.Auto_BuyItem or false,function(v) _G.SST.Auto_BuyItem=v; SS() end)
+Shop_UserInfo:AddSliderL("Amount to Buy",1,99,_G.SST.BuyItem_Amount or 1,function(v) _G.SST.BuyItem_Amount=v; SS() end)
+Shop_UserInfo:AddToggleL("Auto Buy Item",_G.SST.Auto_BuyItem or false,function(v) _G.SST.Auto_BuyItem=v; SS() end)
 
 task.spawn(function()
     local merchantRemote
     pcall(function() merchantRemote=ReplicatedStorage.Remote.Server.Gameplay.Merchant end)
-    while task.wait(1) do
+    while task.wait(0.5) do
         pcall(function()
             if not _G.SST.Auto_BuyItem or not merchantRemote then return end
             local pd=ReplicatedStorage.Player_Data:FindFirstChild(plr.Name); if not pd then return end
@@ -2550,42 +2329,13 @@ task.spawn(function()
     end
 end)
 
-AP:AddSeperatorR("Speed Set Game")
--- Fixed speed setting (added safe remote check and better error handling)
-local speedOptions = {"1", "2", "3"}
-local speedDD = AP:AddDropdownR("Game Speed", speedOptions, _G.SST.Select_Speed and tostring(_G.SST.Select_Speed).."x" or "1x", function(v)
-    local speed = tonumber(v:gsub("x", ""))
-    if speed then
-        _G.SST.Select_Speed = speed
-        SS()
-        -- Safely attempt to set the speed
-        local success, err = pcall(function()
-            local remote = ReplicatedStorage:FindFirstChild("Remote")
-            if remote then
-                local speedRemote = remote:FindFirstChild("SpeedGamepass")
-                if speedRemote then
-                    speedRemote:FireServer(speed)
-                else
-                    error("SpeedGamepass remote not found")
-                end
-            else
-                error("Remote folder not found")
-            end
-        end)
-        if success then
-            AddNotification("Speed set to x" .. speed)
-        else
-            AddNotification("Failed to set speed: " .. err)
-        end
-    end
-end)
 
-SP:AddSeperatorR("Auto Summon")
+Shop_UserInfo:AddSeperatorL("Auto Summon")
 local summonModeList={"Standard","RateUp","Sol"}
-local summonModeDD=SP:AddDropdownR("Summon Banner",summonModeList,_G.SST.Select_SummonMode or "Standard",function(v) _G.SST.Select_SummonMode=v; SS() end)
+local summonModeDD=Shop_UserInfo:AddDropdownL("Summon Banner",summonModeList,_G.SST.Select_SummonMode or "Standard",function(v) _G.SST.Select_SummonMode=v; SS() end)
 local summonCountList={"1x","10x"}
-local summonCountDD=SP:AddDropdownR("Summon Count",summonCountList,_G.SST.Select_SummonCount or "10x",function(v) _G.SST.Select_SummonCount=v; SS() end)
-SP:AddToggleR("Auto Summon",_G.SST.Auto_Summon or false,function(v) _G.SST.Auto_Summon=v; SS() end)
+local summonCountDD=Shop_UserInfo:AddDropdownL("Summon Count",summonCountList,_G.SST.Select_SummonCount or "10x",function(v) _G.SST.Select_SummonCount=v; SS() end)
+Shop_UserInfo:AddToggleL("Auto Summon",_G.SST.Auto_Summon or false,function(v) _G.SST.Auto_Summon=v; SS() end)
 
 task.spawn(function()
     local summonRemote
@@ -2601,45 +2351,222 @@ task.spawn(function()
     end
 end)
 
--- ═══ WEBHOOK / BOOSTFPS TAB ═══════════════════════════
-WH:AddSeperatorL("Code")
-WH:AddButtonL("Redeem All Code",function()
-    local codes={
-        "SorryForIssues","Im Back","125M Visits","100K CCU",
-        "Easter Egg 2025!","CongratsFor1M","LiveLike",
-        "RERANGERSX","ReRangersX","SubTo_RebornXer",
-        "200MVisits","300K_CCU","HappyNewYear2025",
-        "FreeShard","Sorry4Delay","ThankYou100M"
-    }
-    local codeRemote
-    pcall(function() codeRemote=ReplicatedStorage.Remote.Server.Lobby.Code end)
-    if not codeRemote then
-        AddNotification("[X] Code remote not found!")
-        return
-    end
-    local redeemed=0
-    for _,code in ipairs(codes) do
+Shop_UserInfo:AddSeperatorR("Info")
+Shop_UserInfo:AddLabelR("Name  : "..plr.Name)
+local LV=Shop_UserInfo:AddLabelR(""); local GemAmt=Shop_UserInfo:AddLabelR(""); local GoldAmt=Shop_UserInfo:AddLabelR(""); local EggAmt=Shop_UserInfo:AddLabelR("")
+
+task.spawn(function()
+    while task.wait(1) do
         pcall(function()
-            codeRemote:FireServer(code)
-            redeemed=redeemed+1
+            local pd=ReplicatedStorage.Player_Data:FindFirstChild(plr.Name); if not pd then return end
+            LV:Set("Level : "..pd.Data.Level.Value.."  Exp : "..pd.Data.Exp.Value)
+            GemAmt:Set("Gem   : "..pd.Data.Gem.Value)
+            GoldAmt:Set("Gold  : "..pd.Data.Gold.Value)
         end)
-        task.wait(0.15)
     end
-    AddNotification("[OK] Redeemed "..redeemed.." codes!")
 end)
 
-WH:AddSeperatorR("WebHook")
-WH:AddTextboxR("WebHook Link", _G.SST.Place_WebHook_Link or "", "", function(v)
+Shop_UserInfo:AddSeperatorR("Item")
+
+local itemsFolder=ReplicatedStorage.Player_Data[plr.Name].Items
+local itemLabels={}
+local sortedItems=itemsFolder:GetChildren()
+table.sort(sortedItems,function(a,b) return a.Name:lower()<b.Name:lower() end)
+for _,item in ipairs(sortedItems) do itemLabels[item.Name]=Shop_UserInfo:AddLabelR(item.Name.." : Loading...") end
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            for _,item in ipairs(itemsFolder:GetChildren()) do
+                local amt=item:FindFirstChild("Amount"); local lbl=itemLabels[item.Name]
+                if lbl and amt then lbl:Set(item.Name.." : "..tostring(amt.Value)) end
+            end
+        end)
+    end
+end)
+
+-- ══════════════════════════════════════════════════════
+--  Traits_Potential TABS
+-- ══════════════════════════════════════════════════════
+Traits_Potential:AddSeperatorL("Trait Roroll")
+local rerollRemote=ReplicatedStorage.Remote.Server.Gambling.RerollPotential
+local UnitList={}
+for _,unit in ipairs(GetUnitPlayer:GetChildren()) do table.insert(UnitList,unit.Name) end
+local MainTraitUnit = Traits_Potential:AddLabelL("")
+local SubTraitUnit = Traits_Potential:AddLabelL("")
+local UnitTrait = Traits_Potential:AddDropdownL("Select Unit",UnitList,_G.SST.Select_UnitTrait,function(v) _G.SST.Select_UnitTrait=v; SS() end)
+UnitTrait.onRefresh=function()
+    local nl={}; for _,u in ipairs(GetUnitPlayer:GetChildren()) do table.insert(nl,u.Name) end; return nl
+end
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            local unit=GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitTrait)
+            if not unit then return end
+            MainTraitUnit:Set("Main Trait : "..unit.PrimaryTrait.Value or "None")
+            SubTraitUnit:Set("Sub Trait : "..unit.SecondaryTrait.Value or "None")
+        end)
+    end
+end)
+
+local TraitList={"Superior I","Superior II","Superior III","Horizon I","Horizon II","Horizon III","Endure I","Endure II","Endure III","Brute","Sniper","Colossal","Investor","Jokester","Blitz","Juggernaut","Millionaire","Violent","Seraph","Capitalist","Duplicator","Sovereign"}
+local TraitResetList=Traits_Potential:AddMultiDropdownL("Select Trait",TraitList,function(v) _G.SST.Select_Trait=v; SS() end)
+if type(_G.SST.Select_Trait)=="table" then task.defer(function() pcall(function() TraitResetList:Set(_G.SST.Select_Trait) end) end) end
+Traits_Potential:AddToggleL("Auto Reroll Trait",_G.SST.Auto_Reroll_Trait,function(v) _G.SST.Auto_Reroll_Trait=v; SS() end)
+
+-- ── Trait Reroll loop ────────────────────────────────
+task.spawn(function()
+    local traitRemote
+    pcall(function() traitRemote = ReplicatedStorage.Remote.Server.Gambling.RerollTrait end)
+    local lastTrait    = ""
+    local lastUnitName = ""
+    while task.wait(0.5) do
+        pcall(function()
+            if not _G.SST.Auto_Reroll_Trait or not traitRemote then return end
+            local unit = GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitTrait)
+            if not unit or not unit:FindFirstChild("Tag") then return end
+            local desired = _G.SST.Select_Trait or {}
+            local current = unit.PrimaryTrait.Value
+            local secondTrait = unit.SecondaryTrait.Value
+            -- reset เมื่อเปลี่ยน unit
+            if lastUnitName ~= unit.Name then
+                lastUnitName = unit.Name
+                lastTrait    = ""
+            end
+            -- ตรวจว่าเลือก trait ไว้ไหม
+            local hasDesired = false
+            for _, v in pairs(desired) do if v then hasDesired=true; break end end
+            if not hasDesired then return end
+
+            if desired[current] or desired[secondTrait] then
+                -- ได้ trait ที่ต้องการ → แจ้งเตือนครั้งเดียวแล้วหยุด
+                if lastTrait ~= current and lastSecondTrait ~= secondTrait then
+                    lastTrait = current
+                    lastSecondTrait = secondTrait
+                    AddNotification("[Trait] Got: "..current.."[SubTrait] Got: "  ..secondTrait.." on "..unit.Name.."!")
+                    -- ส่ง Webhook ถ้าเปิด Send_WebHook อยู่
+                    if _G.SST.Send_WebHook and _G.SST.Place_WebHook_Link ~= "" then
+                        local url      = _G.SST.Place_WebHook_Link
+                        -- getAvatar มี cache อยู่แล้ว → ได้ CDN URL จริง ไม่ใช่ redirect
+                        local avatarUrl = getAvatar(plr.UserId)
+                        local tag = unit:FindFirstChild("Tag") and unit.Tag.Value or "?"
+                        local spd = unit:FindFirstChild("SpeedPotential") and unit.SpeedPotential.Value or "?"
+                        local rng = unit:FindFirstChild("RangePotential") and unit.RangePotential.Value or "?"
+                        local hp  = unit:FindFirstChild("HealthPotential") and unit.HealthPotential.Value or "?"
+                        local dmg = unit:FindFirstChild("DamagePotential") and unit.DamagePotential.Value or "?"
+                        local cd  = unit:FindFirstChild("AttackCooldownPotential") and unit.AttackCooldownPotential.Value or "?"
+                        local payload = {
+                            ["content"] = "",
+                            ["embeds"] = {{
+                                ["author"]      = { ["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile" },
+                                ["title"]       = "Anime Rangers X  ·  Trait Reroll",
+                                ["description"] = "# ✨  TRAIT UNLOCKED!\n> **"..unit.Name.."** got the desired trait.",
+                                ["thumbnail"]   = { ["url"]=avatarUrl },
+                                ["color"]       = 0xA855F7,
+                                ["fields"] = {
+                                    { ["name"]="✨  Trait",     ["value"]="```fix\n"..current.."\n```",  ["inline"]=false },
+                                    { ["name"]="✨  SubTrait",  ["value"]="```fix\n"..secondTrait.."\n```",  ["inline"]=false },
+                                    { ["name"]="🪪  Unit",       ["value"]="```fix\n"..unit.Name.."\n```", ["inline"]=true  },
+                                    { ["name"]="🔑  Tag",        ["value"]="```fix\n"..tag.."\n```",       ["inline"]=true  },
+                                    { ["name"]="📊  Potentials", ["value"]="```fix\nSpeed: "..spd.."  Range: "..rng.."\nHP:    "..hp.."   DMG:   "..dmg.."\nCD:    "..cd.."\n```", ["inline"]=false },
+                                },
+                                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
+                                ["footer"]    = { ["text"]="Anitary Hub    |  Trait Reroll", ["icon_url"]=avatarUrl },
+                            }}
+                        }
+                        local ok, json = pcall(function() return HttpService:JSONEncode(payload) end)
+                        if ok then
+                            local req = http_request or request or (syn and syn.request)
+                            if req then
+                                pcall(function() req({ Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json }) end)
+                            end
+                        end
+                    end
+                    -- หยุด reroll หลัง success เสมอ
+                    _G.SST.Auto_Reroll_Trait = false
+                    SS()
+                end
+            else
+                -- ยังไม่ได้ → reroll ต่อ
+                lastTrait = "" ..current
+                lastSecondTrait = "" ..secondTrait  
+                traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {current,secondTrait})
+                task.wait(0.5)
+            end
+        end)
+    end
+end)
+
+
+Traits_Potential:AddSeperatorR("Stats Potential Reroll")
+local NameUnit  = Traits_Potential:AddLabelR(""); local CodeUnit=Traits_Potential:AddLabelR("")
+local SpeedPot  = Traits_Potential:AddLabelR(""); local RangePot=Traits_Potential:AddLabelR("")
+local HealthPot = Traits_Potential:AddLabelR(""); local DamagePot=Traits_Potential:AddLabelR("")
+local CooldownPot=Traits_Potential:AddLabelR("")
+
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            local unit=GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitPotential)
+            if not unit then return end
+            NameUnit:Set("Name  : "..unit.Name)
+            CodeUnit:Set("Code  : "..unit.Tag.Value)
+            SpeedPot:Set("Speed : "..unit.SpeedPotential.Value)
+            RangePot:Set("Range : "..unit.RangePotential.Value)
+            HealthPot:Set("HP    : "..unit.HealthPotential.Value)
+            DamagePot:Set("DMG   : "..unit.DamagePotential.Value)
+            CooldownPot:Set("CD    : "..unit.AttackCooldownPotential.Value)
+        end)
+    end
+end)
+
+local UnitPotential = Traits_Potential:AddDropdownR("Select Unit For Potential",UnitList,_G.SST.Select_UnitPotential,function(v) _G.SST.Select_UnitPotential=v; SS() end)
+UnitPotential.onRefresh=function()
+    local nl={}; for _,u in ipairs(GetUnitPlayer:GetChildren()) do table.insert(nl,u.Name) end; return nl
+end
+local potDD=Traits_Potential:AddMultiDropdownR("Select Potential",{"Speed","Range","Health","Damage","AttackCooldown"},function(v) _G.SST.Select_Potential=v; SS() end)
+if type(_G.SST.Select_Potential)=="table" then task.defer(function() pcall(function() potDD:Set(_G.SST.Select_Potential) end) end) end
+local statDD=Traits_Potential:AddMultiDropdownR("Select Stats",{"C-","C","C+","B-","B","B+","A-","A","A+","S-","S","S+","SS","SSS","O-","O","O+"},function(v) _G.SST.Select_Stats=v; SS() end)
+if type(_G.SST.Select_Stats)=="table" then task.defer(function() pcall(function() statDD:Set(_G.SST.Select_Stats) end) end) end
+
+Traits_Potential:AddToggleR("Auto ReRoll Stats Potential",_G.SST.Auto_ReRoll_Stats_Potential,function(v) _G.SST.Auto_ReRoll_Stats_Potential=v; SS() end)
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            if not _G.SST.Auto_ReRoll_Stats_Potential or not _G.SST.Select_UnitPotential then return end
+            local pList=_G.SST.Select_Potential
+            if type(pList)~="table" then return end
+            local unit=GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitPotential)
+            if not unit or not unit:FindFirstChild("Tag") then return end
+            local tag=unit.Tag.Value
+            local desired= type(_G.SST.Select_Stats)=="table" and _G.SST.Select_Stats or {}
+            for potName,enabled in pairs(pList) do
+                if enabled then
+                    local pot=unit:FindFirstChild(potName.."Potential")
+                    if pot and not desired[pot.Value] then
+                        rerollRemote:FireServer(potName,tag,"Selective")
+                        task.wait(0.3)
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- ══════════════════════════════════════════════════════
+--  WebHook_Misc TABS
+-- ══════════════════════════════════════════════════════
+
+WebHook_Misc:AddSeperatorL("WebHook")
+WebHook_Misc:AddTextboxL("WebHook Link", _G.SST.Place_WebHook_Link or "", "", function(v)
     _G.SST.Place_WebHook_Link = v
     SS()
 end)
 
-WH:AddToggleR("Send WebHook", _G.SST.Send_WebHook or false, function(v)
+WebHook_Misc:AddToggleL("Send WebHook", _G.SST.Send_WebHook or false, function(v)
     _G.SST.Send_WebHook = v
     SS()
 end)
 
--- ── Match result webhook loop ────────────────────────
 local sentThisMatch = false
 local matchEnded    = false
 
@@ -2685,7 +2612,38 @@ task.spawn(function()
     end
 end)
 
-WH:AddSeperatorR("Performance")
+WebHook_Misc:AddSeperatorL("WebHook Settings")
+WebHook_Misc:AddDropdownL("Select Win/Lose WebHook",{"Win","Lose","Both"},_G.SST.Select_WebHook_Type or "Both",function(v) _G.SST.Select_WebHook_Type=v; SS() end)
+WebHook_Misc:AddMultiDropdownL("Select To Shown On WebHook",{"Rewards","GameTime","Both"},_G.SST.Select_WebHook_Info or "Both",function(v) _G.SST.Select_WebHook_Info=v; SS() end)
+WebHook_Misc:AddToggleL("Tag roll on discord", _G.SST.Tag_Roll_Discord or false, function(v) _G.SST.Tag_Roll_Discord = v; SS() end)
+
+WebHook_Misc:AddSeperatorR("Code")
+WebHook_Misc:AddButtonR("Redeem All Code",function()
+    local codes={
+        "SorryForIssues","Im Back","125M Visits","100K CCU",
+        "Easter Egg 2025!","CongratsFor1M","LiveLike",
+        "RERANGERSX","ReRangersX","SubTo_Anitary",
+        "200MVisits","300K_CCU","HappyNewYear2025",
+        "FreeShard","Sorry4Delay","ThankYou100M"
+    }
+    local codeRemote
+    pcall(function() codeRemote=ReplicatedStorage.Remote.Server.Lobby.Code end)
+    if not codeRemote then
+        AddNotification("[X] Code remote not found!")
+        return
+    end
+    local redeemed=0
+    for _,code in ipairs(codes) do
+        pcall(function()
+            codeRemote:FireServer(code)
+            redeemed=redeemed+1
+        end)
+        task.wait(0.15)
+    end
+    AddNotification("[OK] Redeemed "..redeemed.." codes!")
+end)
+
+WebHook_Misc:AddSeperatorR("Performance")
 -- Get services and local player
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -2749,7 +2707,7 @@ local function toggleBlackScreen(enable)
 end
 
 -- เพิ่ม toggle ใน UI
-WH:AddToggleR("Black Screen", _G.SST.Black_Screen or false, function(v)
+WebHook_Misc:AddToggleR("Black Screen", _G.SST.Black_Screen or false, function(v)
     _G.SST.Black_Screen = v
     SS()
     -- รอสักครู่ให้ UI สร้างเสร็จก่อน
@@ -2766,7 +2724,7 @@ task.spawn(function()
     end
 end)
 
-WH:AddToggleR("Boost Fps",_G.SST.Boost_Fps,function(v) _G.SST.Boost_Fps=v; SS() end)
+WebHook_Misc:AddToggleR("Boost Fps",_G.SST.Boost_Fps,function(v) _G.SST.Boost_Fps=v; SS() end)
 
 local boosted=false; local origTerrain={}; local origLighting={}; local origEffects={}
 local function enableBoost()
@@ -2786,11 +2744,11 @@ task.spawn(function()
     end
 end)
 
-WH:AddSliderR("Select Frame Rate",0,240,_G.SST.Select_Frame_Rate or 60,function(v) _G.SST.Select_Frame_Rate=v; SS() end)
+WebHook_Misc:AddSliderR("Select Frame Rate",0,240,_G.SST.Select_Frame_Rate or 60,function(v) _G.SST.Select_Frame_Rate=v; SS() end)
 task.spawn(function() while task.wait(1) do pcall(function() if type(_G.SST.Select_Frame_Rate)=="number" and _G.SST.Select_Frame_Rate>0 then setfpscap(_G.SST.Select_Frame_Rate) end end) end end)
 
-WH:AddSeperatorR("Misc")
-WH:AddToggleR("Anti AFK",_G.SST.Anti_AFK,function(v) _G.SST.Anti_AFK=v; SS() end)
+WebHook_Misc:AddSeperatorR("Misc")
+WebHook_Misc:AddToggleR("Anti AFK",_G.SST.Anti_AFK,function(v) _G.SST.Anti_AFK=v; SS() end)
 task.spawn(function()
     local antiAfkConnection=nil
     local function updateAntiAfk()
@@ -2813,7 +2771,7 @@ task.spawn(function()
     end
 end)
 
-WH:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin,function(v) _G.SST.Auto_Kick_Rejoin=v; SS() end)
+WebHook_Misc:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin,function(v) _G.SST.Auto_Kick_Rejoin=v; SS() end)
 
 task.spawn(function()
     game.CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
@@ -2823,37 +2781,5 @@ task.spawn(function()
     end)
 end)
 
--- ═══ ITEM CHECK TAB ═══════════════════════════════════
-CH:AddSeperatorL("Item")
-CH:AddSeperatorR("Info")
-CH:AddLabelR("Name  : "..plr.Name)
-local LV=CH:AddLabelR(""); local GemAmt=CH:AddLabelR(""); local GoldAmt=CH:AddLabelR(""); local EggAmt=CH:AddLabelR("")
-
-task.spawn(function()
-    while task.wait(1) do
-        pcall(function()
-            local pd=ReplicatedStorage.Player_Data:FindFirstChild(plr.Name); if not pd then return end
-            LV:Set("Level : "..pd.Data.Level.Value.."  Exp : "..pd.Data.Exp.Value)
-            GemAmt:Set("Gem   : "..pd.Data.Gem.Value)
-            GoldAmt:Set("Gold  : "..pd.Data.Gold.Value)
-        end)
-    end
-end)
-
-local itemsFolder=ReplicatedStorage.Player_Data[plr.Name].Items
-local itemLabels={}
-local sortedItems=itemsFolder:GetChildren()
-table.sort(sortedItems,function(a,b) return a.Name:lower()<b.Name:lower() end)
-for _,item in ipairs(sortedItems) do itemLabels[item.Name]=CH:AddLabelL(item.Name.." : Loading...") end
-task.spawn(function()
-    while task.wait(1) do
-        pcall(function()
-            for _,item in ipairs(itemsFolder:GetChildren()) do
-                local amt=item:FindFirstChild("Amount"); local lbl=itemLabels[item.Name]
-                if lbl and amt then lbl:Set(item.Name.." : "..tostring(amt.Value)) end
-            end
-        end)
-    end
-end)
 
 AddNotification(L("welcome"))
