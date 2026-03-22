@@ -2047,7 +2047,6 @@ end
 -- shared refs
 local GetUnitPlayer = ReplicatedStorage.Player_Data[plr.Name].Collection
 local PlayerDataRef = ReplicatedStorage.Player_Data[plr.Name]
-local AutoPlayRemote= ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("Units"):WaitForChild("AutoPlay")
 
 
 -- ══════════════════════════════════════════════════════
@@ -2160,6 +2159,7 @@ end)
 AutoPlay_Function:AddSeperatorL("Auto Play")
 AutoPlay_Function:AddToggleL("Auto Play",_G.SST.Auto_Play,function(v) _G.SST.Auto_Play=v; SS() end)
 task.spawn(function()
+    local AutoPlayRemote = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("Units"):WaitForChild("AutoPlay")
     while task.wait(1) do
         pcall(function()
             if not _G.SST.Auto_Play then return end
@@ -2316,7 +2316,7 @@ task.spawn(function()
         pcall(function()
             if not _G.SST.Select_Speed then return end
             local speedRemote=ReplicatedStorage:WaitForChild("Remote",9e9):WaitForChild("Server",9e9):WaitForChild("Gameplay",9e9):WaitForChild("SetGameSpeed",9e9)
-            local speedVal=tonumber(_G.SST.Select_Speed) or 1
+            local speedVal = tonumber(tostring(_G.SST.Select_Speed or "1"):gsub("x","")) or 1
             speedRemote:FireServer(speedVal)
         end)
     end
@@ -2458,8 +2458,8 @@ task.spawn(function()
         pcall(function()
             local unit=GetUnitPlayer:FindFirstChild(_G.SST.Select_UnitTrait)
             if not unit then return end
-            MainTraitUnit:Set("Main Trait : "..unit.PrimaryTrait.Value or "None")
-            SubTraitUnit:Set("Sub Trait : "..unit.SecondaryTrait.Value or "None")
+            MainTraitUnit:Set("Main Trait : "..(unit.PrimaryTrait.Value or "None"))
+            SubTraitUnit:Set("Sub Trait : "..(unit.SecondaryTrait.Value or "None"))
         end)
     end
 end)
@@ -2473,8 +2473,9 @@ Traits_Potential:AddToggleL("Auto Reroll Trait",_G.SST.Auto_Reroll_Trait,functio
 task.spawn(function()
     local traitRemote
     pcall(function() traitRemote = ReplicatedStorage.Remote.Server.Gambling.RerollTrait end)
-    local lastTrait    = ""
-    local lastUnitName = ""
+    local lastTrait       = ""
+    local lastSecondTrait = ""
+    local lastUnitName    = ""
     while task.wait(0.5) do
         pcall(function()
             if not _G.SST.Auto_Reroll_Trait or not traitRemote then return end
@@ -2485,8 +2486,9 @@ task.spawn(function()
             local secondTrait = unit.SecondaryTrait.Value
             -- reset เมื่อเปลี่ยน unit
             if lastUnitName ~= unit.Name then
-                lastUnitName = unit.Name
-                lastTrait    = ""
+                lastUnitName    = unit.Name
+                lastTrait       = ""
+                lastSecondTrait = ""
             end
             -- ตรวจว่าเลือก trait ไว้ไหม
             local hasDesired = false
@@ -2498,7 +2500,7 @@ task.spawn(function()
                 if lastTrait ~= current and lastSecondTrait ~= secondTrait then
                     lastTrait = current
                     lastSecondTrait = secondTrait
-                    AddNotification("[Trait] Got: "..current.."[SubTrait] Got: "  ..secondTrait.." on "..unit.Name.."!")
+                    AddNotification("[Trait] Got: "..current.." | [SubTrait] Got: "..secondTrait.." on "..unit.Name.."!")
                     -- ส่ง Webhook ถ้าเปิด Send_WebHook อยู่
                     if _G.SST.Send_WebHook and _G.SST.Place_WebHook_Link ~= "" then
                         local url      = _G.SST.Place_WebHook_Link
@@ -2700,11 +2702,6 @@ WebHook_Misc:AddButtonR("Redeem All Code",function()
 end)
 
 WebHook_Misc:AddSeperatorR("Performance")
--- Get services and local player
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local plr = Players.LocalPlayer
-
 local blackScreenUI = nil
 local blackScreenFrame = nil
 
@@ -2830,13 +2827,13 @@ end)
 WebHook_Misc:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin ,function(v) _G.SST.Auto_Kick_Rejoin=v; SS() end)
 
 task.spawn(function()
-    if _G.SST.Auto_Kick_Rejoin then
+    pcall(function()
         game.CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
             if _G.SST.Auto_Kick_Rejoin and child.Name == 'ErrorPrompt' then
                 TeleportService:Teleport(111446873000464)
             end
         end)
-    end
+    end)
 end)
 
 
