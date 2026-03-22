@@ -2462,8 +2462,6 @@ end)
 
 -- ═══ SHOP TAB ═════════════════════════════════════════
 SP:AddSeperatorL("Auto Buy Item")
-SP:AddLabelL("ซื้อไอเทมอัตโนมัติจาก Merchant")
-
 -- Load item list from player's Merchant folder
 local buyItemList={}
 pcall(function()
@@ -2492,8 +2490,8 @@ buyItemDD.onRefresh=function()
     return items
 end
 
-SP:AddSliderL("Min Yen Limit",0,100000,_G.SST.BuyItem_MinYen or 0,function(v) _G.SST.BuyItem_MinYen=v; SS() end)
-SP:AddSliderL("Max Yen Limit",0,100000000000000000,_G.SST.BuyItem_MaxYen or 999999,function(v) _G.SST.BuyItem_MaxYen=v; SS() end)
+-- Removed Min Yen Limit and Max Yen Limit sliders
+
 SP:AddSliderL("Amount to Buy",1,99,_G.SST.BuyItem_Amount or 1,function(v) _G.SST.BuyItem_Amount=v; SS() end)
 SP:AddToggleL("Auto Buy Item",_G.SST.Auto_BuyItem or false,function(v) _G.SST.Auto_BuyItem=v; SS() end)
 
@@ -2505,9 +2503,7 @@ task.spawn(function()
             if not _G.SST.Auto_BuyItem or not merchantRemote then return end
             local pd=ReplicatedStorage.Player_Data:FindFirstChild(plr.Name); if not pd then return end
             local gold=tonumber(pd.Data.Gold.Value) or 0
-            local minY=_G.SST.BuyItem_MinYen or 0
-            local maxY=_G.SST.BuyItem_MaxYen or 999999
-            if gold < minY or gold > maxY then return end
+            -- Removed Min/Max Yen checks
             local selected=_G.SST.Select_BuyItem
             if type(selected)~="table" then return end
             local amount=_G.SST.BuyItem_Amount or 1
@@ -2524,17 +2520,32 @@ task.spawn(function()
 end)
 
 AP:AddSeperatorR("Speed Set Game")
--- ใน AP tab (Auto Play)
-local speedOptions = {"1x", "2x", "3x"}
+-- Fixed speed setting (added safe remote check and better error handling)
+local speedOptions = {"1", "2", "3"}
 local speedDD = AP:AddDropdownR("Game Speed", speedOptions, _G.SST.Select_Speed and tostring(_G.SST.Select_Speed).."x" or "1x", function(v)
     local speed = tonumber(v:gsub("x", ""))
     if speed then
         _G.SST.Select_Speed = speed
         SS()
-        pcall(function()
-            ReplicatedStorage:WaitForChild("Remote"):WaitForChild("SpeedGamepass"):FireServer(speed)
+        -- Safely attempt to set the speed
+        local success, err = pcall(function()
+            local remote = ReplicatedStorage:FindFirstChild("Remote")
+            if remote then
+                local speedRemote = remote:FindFirstChild("SpeedGamepass")
+                if speedRemote then
+                    speedRemote:FireServer(speed)
+                else
+                    error("SpeedGamepass remote not found")
+                end
+            else
+                error("Remote folder not found")
+            end
         end)
-        AddNotification("Speed set to x" .. speed)
+        if success then
+            AddNotification("Speed set to x" .. speed)
+        else
+            AddNotification("Failed to set speed: " .. err)
+        end
     end
 end)
 
