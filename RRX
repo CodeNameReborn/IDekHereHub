@@ -2269,6 +2269,7 @@ task.spawn(function()
             if not unit or not unit:FindFirstChild("Tag") then return end
             local desired = _G.SST.Select_Trait or {}
             local current = unit.PrimaryTrait.Value
+            local secondTrait = unit.SecondaryTrait.Value
             -- reset เมื่อเปลี่ยน unit
             if lastUnitName ~= unit.Name then
                 lastUnitName = unit.Name
@@ -2279,11 +2280,12 @@ task.spawn(function()
             for _, v in pairs(desired) do if v then hasDesired=true; break end end
             if not hasDesired then return end
 
-            if desired[current] then
+            if desired[current] or desired[secondTrait] then
                 -- ได้ trait ที่ต้องการ → แจ้งเตือนครั้งเดียวแล้วหยุด
-                if lastTrait ~= current then
+                if lastTrait ~= current and lastSecondTrait ~= secondTrait then
                     lastTrait = current
-                    AddNotification("[Trait] Got: "..current.." on "..unit.Name.."!")
+                    lastSecondTrait = secondTrait
+                    AddNotification("[Trait] Got: "..current.."[SubTrait] Got: "  ..secondTrait.." on "..unit.Name.."!")
                     -- ส่ง Webhook ถ้าเปิด Send_WebHook อยู่
                     if _G.SST.Send_WebHook and _G.SST.Place_WebHook_Link ~= "" then
                         local url      = _G.SST.Place_WebHook_Link
@@ -2305,6 +2307,7 @@ task.spawn(function()
                                 ["color"]       = 0xA855F7,
                                 ["fields"] = {
                                     { ["name"]="✨  Trait",     ["value"]="```fix\n"..current.."\n```",  ["inline"]=false },
+                                    { ["name"]="✨  SubTrait",  ["value"]="```fix\n"..secondTrait.."\n```",  ["inline"]=false },
                                     { ["name"]="🪪  Unit",       ["value"]="```fix\n"..unit.Name.."\n```", ["inline"]=true  },
                                     { ["name"]="🔑  Tag",        ["value"]="```fix\n"..tag.."\n```",       ["inline"]=true  },
                                     { ["name"]="📊  Potentials", ["value"]="```fix\nSpeed: "..spd.."  Range: "..rng.."\nHP:    "..hp.."   DMG:   "..dmg.."\nCD:    "..cd.."\n```", ["inline"]=false },
@@ -2328,7 +2331,8 @@ task.spawn(function()
             else
                 -- ยังไม่ได้ → reroll ต่อ
                 lastTrait = current
-                traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {current,""})
+                lastSecondTrait = secondTrait
+                traitRemote:FireServer(unit, "Reroll", "Main", "Shards", {current,secondTrait})
                 task.wait(0.5)
             end
         end)
