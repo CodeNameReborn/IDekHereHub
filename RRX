@@ -1989,6 +1989,61 @@ BuildUISettings()
 uiReady=true
 if refreshScriptList then refreshScriptList() end
 
+local _avatarCache = {}
+local function getAvatar(userId)
+    if _avatarCache[userId] then return _avatarCache[userId] end
+    local fallback = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
+    local req = http_request or request or (syn and syn.request)
+    if not req then return fallback end
+    local ok, res = pcall(function()
+        return req({ Url="https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png", Method="GET" })
+    end)
+    if not ok or not res or not res.Body then return fallback end
+    local parsed; pcall(function() parsed = HttpService:JSONDecode(res.Body) end)
+    local url = parsed and parsed.data and parsed.data[1] and parsed.data[1].imageUrl
+    local result = (url and url ~= "") and url or fallback
+    _avatarCache[userId] = result
+    return result
+end
+local function sendWebhook(isWin, RewardsText, GameTime)
+    local url = _G.SST.Place_WebHook_Link
+    if not url or url == "" then return end
+    local pd = ReplicatedStorage:FindFirstChild("Player_Data") and ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
+    if not pd or not pd:FindFirstChild("Data") then return end
+    local dataFolder = pd.Data
+    local function safeVal(obj) return obj and tostring(obj.Value or obj.Text or "0") or "0" end
+    local resultDesc = isWin
+        and "# 🏆  VICTORY\n> The battle is won. Rangers stand victorious!"
+        or  "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger."
+    local color = isWin and 0x00E676 or 0xFF1744
+    local avatarUrl = getAvatar(plr.UserId)
+    local payload = {
+        ["content"] = "",
+        ["embeds"] = {{
+            ["author"]      = { ["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile" },
+            ["title"]       = "Anime Rangers X  ·  Match Result",
+            ["description"] = resultDesc,
+            ["thumbnail"]   = { ["url"]=avatarUrl },
+            ["color"]       = color,
+            ["fields"] = {
+                { ["name"]="💎  Gem",    ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Gem")).."\n```",  ["inline"]=true  },
+                { ["name"]="🪙  Gold",   ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Gold")).."\n```", ["inline"]=true  },
+                { ["name"]="⭐  Level",  ["value"]="```fix\n"..safeVal(dataFolder:FindFirstChild("Level")).."  (EXP: "..safeVal(dataFolder:FindFirstChild("Exp"))..")\n```", ["inline"]=false },
+                { ["name"]="⏱️  Match Time", ["value"]="```\n"..tostring(GameTime).."\n```", ["inline"]=false },
+                { ["name"]="🎁  Rewards",    ["value"]="```\n"..(RewardsText ~= "" and RewardsText or "— none —").."\n```", ["inline"]=false },
+            },
+            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
+            ["footer"]    = { ["text"]="Anitary Hub    |  Anime Rangers X", ["icon_url"]=avatarUrl },
+        }}
+    }
+    local ok, json = pcall(function() return HttpService:JSONEncode(payload) end)
+    if not ok then return end
+    local req = http_request or request or (syn and syn.request)
+    if not req then return end
+    pcall(function() req({ Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json }) end)
+end
+
+
 -- shared refs
 local GetUnitPlayer = ReplicatedStorage.Player_Data[plr.Name].Collection
 local PlayerDataRef = ReplicatedStorage.Player_Data[plr.Name]
@@ -2353,7 +2408,7 @@ end)
 
 Shop_UserInfo:AddSeperatorR("Info")
 Shop_UserInfo:AddLabelR("Name  : "..plr.Name)
-local LV=Shop_UserInfo:AddLabelR(""); local GemAmt=Shop_UserInfo:AddLabelR(""); local GoldAmt=Shop_UserInfo:AddLabelR(""); local EggAmt=Shop_UserInfo:AddLabelR("")
+local LV=Shop_UserInfo:AddLabelR(""); local GemAmt=Shop_UserInfo:AddLabelR(""); local GoldAmt=Shop_UserInfo:AddLabelR("")
 
 task.spawn(function()
     while task.wait(1) do
