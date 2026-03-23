@@ -3127,7 +3127,12 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
     -- ── REWARDS
     if _G.SST.WH_Show_Rewards == true then
         local rewardsDisplay = (RewardsText ~= "" and RewardsText:gsub("\n$","")) or "— none —"
-        local rwChunks = chunkLines(rewardsDisplay:split and rewardsDisplay:split("\n") or {rewardsDisplay}, 980)
+        local rwLines = {}
+        for line in (rewardsDisplay.."\n"):gmatch("([^\n]*)\n") do
+            table.insert(rwLines, line)
+        end
+        if #rwLines == 0 then rwLines = {rewardsDisplay} end
+        local rwChunks = chunkLines(rwLines, 980)
         for i, chunk in ipairs(rwChunks) do
             local label = i == 1 and "🎁  Rewards" or ("🎁  Rewards (cont. "..i..")")
             table.insert(fields, {["name"]=label, ["value"]="```\n"..chunk.."\n```", ["inline"]=false})
