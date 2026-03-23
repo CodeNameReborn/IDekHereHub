@@ -3125,17 +3125,37 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
         if rid ~= "" then contentStr = "<@&"..rid..">" end
     end
 
+    -- ========================
+    -- Sanitize fields ก่อนส่ง: Discord ไม่รับ name/value ว่าง และ value ยาวเกิน 1024
+    -- ========================
+    local cleanFields = {}
+    for _, f in ipairs(fields) do
+        local n = tostring(f["name"] or ""):gsub("%s+", " "):match("^%s*(.-)%s*$")
+        local v = tostring(f["value"] or ""):gsub("%s+", " "):match("^%s*(.-)%s*$")
+        -- ข้าม field ที่ name หรือ value ว่าง / เป็นแค่ code block เปล่า
+        if n ~= "" and v ~= "" and v ~= "``````" and v ~= "```\n```" then
+            -- ตัดถ้าเกิน 1024 chars (Discord limit)
+            if #v > 1024 then v = v:sub(1, 1021).."..." end
+            if #n > 256  then n = n:sub(1, 253).."..." end
+            table.insert(cleanFields, {["name"]=n, ["value"]=v, ["inline"]=f["inline"] or false})
+        end
+    end
+
+    -- description ต้องไม่ว่าง
+    local safeDesc = (embedDesc and embedDesc ~= "") and embedDesc or (isWin and "🏆 Victory" or "💀 Defeat")
+    if #safeDesc > 4096 then safeDesc = safeDesc:sub(1, 4093).."..." end
+
     -- ส่ง webhook
     local avatarUrl = getAvatar(player.UserId)
     local payload = {
-        ["content"] = contentStr,
+        ["content"] = contentStr ~= "" and contentStr or nil,
         ["embeds"]  = {{
             ["author"]      = {["name"]="👤  "..player.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..player.UserId.."/profile"},
             ["title"]       = "Anime Rangers X  ·  Match Result",
-            ["description"] = embedDesc,
+            ["description"] = safeDesc,
             ["thumbnail"]   = {["url"]=avatarUrl},
             ["color"]       = colorInt,
-            ["fields"]      = fields,
+            ["fields"]      = cleanFields,
             ["timestamp"]   = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
             ["footer"]      = {["text"]=footerText, ["icon_url"]=avatarUrl},
         }}
