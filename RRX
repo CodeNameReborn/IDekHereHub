@@ -18,6 +18,21 @@ repeat task.wait() until ReplicatedStorage.Player_Data[plr.Name]:FindFirstChild(
 
 local Collection = ReplicatedStorage.Player_Data[plr.Name].Collection
 repeat task.wait() until #Collection:GetChildren() > 0
+-- ======================== INITIALIZATION ========================
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+
+-- รอ LocalPlayer ให้พร้อม (เผื่อรันเร็วเกินไป)
+local plr = Players.LocalPlayer
+if not plr then
+    plr = Players:WaitForChild("LocalPlayer", 5)
+end
+if not plr then
+    warn("No LocalPlayer found. Webhook will not work.")
+    return
+end
+
+print("LocalPlayer found:", plr.Name)
 
 -- ══════════════════════════════════════════════════════
 --  SERVICES
