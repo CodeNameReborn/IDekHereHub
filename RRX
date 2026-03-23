@@ -3075,21 +3075,27 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
 
     local fields = {}
 
-    -- ── INFO (inline 3 ช่อง)
-    table.insert(fields, {["name"]="👤  Player",  ["value"]="```"..player.Name.."```",  ["inline"]=true})
-    table.insert(fields, {["name"]="⭐  Level",   ["value"]="```"..levelVal.."```",      ["inline"]=true})
-    table.insert(fields, {["name"]="✨  EXP",     ["value"]="```"..expVal.."```",        ["inline"]=true})
+    -- ── INFO (เรียงลงมา)
+    local infoBlock = string.format("👤  %-12s %s\n⭐  %-12s %s\n✨  %-12s %s",
+        "Player :", player.Name,
+        "Level  :", levelVal,
+        "EXP    :", expVal)
+    table.insert(fields, {["name"]="📋  Info", ["value"]="```"..infoBlock.."```", ["inline"]=false})
 
-    -- ── CURRENCY (inline 2 ต่อแถว)
+    -- ── CURRENCY (เรียงลงมาในบล็อกเดียว)
     local currencyOrder  = {"Gold","Gem","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin"}
     local currencyEmoji  = {Gold="🪙", Gem="💎", RCCells="🔴", ["Sol Token"]="☀️", ["Esper Token"]="🌀", ["Curse Token"]="💀", ["Boss Coin"]="👑"}
     local currencyValMap = {Gold=goldVal, Gem=gemVal, RCCells=RCellVal, ["Sol Token"]=SolTokenVal, ["Esper Token"]=EsperTokenVal, ["Curse Token"]=CurseTokenVal, ["Boss Coin"]=BossCoinsVal}
+    local currencyLines = {}
     for _, item in ipairs(currencyOrder) do
         if currencyFields[item] then
             local emoji = currencyEmoji[item] or "•"
             local val   = currencyValMap[item] or "0"
-            table.insert(fields, {["name"]=emoji.."  "..item, ["value"]="```"..val.."```", ["inline"]=true})
+            table.insert(currencyLines, string.format("%s  %-22s %s", emoji, item.." :", val))
         end
+    end
+    if #currencyLines > 0 then
+        table.insert(fields, {["name"]="💰  Currency", ["value"]="```"..table.concat(currencyLines,"\n").."```", ["inline"]=false})
     end
 
     -- ── RESOURCES (แบ่ง chunk ถ้ายาว แต่ละ chunk ≤ 1000 chars)
@@ -3115,7 +3121,7 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
 
     -- ── MATCH TIME
     if _G.SST.WH_Show_Time == true then
-        table.insert(fields, {["name"]="⏱️  Match Time", ["value"]="```"..tostring(GameTime).."```", ["inline"]=true})
+        table.insert(fields, {["name"]="⏱️  Match Time", ["value"]="```"..tostring(GameTime).."```", ["inline"]=false})
     end
 
     -- ── REWARDS
