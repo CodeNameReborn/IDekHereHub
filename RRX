@@ -2888,6 +2888,7 @@ end)
 --  WebHook_Misc TABS
 -- ══════════════════════════════════════════════════════
 
+-- ส่วนที่เพิ่ม WebHook settings
 WebHook_Misc:AddSeperatorL("WebHook")
 WebHook_Misc:AddTextboxL("WebHook Link", _G.SST.Place_WebHook_Link or "", "", function(v)
     _G.SST.Place_WebHook_Link = v
@@ -2898,69 +2899,6 @@ WebHook_Misc:AddToggleL("Send WebHook", _G.SST.Send_WebHook or false, function(v
     _G.SST.Send_WebHook = v
     SS()
 end)
-
-local sentThisMatch = false
-local matchEnded    = false
-
-task.spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            if not _G.SST.Send_WebHook then return end
-            local rUI = plr.PlayerGui:FindFirstChild("RewardsUI")
-            if not rUI then return end
-            if rUI.Enabled then
-                if not sentThisMatch and not matchEnded then
-                    task.wait(0.5) -- รอให้ UI โหลดเนื้อหาก่อน
-                    -- ── ตรวจผล Win / Lose ─────────────────────────────
-                    local isWin = true
-                    pcall(function()
-                        -- ลองหาจากหลาย path
-                        local resultFrame =
-                            (rUI.Main and rUI.Main:FindFirstChild("Result")) or
-                            (rUI.Main and rUI.Main.LeftSide and rUI.Main.LeftSide:FindFirstChild("Result")) or
-                            rUI:FindFirstChildWhichIsA("TextLabel", true)
-                        if resultFrame and resultFrame.Text then
-                            local t = string.lower(resultFrame.Text)
-                            if string.find(t,"lose") or string.find(t,"defeat") or string.find(t,"fail") then
-                                isWin = false
-                            end
-                        end
-                    end)
-                    -- ── ดึง GameTime ──────────────────────────────────
-                    local GameTime = "Unknown"
-                    pcall(function()
-                        GameTime = rUI.Main.LeftSide.TotalTime.Text
-                    end)
-                    -- ── ดึง Rewards ───────────────────────────────────
-                    local RewardsText = ""
-                    pcall(function()
-                        local rf = plr:FindFirstChild("RewardsShow")
-                        if rf then
-                            for _, ri in ipairs(rf:GetChildren()) do
-                                if ri:IsA("Folder") then
-                                    local a = ri:FindFirstChild("Amount")
-                                    if a then
-                                        RewardsText = RewardsText..ri.Name..": "..tostring(a.Value or a.Text or "0").."\n"
-                                    end
-                                end
-                            end
-                        end
-                    end)
-                    sendWebhook(isWin, RewardsText, GameTime)
-                    sentThisMatch = true
-                    matchEnded    = true
-                end
-            else
-                -- RewardsUI ปิด → reset รอ match ใหม่
-                if matchEnded then
-                    sentThisMatch = false
-                    matchEnded    = false
-                end
-            end
-        end)
-    end
-end)
-
 -- ======================== HELPER ========================
 local function tableKeys(t)
     local keys = {}
@@ -2979,8 +2917,8 @@ if not plr then
     return
 end
 
--- HttpService
-local HttpService = game:GetService("HttpService")
+-- HttpService (อาจถูกปิดในบาง executor)
+local HttpService = pcall(function() return game:GetService("HttpService") end) and game:GetService("HttpService") or nil
 
 -- ======================== AVATAR CACHE ========================
 local _avatarCache = {}
@@ -2988,15 +2926,16 @@ local function getAvatar(userId)
     if _avatarCache[userId] then return _avatarCache[userId] end
     local fallback = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
     local req = http_request or request or (syn and syn.request)
-    if not req then return fallback end
+    if type(req) ~= "function" then return fallback end
     local ok, res = pcall(function()
         return req({ Url="https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png", Method="GET" })
     end)
     if not ok or not res or not res.Body then return fallback end
     local parsed
-    local decodeOk, decoded = pcall(function() return HttpService:JSONDecode(res.Body) end)
-    if not decodeOk then return fallback end
-    parsed = decoded
+    if HttpService then
+        local decodeOk, decoded = pcall(function() return HttpService:JSONDecode(res.Body) end)
+        if decodeOk then parsed = decoded end
+    end
     local url = parsed and parsed.data and parsed.data[1] and parsed.data[1].imageUrl
     local result = (url and url ~= "") and url or fallback
     _avatarCache[userId] = result
@@ -3014,23 +2953,29 @@ local WH_COLOR_PRESETS = {
 }
 
 -- ======================== WEBHOOK SEND FUNCTION ========================
--- Added plr as parameter to avoid dependency on external global
 local function sendWebhook(isWin, RewardsText, GameTime, player)
-    player = player or plr
-    if not player then return end
+    -- ตรวจสอบข้อมูลพื้นฐาน
+    if not player then
+        warn("[sendWebhook] No player provided")
+        return false
+    end
+    if not _G.SST or type(_G.SST.Place_WebHook_Link) ~= "string" or _G.SST.Place_WebHook_Link == "" then
+        warn("[sendWebhook] Webhook URL missing")
+        return false
+    end
+    if not HttpService then
+        warn("[sendWebhook] HttpService not available")
+        return false
+    end
 
-    local url = _G.SST.Place_WebHook_Link
-    if not url or url == "" then return end
-
-    -- Win/Lose filter
-    local whType = _G.SST.Select_WebHook_Type or "Both"
-    if whType == "Win"  and not isWin then return end
-    if whType == "Lose" and isWin     then return end
-
-    -- ดึงข้อมูลผู้เล่น
+    -- ตรวจสอบว่าผู้เล่นอยู่ในเกมและมีข้อมูล
     local replicatedStorage = game:GetService("ReplicatedStorage")
     local pd = replicatedStorage:FindFirstChild("Player_Data") and replicatedStorage.Player_Data:FindFirstChild(player.Name)
-    if not pd or not pd:FindFirstChild("Data") then return end
+    if not pd or not pd:FindFirstChild("Data") then
+        warn("[sendWebhook] Player data not found")
+        return false
+    end
+
     local dataFolder = pd.Data
     local function safeVal(obj) return obj and tostring(obj.Value or obj.Text or "0") or "0" end
 
@@ -3048,7 +2993,6 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
     local itemsFolder = pd:FindFirstChild("Items")
     local resourcesValues = {}
     if itemsFolder then
-        -- Use pairs to avoid ipairs sparse table issues
         for _, child in pairs(itemsFolder:GetChildren()) do
             if child:IsA("Folder") then
                 local amountObj = child:FindFirstChild("Amount")
@@ -3092,14 +3036,13 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
                             or {Gold=true, Gem=true, RCCells=true, ["Sol Token"]=true, ["Esper Token"]=true, ["Curse Token"]=true, ["Boss Coin"]=true}
     local resourcesFields = type(_G.SST.WH_Resources_Fields)=="table" and _G.SST.WH_Resources_Fields or {}
 
-    -- helper: จัด column ชื่อ : ค่า ให้ตรงกัน
     local function fmtRow(label, value)
         return string.format("%-20s : %s", label, value)
     end
 
     local fields = {}
 
-    -- 1. INFO
+    -- INFO
     local infoLines = {
         fmtRow("Player", player.Name),
         fmtRow("Level",  levelVal),
@@ -3107,7 +3050,7 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
     }
     table.insert(fields, {["name"]="📋 Info", ["value"]="```\n"..table.concat(infoLines,"\n").."\n```", ["inline"]=false})
 
-    -- 2. CURRENCY
+    -- CURRENCY
     local currencyOrder = {"Gold","Gem","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin"}
     local currencyLines = {}
     for _, item in ipairs(currencyOrder) do
@@ -3122,7 +3065,7 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
         table.insert(fields, {["name"]="💰 Currency", ["value"]="```\n"..table.concat(currencyLines,"\n").."\n```", ["inline"]=false})
     end
 
-    -- 3. RESOURCES
+    -- RESOURCES
     local sortedRes = {}
     for resName, resAmount in pairs(resourcesValues) do
         if resourcesFields[resName] then
@@ -3138,12 +3081,12 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
         table.insert(fields, {["name"]="📦 Resources", ["value"]="```\n"..table.concat(resourceLines,"\n").."\n```", ["inline"]=false})
     end
 
-    -- 4. TIME
+    -- TIME
     if _G.SST.WH_Show_Time == true then
         table.insert(fields, {["name"]="⏱️ Match Time", ["value"]="```\n"..fmtRow("Match Time", tostring(GameTime)).."\n```", ["inline"]=false})
     end
 
-    -- 5. REWARDS
+    -- REWARDS
     if _G.SST.WH_Show_Rewards == true then
         local rewardsDisplay = (RewardsText ~= "" and RewardsText) or "— none —"
         table.insert(fields, {["name"]="🎁 Rewards", ["value"]="```\n"..rewardsDisplay.."\n```", ["inline"]=false})
@@ -3182,21 +3125,45 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
             ["footer"]      = {["text"]=footerText, ["icon_url"]=avatarUrl},
         }}
     }
+
     local ok2, json = pcall(function() return HttpService:JSONEncode(payload) end)
-    if not ok2 then return end
+    if not ok2 then
+        warn("[sendWebhook] Failed to encode JSON")
+        return false
+    end
+
     local req = http_request or request or (syn and syn.request)
-    if not req then return end
-    pcall(function()
-        req({Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json})
+    if type(req) ~= "function" then
+        warn("[sendWebhook] No request function available")
+        return false
+    end
+
+    local success, res = pcall(function()
+        return req({Url=_G.SST.Place_WebHook_Link, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json})
     end)
+    if not success then
+        warn("[sendWebhook] Request failed: " .. tostring(res))
+        return false
+    end
+    return true
 end
 
 -- ======================== GUI ========================
--- Assume WebHook_Misc is defined elsewhere (UI object)
 if not WebHook_Misc then
     warn("WebHook_Misc not found, GUI will not be created")
     return
 end
+
+WebHook_Misc:AddSeperatorL("WebHook")
+WebHook_Misc:AddTextboxL("WebHook Link", _G.SST.Place_WebHook_Link or "", "", function(v)
+    _G.SST.Place_WebHook_Link = v
+    SS()
+end)
+
+WebHook_Misc:AddToggleL("Send WebHook", _G.SST.Send_WebHook or false, function(v)
+    _G.SST.Send_WebHook = v
+    SS()
+end)
 
 WebHook_Misc:AddSeperatorL("WebHook Settings")
 WebHook_Misc:AddDropdownL("Sent On",{"Win","Lose","Both"},_G.SST.Select_WebHook_Type or "Both",function(v)
@@ -3242,7 +3209,6 @@ coroutine.wrap(function()
     if not items then return end
 
     local resourceNames = {}
-    -- Use pairs to avoid sparse table issues
     for _, child in pairs(items:GetChildren()) do
         if child:IsA("Folder") and child:FindFirstChild("Amount") then
             table.insert(resourceNames, child.Name)
@@ -3334,6 +3300,102 @@ WebHook_Misc:AddButtonL("📤 Test Send Webhook", function()
         AddNotification("[X] ส่ง Webhook ล้มเหลว ดู Console")
     else
         AddNotification("[OK] Test Webhook sent!")
+    end
+end)
+
+-- ======================== AUTO WEBHOOK LOOP ========================
+local sentThisMatch = false
+local matchEnded    = false
+local monitoring    = true
+
+task.spawn(function()
+    while monitoring do
+        task.wait(0.5)
+        -- ตรวจสอบว่าผู้ใช้เปิดใช้งานหรือไม่
+        if not _G.SST.Send_WebHook then
+            sentThisMatch = false
+            matchEnded = false
+            continue
+        end
+
+        -- ตรวจสอบ plr และ PlayerGui
+        if not plr or not plr.PlayerGui then continue end
+
+        local success, err = pcall(function()
+            local rUI = plr.PlayerGui:FindFirstChild("RewardsUI")
+            if not rUI then return end
+
+            if rUI.Enabled then
+                if not sentThisMatch and not matchEnded then
+                    -- รอให้ UI โหลดข้อมูล (ไม่เกิน 2 วินาที)
+                    local maxWait = 2
+                    local waited = 0
+                    while waited < maxWait do
+                        task.wait(0.1)
+                        waited = waited + 0.1
+                        if rUI.Main and rUI.Main.LeftSide and rUI.Main.LeftSide.TotalTime then
+                            break
+                        end
+                    end
+
+                    -- ตรวจผล Win / Lose
+                    local isWin = nil
+                    local resultFrame =
+                        (rUI.Main and rUI.Main:FindFirstChild("Result")) or
+                        (rUI.Main and rUI.Main.LeftSide and rUI.Main.LeftSide:FindFirstChild("Result")) or
+                        rUI:FindFirstChildWhichIsA("TextLabel", true)
+                    if resultFrame and resultFrame.Text then
+                        local t = string.lower(resultFrame.Text)
+                        if string.find(t,"lose") or string.find(t,"defeat") or string.find(t,"fail") then
+                            isWin = false
+                        else
+                            isWin = true
+                        end
+                    end
+
+                    -- ถ้ายังไม่รู้ผล ให้ข้ามส่ง (ป้องกันข้อมูลผิด)
+                    if isWin == nil then
+                        sentThisMatch = true
+                        matchEnded = true
+                        return
+                    end
+
+                    -- ดึง GameTime
+                    local GameTime = "Unknown"
+                    if rUI.Main and rUI.Main.LeftSide and rUI.Main.LeftSide.TotalTime then
+                        GameTime = rUI.Main.LeftSide.TotalTime.Text
+                    end
+
+                    -- ดึง Rewards
+                    local RewardsText = ""
+                    local rf = plr:FindFirstChild("RewardsShow")
+                    if rf then
+                        for _, ri in ipairs(rf:GetChildren()) do
+                            if ri:IsA("Folder") then
+                                local a = ri:FindFirstChild("Amount")
+                                if a then
+                                    RewardsText = RewardsText..ri.Name..": "..tostring(a.Value or a.Text or "0").."\n"
+                                end
+                            end
+                        end
+                    end
+
+                    -- ส่ง Webhook (ส่ง plr เข้าไปด้วย)
+                    sendWebhook(isWin, RewardsText, GameTime, plr)
+                    sentThisMatch = true
+                    matchEnded    = true
+                end
+            else
+                if matchEnded then
+                    sentThisMatch = false
+                    matchEnded    = false
+                end
+            end
+        end)
+
+        if not success then
+            warn("[Auto Webhook] Error:", err)
+        end
     end
 end)
 WebHook_Misc:AddSeperatorR("Code")
@@ -3497,4 +3559,4 @@ task.spawn(function()
     end)
 end)
 
-AddNotification(L("Hello World"))
+AddNotification(L("Hello User"))
