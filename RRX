@@ -3051,36 +3051,48 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
                             or {Gold=true, Gem=true, RCCells=true, ["Sol Token"]=true, ["Esper Token"]=true, ["Curse Token"]=true, ["Boss Coin"]=true}
     local resourcesFields = type(_G.SST.WH_Resources_Fields)=="table" and _G.SST.WH_Resources_Fields or {}
 
+    -- helper: pad label ให้ align สวย
     local function fmtRow(label, value)
-        return string.format("%-20s : %s", label, value)
+        return string.format("%-22s %s", label.." :", tostring(value))
+    end
+
+    -- helper: แบ่ง list ยาวออกเป็น chunk ไม่เกิน 1000 chars ต่อ field
+    local function chunkLines(lines, chunkMax)
+        local chunks = {}
+        local cur = ""
+        for _, line in ipairs(lines) do
+            local add = (cur == "" and "" or "\n") .. line
+            if #cur + #add > chunkMax then
+                table.insert(chunks, cur)
+                cur = line
+            else
+                cur = cur .. add
+            end
+        end
+        if cur ~= "" then table.insert(chunks, cur) end
+        return chunks
     end
 
     local fields = {}
 
-    -- INFO
-    local infoLines = {
-        fmtRow("Player", player.Name),
-        fmtRow("Level",  levelVal),
-        fmtRow("EXP",    expVal),
-    }
-    table.insert(fields, {["name"]="📋 Info", ["value"]="```\n"..table.concat(infoLines,"\n").."\n```", ["inline"]=false})
+    -- ── INFO (inline 3 ช่อง)
+    table.insert(fields, {["name"]="👤  Player",  ["value"]="```"..player.Name.."```",  ["inline"]=true})
+    table.insert(fields, {["name"]="⭐  Level",   ["value"]="```"..levelVal.."```",      ["inline"]=true})
+    table.insert(fields, {["name"]="✨  EXP",     ["value"]="```"..expVal.."```",        ["inline"]=true})
 
-    -- CURRENCY
-    local currencyOrder = {"Gold","Gem","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin"}
-    local currencyLines = {}
+    -- ── CURRENCY (inline 2 ต่อแถว)
+    local currencyOrder  = {"Gold","Gem","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin"}
+    local currencyEmoji  = {Gold="🪙", Gem="💎", RCCells="🔴", ["Sol Token"]="☀️", ["Esper Token"]="🌀", ["Curse Token"]="💀", ["Boss Coin"]="👑"}
+    local currencyValMap = {Gold=goldVal, Gem=gemVal, RCCells=RCellVal, ["Sol Token"]=SolTokenVal, ["Esper Token"]=EsperTokenVal, ["Curse Token"]=CurseTokenVal, ["Boss Coin"]=BossCoinsVal}
     for _, item in ipairs(currencyOrder) do
         if currencyFields[item] then
-            local value = item=="Gold" and goldVal or item=="Gem" and gemVal or item=="RCCells" and RCellVal
-                       or item=="Sol Token" and SolTokenVal or item=="Esper Token" and EsperTokenVal
-                       or item=="Curse Token" and CurseTokenVal or item=="Boss Coin" and BossCoinsVal or "0"
-            table.insert(currencyLines, fmtRow(item, value))
+            local emoji = currencyEmoji[item] or "•"
+            local val   = currencyValMap[item] or "0"
+            table.insert(fields, {["name"]=emoji.."  "..item, ["value"]="```"..val.."```", ["inline"]=true})
         end
     end
-    if #currencyLines > 0 then
-        table.insert(fields, {["name"]="💰 Currency", ["value"]="```\n"..table.concat(currencyLines,"\n").."\n```", ["inline"]=false})
-    end
 
-    -- RESOURCES
+    -- ── RESOURCES (แบ่ง chunk ถ้ายาว แต่ละ chunk ≤ 1000 chars)
     local sortedRes = {}
     for resName, resAmount in pairs(resourcesValues) do
         if resourcesFields[resName] then
@@ -3088,23 +3100,32 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
         end
     end
     table.sort(sortedRes, function(a,b) return a.name < b.name end)
-    local resourceLines = {}
-    for _, r in ipairs(sortedRes) do
-        table.insert(resourceLines, fmtRow(r.name, r.amount))
-    end
-    if #resourceLines > 0 then
-        table.insert(fields, {["name"]="📦 Resources", ["value"]="```\n"..table.concat(resourceLines,"\n").."\n```", ["inline"]=false})
+
+    if #sortedRes > 0 then
+        local resLines = {}
+        for _, r in ipairs(sortedRes) do
+            table.insert(resLines, fmtRow(r.name, r.amount))
+        end
+        local chunks = chunkLines(resLines, 980)
+        for i, chunk in ipairs(chunks) do
+            local label = i == 1 and "📦  Resources" or ("📦  Resources (cont. "..i..")")
+            table.insert(fields, {["name"]=label, ["value"]="```ansi\n"..chunk.."\n```", ["inline"]=false})
+        end
     end
 
-    -- TIME
+    -- ── MATCH TIME
     if _G.SST.WH_Show_Time == true then
-        table.insert(fields, {["name"]="⏱️ Match Time", ["value"]="```\n"..fmtRow("Match Time", tostring(GameTime)).."\n```", ["inline"]=false})
+        table.insert(fields, {["name"]="⏱️  Match Time", ["value"]="```"..tostring(GameTime).."```", ["inline"]=true})
     end
 
-    -- REWARDS
+    -- ── REWARDS
     if _G.SST.WH_Show_Rewards == true then
-        local rewardsDisplay = (RewardsText ~= "" and RewardsText) or "— none —"
-        table.insert(fields, {["name"]="🎁 Rewards", ["value"]="```\n"..rewardsDisplay.."\n```", ["inline"]=false})
+        local rewardsDisplay = (RewardsText ~= "" and RewardsText:gsub("\n$","")) or "— none —"
+        local rwChunks = chunkLines(rewardsDisplay:split and rewardsDisplay:split("\n") or {rewardsDisplay}, 980)
+        for i, chunk in ipairs(rwChunks) do
+            local label = i == 1 and "🎁  Rewards" or ("🎁  Rewards (cont. "..i..")")
+            table.insert(fields, {["name"]=label, ["value"]="```\n"..chunk.."\n```", ["inline"]=false})
+        end
     end
 
     -- Footer
