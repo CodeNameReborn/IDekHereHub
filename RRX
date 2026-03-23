@@ -2968,6 +2968,20 @@ local function tableKeys(t)
     return keys
 end
 
+-- Ensure _G.SST exists
+_G.SST = _G.SST or {}
+
+-- Get local player
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+if not plr then
+    warn("No local player found")
+    return
+end
+
+-- HttpService
+local HttpService = game:GetService("HttpService")
+
 -- ======================== AVATAR CACHE ========================
 local _avatarCache = {}
 local function getAvatar(userId)
@@ -2979,7 +2993,10 @@ local function getAvatar(userId)
         return req({ Url="https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png", Method="GET" })
     end)
     if not ok or not res or not res.Body then return fallback end
-    local parsed; pcall(function() parsed = HttpService:JSONDecode(res.Body) end)
+    local parsed
+    local decodeOk, decoded = pcall(function() return HttpService:JSONDecode(res.Body) end)
+    if not decodeOk then return fallback end
+    parsed = decoded
     local url = parsed and parsed.data and parsed.data[1] and parsed.data[1].imageUrl
     local result = (url and url ~= "") and url or fallback
     _avatarCache[userId] = result
@@ -2997,7 +3014,11 @@ local WH_COLOR_PRESETS = {
 }
 
 -- ======================== WEBHOOK SEND FUNCTION ========================
-local function sendWebhook(isWin, RewardsText, GameTime)
+-- Added plr as parameter to avoid dependency on external global
+local function sendWebhook(isWin, RewardsText, GameTime, player)
+    player = player or plr
+    if not player then return end
+
     local url = _G.SST.Place_WebHook_Link
     if not url or url == "" then return end
 
@@ -3007,7 +3028,8 @@ local function sendWebhook(isWin, RewardsText, GameTime)
     if whType == "Lose" and isWin     then return end
 
     -- ดึงข้อมูลผู้เล่น
-    local pd = ReplicatedStorage:FindFirstChild("Player_Data") and ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local pd = replicatedStorage:FindFirstChild("Player_Data") and replicatedStorage.Player_Data:FindFirstChild(player.Name)
     if not pd or not pd:FindFirstChild("Data") then return end
     local dataFolder = pd.Data
     local function safeVal(obj) return obj and tostring(obj.Value or obj.Text or "0") or "0" end
@@ -3026,7 +3048,8 @@ local function sendWebhook(isWin, RewardsText, GameTime)
     local itemsFolder = pd:FindFirstChild("Items")
     local resourcesValues = {}
     if itemsFolder then
-        for _, child in ipairs(itemsFolder:GetChildren()) do
+        -- Use pairs to avoid ipairs sparse table issues
+        for _, child in pairs(itemsFolder:GetChildren()) do
             if child:IsA("Folder") then
                 local amountObj = child:FindFirstChild("Amount")
                 if amountObj then
@@ -3037,7 +3060,7 @@ local function sendWebhook(isWin, RewardsText, GameTime)
     end
 
     -- ถ้ายังไม่มีข้อมูลทรัพยากรที่เลือก ให้เลือกทั้งหมดอัตโนมัติ
-    if not _G.SST.WH_Resources_Fields or next(_G.SST.WH_Resources_Fields) == nil then
+    if type(_G.SST.WH_Resources_Fields) ~= "table" or next(_G.SST.WH_Resources_Fields) == nil then
         _G.SST.WH_Resources_Fields = {}
         for name, _ in pairs(resourcesValues) do
             _G.SST.WH_Resources_Fields[name] = true
@@ -3056,7 +3079,7 @@ local function sendWebhook(isWin, RewardsText, GameTime)
         else          table.insert(descParts, "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger.") end
     end
     if ei["Player Name"] or ei["PlayerName"] then
-        table.insert(descParts, "> 👤  **"..plr.Name.."**") end
+        table.insert(descParts, "> 👤  **"..player.Name.."**") end
     if ei["Match Time"] or ei["MatchTime"] then
         table.insert(descParts, "> ⏱️  Match Time : **"..tostring(GameTime).."**") end
     if ei["Rewards Summary"] or ei["RewardsSummary"] then
@@ -3078,7 +3101,7 @@ local function sendWebhook(isWin, RewardsText, GameTime)
 
     -- 1. INFO
     local infoLines = {
-        fmtRow("Player", plr.Name),
+        fmtRow("Player", player.Name),
         fmtRow("Level",  levelVal),
         fmtRow("EXP",    expVal),
     }
@@ -3130,7 +3153,7 @@ local function sendWebhook(isWin, RewardsText, GameTime)
     local fi = type(_G.SST.WH_Footer_Info)=="table" and _G.SST.WH_Footer_Info or {HubName=true}
     local footerParts = {}
     if fi["Hub Name"]    or fi["HubName"]    then table.insert(footerParts, "Anitary Hub") end
-    if fi["Player Name"] or fi["PlayerName"] then table.insert(footerParts, plr.Name) end
+    if fi["Player Name"] or fi["PlayerName"] then table.insert(footerParts, player.Name) end
     if fi["Result"]      or fi["result"]     then table.insert(footerParts, isWin and "Victory" or "Defeat") end
     local footerText = #footerParts > 0 and table.concat(footerParts," | ") or "Anitary Hub"
 
@@ -3145,11 +3168,11 @@ local function sendWebhook(isWin, RewardsText, GameTime)
     end
 
     -- ส่ง webhook
-    local avatarUrl = getAvatar(plr.UserId)
+    local avatarUrl = getAvatar(player.UserId)
     local payload = {
         ["content"] = contentStr,
         ["embeds"]  = {{
-            ["author"]      = {["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile"},
+            ["author"]      = {["name"]="👤  "..player.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..player.UserId.."/profile"},
             ["title"]       = "Anime Rangers X  ·  Match Result",
             ["description"] = embedDesc,
             ["thumbnail"]   = {["url"]=avatarUrl},
@@ -3169,6 +3192,12 @@ local function sendWebhook(isWin, RewardsText, GameTime)
 end
 
 -- ======================== GUI ========================
+-- Assume WebHook_Misc is defined elsewhere (UI object)
+if not WebHook_Misc then
+    warn("WebHook_Misc not found, GUI will not be created")
+    return
+end
+
 WebHook_Misc:AddSeperatorL("WebHook Settings")
 WebHook_Misc:AddDropdownL("Sent On",{"Win","Lose","Both"},_G.SST.Select_WebHook_Type or "Both",function(v)
     _G.SST.Select_WebHook_Type = v; SS()
@@ -3201,8 +3230,9 @@ end
 -- Resources Fields
 WebHook_Misc:AddSeperatorL("Resources Fields")
 coroutine.wrap(function()
-    local playerData = ReplicatedStorage:FindFirstChild("Player_Data")
-    if not playerData then playerData = ReplicatedStorage:WaitForChild("Player_Data", 5) end
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local playerData = replicatedStorage:FindFirstChild("Player_Data")
+    if not playerData then playerData = replicatedStorage:WaitForChild("Player_Data", 5) end
     if not playerData then return end
     local playerFolder = playerData:FindFirstChild(plr.Name)
     if not playerFolder then playerFolder = playerData:WaitForChild(plr.Name, 5) end
@@ -3212,7 +3242,8 @@ coroutine.wrap(function()
     if not items then return end
 
     local resourceNames = {}
-    for _, child in ipairs(items:GetChildren()) do
+    -- Use pairs to avoid sparse table issues
+    for _, child in pairs(items:GetChildren()) do
         if child:IsA("Folder") and child:FindFirstChild("Amount") then
             table.insert(resourceNames, child.Name)
         end
@@ -3297,7 +3328,7 @@ WebHook_Misc:AddButtonL("📤 Test Send Webhook", function()
         AddNotification("[X] ใส่ WebHook Link ก่อน!")
         return
     end
-    local success, err = pcall(sendWebhook, true, "TestItem: 5\nTestGem: 10\n", "02:30")
+    local success, err = pcall(sendWebhook, true, "TestItem: 5\nTestGem: 10\n", "02:30", plr)
     if not success then
         warn("[ERROR] sendWebhook:", err)
         AddNotification("[X] ส่ง Webhook ล้มเหลว ดู Console")
@@ -3305,7 +3336,6 @@ WebHook_Misc:AddButtonL("📤 Test Send Webhook", function()
         AddNotification("[OK] Test Webhook sent!")
     end
 end)
-
 WebHook_Misc:AddSeperatorR("Code")
 WebHook_Misc:AddButtonR("Redeem All Code",function()
     local codes={
