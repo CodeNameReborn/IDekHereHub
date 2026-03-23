@@ -2283,6 +2283,9 @@ task.spawn(function()
                 busyG = true
                 ev:FireServer("Fate Mode")
                 task.wait(2); busyG = false
+                if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+                ev:FireServer("Start")
+            end
             end
             if not busyB and _G.SST.Auto_Boss_Attack
             and workspace:FindFirstChild("Lobby")
