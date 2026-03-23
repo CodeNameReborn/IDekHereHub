@@ -2962,7 +2962,6 @@ task.spawn(function()
 end)
 
 -- ======================== HELPER ========================
--- ======================== HELPER ========================
 local function tableKeys(t)
     local keys = {}
     for k in pairs(t) do table.insert(keys, k) end
@@ -3239,7 +3238,7 @@ end)()
 
 -- Additional Toggles
 WebHook_Misc:AddSeperatorL("Additional Fields")
-local timeToggle = WebHook_Misc:AddToggleL("Show Match Time", function(v)
+local timeToggle = WebHook_Misc:AddToggle("Show Match Time", function(v)
     _G.SST.WH_Show_Time = v; SS()
 end)
 if _G.SST.WH_Show_Time == nil then _G.SST.WH_Show_Time = true end
@@ -3249,7 +3248,7 @@ task.defer(function()
     _G.SST.WH_Show_Time = _savedShowTime
 end)
 
-local rewardsToggle = WebHook_Misc:AddToggleL("Show Rewards", function(v)
+local rewardsToggle = WebHook_Misc:AddToggle("Show Rewards", function(v)
     _G.SST.WH_Show_Rewards = v; SS()
 end)
 if _G.SST.WH_Show_Rewards == nil then _G.SST.WH_Show_Rewards = true end
@@ -3301,149 +3300,6 @@ WebHook_Misc:AddButtonL("📤 Test Send Webhook", function()
     local success, err = pcall(sendWebhook, true, "TestItem: 5\nTestGem: 10\n", "02:30")
     if not success then
         warn("[ERROR] sendWebhook:", err)
-        AddNotification("[X] ส่ง Webhook ล้มเหลว ดู Console")
-    else
-        AddNotification("[OK] Test Webhook sent!")
-    end
-end)
--- ======================== GUI ========================
-WebHook_Misc:AddSeperatorL("WebHook Settings")
-WebHook_Misc:AddDropdownL("Sent On",{"Win","Lose","Both"},_G.SST.Select_WebHook_Type or "Both",function(v)
-    _G.SST.Select_WebHook_Type = v; SS()
-end)
-
-WebHook_Misc:AddSeperatorL("Description")
-local embedInfoDD = WebHook_Misc:AddMultiDropdownL(
-    "Embed Description",
-    {"Result Emoji","Player Name","Match Time","Rewards Summary"},
-    function(v) _G.SST.WH_Embed_Info = v; SS() end
-)
-if type(_G.SST.WH_Embed_Info)=="table" then
-    task.defer(function() pcall(function() embedInfoDD:Set(_G.SST.WH_Embed_Info) end) end)
-end
-
--- Currency Fields
-WebHook_Misc:AddSeperatorL("Currency Fields")
-local currencyFieldsDD = WebHook_Misc:AddMultiDropdownL(
-    "Show Currency",
-    {"Gold","Gem","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin"},
-    function(v) _G.SST.WH_Currency_Fields = v; SS() end
-)
-if type(_G.SST.WH_Currency_Fields)=="table" then
-    task.defer(function() pcall(function() currencyFieldsDD:Set(_G.SST.WH_Currency_Fields) end) end)
-else
-    _G.SST.WH_Currency_Fields = {Gold=true, Gem=true, RCCells=true, ["Sol Token"]=true, ["Esper Token"]=true, ["Curse Token"]=true, ["Boss Coin"]=true}
-    task.defer(function() pcall(function() currencyFieldsDD:Set(_G.SST.WH_Currency_Fields) end) end)
-end
-
--- Resources Fields (รอให้ Items พร้อมแล้วดึงชื่อ)
-WebHook_Misc:AddSeperatorL("Resources Fields")
-coroutine.wrap(function()
-    print("[DEBUG] Loading Resources dropdown...")
-    local playerData = ReplicatedStorage:FindFirstChild("Player_Data")
-    if not playerData then playerData = ReplicatedStorage:WaitForChild("Player_Data", 5) end
-    if not playerData then warn("Player_Data not found!"); return end
-    local playerFolder = playerData:FindFirstChild(plr.Name)
-    if not playerFolder then playerFolder = playerData:WaitForChild(plr.Name, 5) end
-    if not playerFolder then warn("Player folder not found for", plr.Name); return end
-    local items = playerFolder:FindFirstChild("Items")
-    if not items then items = playerFolder:WaitForChild("Items", 5) end
-    if not items then warn("Items not found!"); return end
-
-    local resourceNames = {}
-    for _, child in ipairs(items:GetChildren()) do
-        if child:IsA("Folder") and child:FindFirstChild("Amount") then
-            table.insert(resourceNames, child.Name)
-        end
-    end
-    if #resourceNames == 0 then
-        resourceNames = {"Trait Reroll"}
-        print("[DEBUG] No resources found, using fallback.")
-    else
-        print("[DEBUG] Found resources:", table.concat(resourceNames, ", "))
-    end
-
-    local resourcesDropdown = WebHook_Misc:AddMultiDropdownL(
-        "Show Resources",
-        resourceNames,
-        function(v) _G.SST.WH_Resources_Fields = v; SS() end
-    )
-    if type(_G.SST.WH_Resources_Fields)=="table" then
-        task.defer(function() pcall(function() resourcesDropdown:Set(_G.SST.WH_Resources_Fields) end) end)
-    else
-        local default = {}
-        for _, name in ipairs(resourceNames) do default[name] = true end
-        _G.SST.WH_Resources_Fields = default
-        task.defer(function() pcall(function() resourcesDropdown:Set(default) end) end)
-    end
-end)()
-
--- Additional Toggles
-WebHook_Misc:AddSeperatorL("Additional Fields")
-local timeToggle = WebHook_Misc:AddToggleL("Show Match Time", function(v)
-    _G.SST.WH_Show_Time = v; SS()
-end)
-if _G.SST.WH_Show_Time == nil then _G.SST.WH_Show_Time = true end
-local _savedShowTime = _G.SST.WH_Show_Time
-task.defer(function()
-    pcall(function() timeToggle:Set(_savedShowTime) end)
-    _G.SST.WH_Show_Time = _savedShowTime  -- ✅ restore หลัง Set เพราะ callback อาจเซ็ต true ทับ
-end)
-
-local rewardsToggle = WebHook_Misc:AddToggleL("Show Rewards", function(v)
-    _G.SST.WH_Show_Rewards = v; SS()
-end)
-if _G.SST.WH_Show_Rewards == nil then _G.SST.WH_Show_Rewards = true end
-local _savedShowRewards = _G.SST.WH_Show_Rewards
-task.defer(function()
-    pcall(function() rewardsToggle:Set(_savedShowRewards) end)
-    _G.SST.WH_Show_Rewards = _savedShowRewards  -- ✅ restore หลัง Set
-end)
-
--- Footer
-WebHook_Misc:AddSeperatorL("Footer")
-local footerDD = WebHook_Misc:AddMultiDropdownL(
-    "Footer Info",
-    {"Hub Name","Player Name","Result"},
-    function(v) _G.SST.WH_Footer_Info = v; SS() end
-)
-if type(_G.SST.WH_Footer_Info)=="table" then
-    task.defer(function() pcall(function() footerDD:Set(_G.SST.WH_Footer_Info) end) end)
-end
-
--- Color Preset
-WebHook_Misc:AddSeperatorL("Embed Color")
-WebHook_Misc:AddDropdownL(
-    "Color Preset (Win / Lose)",
-    {"Green / Red","Blue / Orange","Purple / Yellow","Cyan / Pink","White / Black","Gold / Dark"},
-    _G.SST.WH_Color_Preset or "Green / Red",
-    function(v) _G.SST.WH_Color_Preset = v; SS() end
-)
-
--- Ping
-WebHook_Misc:AddSeperatorL("Ping")
-WebHook_Misc:AddDropdownL(
-    "Ping Type",
-    {"None","@everyone","@here","Role ID"},
-    _G.SST.WH_Ping_Type or "None",
-    function(v) _G.SST.WH_Ping_Type = v; SS() end
-)
-WebHook_Misc:AddTextboxL("Role ID", _G.SST.WH_Role_ID or "", "Enter only when selecting Role ID.", function(v)
-    _G.SST.WH_Role_ID = v; SS()
-end)
-
--- Test Button
-WebHook_Misc:AddSeperatorL("Test")
-WebHook_Misc:AddButtonL("📤 Test Send Webhook", function()
-    print("[DEBUG] กดปุ่ม Test Webhook")
-    if not _G.SST.Place_WebHook_Link or _G.SST.Place_WebHook_Link == "" then
-        AddNotification("[X] ใส่ WebHook Link ก่อน!")
-        warn("[DEBUG] ไม่มี Webhook URL ใน _G.SST.Place_WebHook_Link")
-        return
-    end
-    local success, err = pcall(sendWebhook, true, "TestItem: 5\nTestGem: 10\n", "02:30")
-    if not success then
-        warn("[ERROR] sendWebhook ล้มเหลว:", err)
         AddNotification("[X] ส่ง Webhook ล้มเหลว ดู Console")
     else
         AddNotification("[OK] Test Webhook sent!")
