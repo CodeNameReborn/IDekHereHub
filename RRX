@@ -318,14 +318,21 @@ local function makeRefreshBtn(parent, zIdx)
         TweenService:Create(btn,TweenInfo.new(0.12),{BackgroundColor3=Color3.fromRGB(38,38,38),TextColor3=Color3.fromRGB(150,150,150)}):Play()
     end)
     -- spin animation
-    local spinning=false
+    local spinning = false
     local function spin()
-        if spinning then return end; spinning=true
-        for i=1,4 do
-            TweenService:Create(btn,TweenInfo.new(0.07,Enum.EasingStyle.Linear),{Rotation=i*90}):Play()
-            task.wait(0.07)
+        if spinning then return end
+        spinning = true
+        for i = 1, 4 do
+            local step = i
+            task.delay((step - 1) * 0.07, function()
+                TweenService:Create(btn, TweenInfo.new(0.07, Enum.EasingStyle.Linear),
+                    {Rotation = step * 90}):Play()
+            end)
         end
-        btn.Rotation=0; spinning=false
+        task.delay(4 * 0.07, function()
+            btn.Rotation = 0
+            spinning = false
+        end)
     end
     return btn, spin
 end
@@ -347,9 +354,11 @@ Main.Position=NORMAL_POS; Main.Size=NORMAL_SIZE; Main.BorderSizePixel=0; Main.Cl
 local MainCorner=Instance.new("UICorner",Main); MainCorner.CornerRadius=UDim.new(0,Theme.WinRadius)
 local MainStroke=Instance.new("UIStroke",Main); MainStroke.Color=Theme.Accent; MainStroke.Thickness=1.5
 
-local function tweenCorner(r,d)
-    task.delay(d or 0,function()
-        TweenService:Create(MainCorner,TweenInfo.new(0.3,Enum.EasingStyle.Sine),{CornerRadius=UDim.new(0,r)}):Play()
+local function tweenCorner(r, d, dur)
+    task.delay(d or 0, function()
+        TweenService:Create(MainCorner,
+            TweenInfo.new(dur or 0.38, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+            {CornerRadius = UDim.new(0, r)}):Play()
     end)
 end
 onThemeChange("Accent",   function(c) MainStroke.Color=c end)
@@ -381,80 +390,87 @@ end
 macBtn("CloseBtn", Color3.fromRGB(255,59,48), 8, function()
     if GUI:FindFirstChild("MiniBtn") then return end
 
-    local vp = workspace.CurrentCamera.ViewportSize
-    local cx  = Main.AbsolutePosition.X + Main.AbsoluteSize.X / 2
-    local cy  = Main.AbsolutePosition.Y + Main.AbsoluteSize.Y / 2
+    local cx = Main.AbsolutePosition.X + Main.AbsoluteSize.X / 2
+    local cy = Main.AbsolutePosition.Y + Main.AbsoluteSize.Y / 2
 
-    TweenService:Create(Main, TweenInfo.new(0.12, Enum.EasingStyle.Sine),
-        {Size = UDim2.new(0, Theme.WinW + 30, 0, Theme.WinH + 20)}):Play()
-    task.wait(0.1)
-    tweenCorner(50)
-    TweenService:Create(Main, TweenInfo.new(0.44, Enum.EasingStyle.Back, Enum.EasingDirection.In),
-        {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0, cx, 0, cy), BackgroundTransparency = 0.5}):Play()
-    task.wait(0.47)
-    Main.Visible = false
+    -- bounce out → collapse (ไม่มี task.wait เลย)
+    TweenService:Create(Main, TweenInfo.new(0.09, Enum.EasingStyle.Sine),
+        {Size = UDim2.new(0, Theme.WinW + 22, 0, Theme.WinH + 14)}):Play()
 
-    -- floating mini pill
-    local mini = Instance.new("Frame", GUI)
-    mini.Name               = "MiniBtn"
-    mini.AnchorPoint        = Vector2.new(0.5, 0.5)
-    mini.Position           = UDim2.new(0, cx, 0, cy)
-    mini.Size               = UDim2.new(0, 0, 0, 0)
-    mini.BackgroundColor3   = Color3.fromRGB(16, 16, 16)
-    mini.BorderSizePixel    = 0
-    mini.ZIndex             = 50
-    Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 16)
-
-    local msk     = Instance.new("UIStroke", mini)
-    msk.Color     = Theme.Accent
-    msk.Thickness = 1.5
-
-    local mt = Instance.new("TextLabel", mini)
-    mt.Size                 = UDim2.new(1, 0, 1, 0)
-    mt.BackgroundTransparency = 1
-    mt.Text                 = "◈"
-    mt.TextColor3           = Theme.Accent
-    mt.Font                 = Enum.Font.GothamBold
-    mt.TextSize             = 18
-    mt.ZIndex               = 51
-
-    TweenService:Create(mini, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-        {Size = UDim2.new(0, 45, 0, 45)}):Play()
-
-    local ca = Instance.new("TextButton", mini)
-    ca.Size                 = UDim2.new(1, 0, 1, 0)
-    ca.BackgroundTransparency = 1
-    ca.Text                 = ""
-    ca.ZIndex               = 52
-
-    ca.MouseEnter:Connect(function()
-        TweenService:Create(msk,  TweenInfo.new(0.15), {Thickness = 2.5}):Play()
-        TweenService:Create(mini, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-            {Size = UDim2.new(0, 52, 0, 52)}):Play()
+    task.delay(0.07, function()
+        tweenCorner(50, 0, 0.38)
+        TweenService:Create(Main, TweenInfo.new(0.38, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+            {Size = UDim2.new(0, 0, 0, 0),
+             Position = UDim2.new(0, cx, 0, cy),
+             BackgroundTransparency = 0.6}):Play()
     end)
-    ca.MouseLeave:Connect(function()
-        TweenService:Create(msk,  TweenInfo.new(0.15), {Thickness = 1.5}):Play()
-        TweenService:Create(mini, TweenInfo.new(0.15, Enum.EasingStyle.Sine),
+
+    task.delay(0.46, function()
+        Main.Visible = false
+
+        local mini = Instance.new("Frame", GUI)
+        mini.Name             = "MiniBtn"
+        mini.AnchorPoint      = Vector2.new(0.5, 0.5)
+        mini.Position         = UDim2.new(0, cx, 0, cy)
+        mini.Size             = UDim2.new(0, 0, 0, 0)
+        mini.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
+        mini.BorderSizePixel  = 0
+        mini.ZIndex           = 50
+        Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 16)
+
+        local msk     = Instance.new("UIStroke", mini)
+        msk.Color     = Theme.Accent
+        msk.Thickness = 1.5
+
+        local mt = Instance.new("TextLabel", mini)
+        mt.Size                   = UDim2.new(1, 0, 1, 0)
+        mt.BackgroundTransparency = 1
+        mt.Text                   = "◈"
+        mt.TextColor3             = Theme.Accent
+        mt.Font                   = Enum.Font.GothamBold
+        mt.TextSize               = 18
+        mt.ZIndex                 = 51
+
+        TweenService:Create(mini, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
             {Size = UDim2.new(0, 45, 0, 45)}):Play()
-    end)
-    ca.MouseButton1Click:Connect(function()
-        local mp = mini.AbsolutePosition
-        local ms = mini.AbsoluteSize
-        local ox = mp.X + ms.X / 2
-        local oy = mp.Y + ms.Y / 2
 
-        TweenService:Create(mini, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.In),
-            {Size = UDim2.new(0, 0, 0, 0)}):Play()
-        task.wait(0.2)
-        mini:Destroy()
+        local ca = Instance.new("TextButton", mini)
+        ca.Size                   = UDim2.new(1, 0, 1, 0)
+        ca.BackgroundTransparency = 1
+        ca.Text                   = ""
+        ca.ZIndex                 = 52
 
-        Main.Visible              = true
-        Main.BackgroundTransparency = 0.5
-        Main.Size                 = UDim2.new(0, 0, 0, 0)
-        Main.Position             = UDim2.new(0, ox, 0, oy)
-        tweenCorner(Theme.WinRadius)
-        TweenService:Create(Main, TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-            {Size = NORMAL_SIZE, Position = NORMAL_POS, BackgroundTransparency = Theme.WinOpacity}):Play()
+        ca.MouseEnter:Connect(function()
+            TweenService:Create(msk,  TweenInfo.new(0.15), {Thickness = 2.5}):Play()
+            TweenService:Create(mini, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                {Size = UDim2.new(0, 52, 0, 52)}):Play()
+        end)
+        ca.MouseLeave:Connect(function()
+            TweenService:Create(msk,  TweenInfo.new(0.15), {Thickness = 1.5}):Play()
+            TweenService:Create(mini, TweenInfo.new(0.2, Enum.EasingStyle.Sine),
+                {Size = UDim2.new(0, 45, 0, 45)}):Play()
+        end)
+        ca.MouseButton1Click:Connect(function()
+            local mp = mini.AbsolutePosition
+            local ms = mini.AbsoluteSize
+            local ox = mp.X + ms.X / 2
+            local oy = mp.Y + ms.Y / 2
+
+            TweenService:Create(mini, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+                {Size = UDim2.new(0, 0, 0, 0)}):Play()
+
+            task.delay(0.18, function()
+                mini:Destroy()
+                Main.Visible              = true
+                Main.BackgroundTransparency = 0.5
+                Main.Size                 = UDim2.new(0, 0, 0, 0)
+                Main.Position             = UDim2.new(0, ox, 0, oy)
+                tweenCorner(Theme.WinRadius, 0, 0.52)
+                TweenService:Create(Main, TweenInfo.new(0.52, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                    {Size = NORMAL_SIZE, Position = NORMAL_POS,
+                     BackgroundTransparency = Theme.WinOpacity}):Play()
+            end)
+        end)
     end)
 end)
 
@@ -592,43 +608,44 @@ local function restoreIsland()
     if not isIsland then return end
     isIsland = false
 
-    -- shrink chevron to signal action
-    TweenService:Create(iArr, TweenInfo.new(0.1), {Rotation = 180}):Play()
-    task.wait(0.08)
+    TweenService:Create(iArr, TweenInfo.new(0.12, Enum.EasingStyle.Sine), {Rotation = 180}):Play()
 
-    islandClick.Visible = false
-    Top.Visible         = true
+    task.delay(0.07, function()
+        islandClick.Visible = false
+        Top.Visible         = true
 
-    -- pill expand then window opens
-    TweenService:Create(Main, TweenInfo.new(0.15, Enum.EasingStyle.Sine),
-        {Size = UDim2.new(0, 240, 0, 36)}):Play()
-    task.wait(0.12)
+        -- pill ขยายออกก่อน
+        TweenService:Create(Main, TweenInfo.new(0.13, Enum.EasingStyle.Sine),
+            {Size = UDim2.new(0, 280, 0, 38)}):Play()
 
-    tweenCorner(Theme.WinRadius, 0)
-    TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-        {Size = NORMAL_SIZE, Position = NORMAL_POS}):Play()
-
-    iArr.Rotation = 0
+        task.delay(0.10, function()
+            -- เปิด window ด้วย Back easing
+            tweenCorner(Theme.WinRadius, 0, 0.50)
+            TweenService:Create(Main, TweenInfo.new(0.50, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                {Size = NORMAL_SIZE, Position = NORMAL_POS}):Play()
+            task.delay(0.52, function() iArr.Rotation = 0 end)
+        end)
+    end)
 end
 islandClick.MouseButton1Click:Connect(restoreIsland)
 
 -- [YEL] Island  (yellow mac button)
 macBtn("MinimizeBtn", Color3.fromRGB(255,204,0), 24, function()
     if GUI:FindFirstChild("MiniBtn") or isIsland then return end
-    isIsland  = true
+    isIsland    = true
     Top.Visible = false
 
-    -- step 1: squeeze slightly wider before shrinking (feels physical)
-    TweenService:Create(Main, TweenInfo.new(0.12, Enum.EasingStyle.Sine),
-        {Size = UDim2.new(0, Theme.WinW + 20, 0, Theme.WinH + 10)}):Play()
-    task.wait(0.10)
+    -- bounce out เล็กน้อย แล้ว collapse ทันที ไม่มี task.wait
+    TweenService:Create(Main, TweenInfo.new(0.08, Enum.EasingStyle.Sine),
+        {Size = UDim2.new(0, Theme.WinW + 14, 0, Theme.WinH + 8)}):Play()
 
-    -- step 2: collapse into pill at top-center
-    tweenCorner(18)
-    TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-        {Size = UDim2.new(0, 220, 0, 32), Position = UDim2.new(0.5, 0, 0, 26)}):Play()
-
-    task.delay(0.42, function() islandClick.Visible = true end)
+    task.delay(0.06, function()
+        tweenCorner(18, 0, 0.40)
+        TweenService:Create(Main, TweenInfo.new(0.40, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+            {Size     = UDim2.new(0, 220, 0, 32),
+             Position = UDim2.new(0.5, 0, 0, 26)}):Play()
+        task.delay(0.36, function() islandClick.Visible = true end)
+    end)
 end)
 
 -- [GRN] Fullscreen
@@ -694,17 +711,16 @@ local function goIsland()
     isIsland    = true
     Top.Visible = false
 
-    -- slight bounce before collapse
-    TweenService:Create(Main, TweenInfo.new(0.1, Enum.EasingStyle.Sine),
-        {Size = UDim2.new(0, Theme.WinW + 18, 0, Theme.WinH + 8)}):Play()
-    task.wait(0.08)
+    TweenService:Create(Main, TweenInfo.new(0.08, Enum.EasingStyle.Sine),
+        {Size = UDim2.new(0, Theme.WinW + 12, 0, Theme.WinH + 6)}):Play()
 
-    TweenService:Create(MainCorner, TweenInfo.new(0.35, Enum.EasingStyle.Sine),
-        {CornerRadius = UDim.new(0, 18)}):Play()
-    TweenService:Create(Main, TweenInfo.new(0.48, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-        {Size = UDim2.new(0, 220, 0, 32), Position = UDim2.new(0.5, 0, 0, 26)}):Play()
-
-    task.delay(0.44, function() islandClick.Visible = true end)
+    task.delay(0.06, function()
+        tweenCorner(18, 0, 0.40)
+        TweenService:Create(Main, TweenInfo.new(0.40, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+            {Size     = UDim2.new(0, 220, 0, 32),
+             Position = UDim2.new(0.5, 0, 0, 26)}):Play()
+        task.delay(0.36, function() islandClick.Visible = true end)
+    end)
 end
 
 -- ── restore from mini pill ───────────────────────────
@@ -720,15 +736,16 @@ local function restoreFromMini()
     TweenService:Create(mini, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.In),
         {Size = UDim2.new(0, 0, 0, 0)}):Play()
 
-    task.delay(0.2, function()
+    task.delay(0.18, function()
         mini:Destroy()
-        Main.Visible              = true
+        Main.Visible                = true
         Main.BackgroundTransparency = 0.5
-        Main.Size                 = UDim2.new(0, 0, 0, 0)
-        Main.Position             = UDim2.new(0, ox, 0, oy)
-        tweenCorner(Theme.WinRadius)
-        TweenService:Create(Main, TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-            {Size = NORMAL_SIZE, Position = NORMAL_POS, BackgroundTransparency = Theme.WinOpacity}):Play()
+        Main.Size                   = UDim2.new(0, 0, 0, 0)
+        Main.Position               = UDim2.new(0, ox, 0, oy)
+        tweenCorner(Theme.WinRadius, 0, 0.52)
+        TweenService:Create(Main, TweenInfo.new(0.52, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Size = NORMAL_SIZE, Position = NORMAL_POS,
+             BackgroundTransparency = Theme.WinOpacity}):Play()
     end)
 end
 
@@ -741,51 +758,56 @@ UserInputService.InputBegan:Connect(function(inp, gp)
     elseif GUI:FindFirstChild("MiniBtn") then
         restoreFromMini()
     elseif kbModeRef[1] == "mini" then
-        -- collapse to mini pill via keybind
         if GUI:FindFirstChild("MiniBtn") then return end
 
-        TweenService:Create(Main, TweenInfo.new(0.12, Enum.EasingStyle.Sine),
-            {Size = UDim2.new(0, 650, 0, 420)}):Play()
-        task.wait(0.1)
-        TweenService:Create(MainCorner, TweenInfo.new(0.3, Enum.EasingStyle.Sine),
-            {CornerRadius = UDim.new(0, 50)}):Play()
-        TweenService:Create(Main, TweenInfo.new(0.44, Enum.EasingStyle.Back, Enum.EasingDirection.In),
-            {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0, 36, 0, 72), BackgroundTransparency = 0.5}):Play()
-        task.wait(0.47)
-        Main.Visible = false
+        -- bounce → collapse → mini pill (ไม่มี task.wait เลย)
+        TweenService:Create(Main, TweenInfo.new(0.08, Enum.EasingStyle.Sine),
+            {Size = UDim2.new(0, Theme.WinW + 14, 0, Theme.WinH + 8)}):Play()
 
-        local mini = Instance.new("Frame", GUI)
-        mini.Name               = "MiniBtn"
-        mini.AnchorPoint        = Vector2.new(0.5, 0.5)
-        mini.Position           = UDim2.new(0, 36, 0, 72)
-        mini.Size               = UDim2.new(0, 0, 0, 0)
-        mini.BackgroundColor3   = Color3.fromRGB(16, 16, 16)
-        mini.BorderSizePixel    = 0
-        mini.ZIndex             = 50
-        Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 16)
+        task.delay(0.06, function()
+            tweenCorner(50, 0, 0.38)
+            TweenService:Create(Main, TweenInfo.new(0.38, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+                {Size = UDim2.new(0, 0, 0, 0),
+                 Position = UDim2.new(0, 36, 0, 72),
+                 BackgroundTransparency = 0.6}):Play()
+        end)
 
-        local msk       = Instance.new("UIStroke", mini)
-        msk.Color       = Theme.Accent
-        msk.Thickness   = 1.5
+        task.delay(0.45, function()
+            Main.Visible = false
 
-        local mt = Instance.new("TextLabel", mini)
-        mt.Size                 = UDim2.new(1, 0, 1, 0)
-        mt.BackgroundTransparency = 1
-        mt.Text                 = "◈"
-        mt.TextColor3           = Theme.Accent
-        mt.Font                 = Enum.Font.GothamBold
-        mt.TextSize             = 18
-        mt.ZIndex               = 51
+            local mini = Instance.new("Frame", GUI)
+            mini.Name             = "MiniBtn"
+            mini.AnchorPoint      = Vector2.new(0.5, 0.5)
+            mini.Position         = UDim2.new(0, 36, 0, 72)
+            mini.Size             = UDim2.new(0, 0, 0, 0)
+            mini.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
+            mini.BorderSizePixel  = 0
+            mini.ZIndex           = 50
+            Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 16)
 
-        TweenService:Create(mini, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-            {Size = UDim2.new(0, 45, 0, 45)}):Play()
+            local msk     = Instance.new("UIStroke", mini)
+            msk.Color     = Theme.Accent
+            msk.Thickness = 1.5
 
-        local ca = Instance.new("TextButton", mini)
-        ca.Size                 = UDim2.new(1, 0, 1, 0)
-        ca.BackgroundTransparency = 1
-        ca.Text                 = ""
-        ca.ZIndex               = 52
-        ca.MouseButton1Click:Connect(restoreFromMini)
+            local mt = Instance.new("TextLabel", mini)
+            mt.Size                   = UDim2.new(1, 0, 1, 0)
+            mt.BackgroundTransparency = 1
+            mt.Text                   = "◈"
+            mt.TextColor3             = Theme.Accent
+            mt.Font                   = Enum.Font.GothamBold
+            mt.TextSize               = 18
+            mt.ZIndex                 = 51
+
+            TweenService:Create(mini, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                {Size = UDim2.new(0, 45, 0, 45)}):Play()
+
+            local ca = Instance.new("TextButton", mini)
+            ca.Size                   = UDim2.new(1, 0, 1, 0)
+            ca.BackgroundTransparency = 1
+            ca.Text                   = ""
+            ca.ZIndex                 = 52
+            ca.MouseButton1Click:Connect(restoreFromMini)
+        end)
     else
         goIsland()
     end
