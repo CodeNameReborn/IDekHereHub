@@ -2040,142 +2040,6 @@ BuildUISettings()
 uiReady=true
 if refreshScriptList then refreshScriptList() end
 
-local _avatarCache = {}
-local function getAvatar(userId)
-    if _avatarCache[userId] then return _avatarCache[userId] end
-    local fallback = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
-    local req = http_request or request or (syn and syn.request)
-    if not req then return fallback end
-    local ok, res = pcall(function()
-        return req({ Url="https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png", Method="GET" })
-    end)
-    if not ok or not res or not res.Body then return fallback end
-    local parsed; pcall(function() parsed = HttpService:JSONDecode(res.Body) end)
-    local url = parsed and parsed.data and parsed.data[1] and parsed.data[1].imageUrl
-    local result = (url and url ~= "") and url or fallback
-    _avatarCache[userId] = result
-    return result
-end
--- ── Color preset map ─────────────────────────────────────────
-local WH_COLOR_PRESETS = {
-    ["Green / Red"]     = {win=0x00E676, lose=0xFF1744},
-    ["Blue / Orange"]   = {win=0x3B82F6, lose=0xF97316},
-    ["Purple / Yellow"] = {win=0xA855F7, lose=0xEAB308},
-    ["Cyan / Pink"]     = {win=0x06B6D4, lose=0xEC4899},
-    ["White / Black"]   = {win=0xFFFFFF, lose=0x111111},
-    ["Gold / Dark"]     = {win=0xF59E0B, lose=0x374151},
-}
-
-local function sendWebhook(isWin, RewardsText, GameTime)
-    local url = _G.SST.Place_WebHook_Link
-    if not url or url == "" then return end
-
-    -- ── Win/Lose filter ───────────────────────────────────
-    local whType = _G.SST.Select_WebHook_Type or "Both"
-    if whType == "Win"  and not isWin then return end
-    if whType == "Lose" and isWin     then return end
-
-    local pd = ReplicatedStorage:FindFirstChild("Player_Data") and ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
-    if not pd or not pd:FindFirstChild("Data") then return end
-    local dataFolder = pd.Data
-    local function safeVal(obj) return obj and tostring(obj.Value or obj.Text or "0") or "0" end
-
-    local gemVal   = safeVal(dataFolder:FindFirstChild("Gem"))
-    local goldVal  = safeVal(dataFolder:FindFirstChild("Gold"))
-    local RCellVal = safeVal(dataFolder:FindFirstChild("RCCells"))
-    local SolTokenVal = safeVal(dataFolder:FindFirstChild("Sol Token"))
-    local EsperTokenVal = safeVal(dataFolder:FindFirstChild("Esper Token"))
-    local CurseTokenVal = safeVal(dataFolder:FindFirstChild("CurseToken"))
-    local BossCoinsVal = safeVal(dataFolder:FindFirstChild("Boss Coin"))
-
-    local levelVal = safeVal(dataFolder:FindFirstChild("Level"))
-    local expVal   = safeVal(dataFolder:FindFirstChild("Exp"))
-
-    -- ── สี จาก Color Preset ───────────────────────────────
-    local preset   = WH_COLOR_PRESETS[_G.SST.WH_Color_Preset or "Green / Red"]
-                     or WH_COLOR_PRESETS["Green / Red"]
-    local colorInt = isWin and preset.win or preset.lose
-
-    -- ── Description จาก WH_Embed_Info ────────────────────
-    local ei = type(_G.SST.WH_Embed_Info)=="table" and _G.SST.WH_Embed_Info
-               or {ResultEmoji=true, PlayerName=true}
-    local descParts = {}
-    if ei["Result Emoji"] or ei["ResultEmoji"] then
-        if isWin then table.insert(descParts, "# 🏆  VICTORY\n> The battle is won. Rangers stand victorious!")
-        else          table.insert(descParts, "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger.") end
-    end
-    if ei["Player Name"] or ei["PlayerName"] then
-        table.insert(descParts, "> 👤  **"..plr.Name.."**") end
-    if ei["Match Time"] or ei["MatchTime"] then
-        table.insert(descParts, "> ⏱️  Match Time : **"..tostring(GameTime).."**") end
-    if ei["Rewards Summary"] or ei["RewardsSummary"] then
-        local short = RewardsText ~= "" and RewardsText:gsub("\n"," | "):gsub(" | $","") or "— none —"
-        table.insert(descParts, "> 🎁  "..short) end
-    local embedDesc = #descParts > 0 and table.concat(descParts,"\n") or (isWin and "# 🏆  VICTORY" or "# 💀  DEFEAT")
-
-    -- ── Fields จาก WH_Show_Fields ────────────────────────
-    local sf = type(_G.SST.WH_Show_Fields)=="table" and _G.SST.WH_Show_Fields
-               or {Gem=true,Gold=true,Level=true,EXP=true,Time=true,Rewards=true}
-    local fields = {}
-    if sf["Gem"]  or sf["gem"]  then table.insert(fields,{["name"]="💎  Gem",  ["value"]="```fix\n"..gemVal.."\n```",  ["inline"]=true}) end
-    if sf["Gold"] or sf["gold"] then table.insert(fields,{["name"]="🪙  Gold", ["value"]="```fix\n"..goldVal.."\n```", ["inline"]=true}) end
-    if sf["RCCells"] or sf["rccells"] then table.insert(fields,{["name"]="<Cell", ["value"]="```fix\n"..RCellVal.."\n```", ["inline"]=true}) end
-    if sf["Sol Token"] or sf["soltoken"] then table.insert(fields,{["name"]="🌟  Sol Token", ["value"]="```fix\n"..SolTokenVal.."\n```", ["inline"]=true}) end
-    if sf["Esper Token"] or sf["espertoken"] then table.insert(fields,{["name"]="🔮  Esper Token", ["value"]="```fix\n"..EsperTokenVal.."\n```", ["inline"]=true}) end
-    if sf["Curse Token"] or sf["cursetoken"] then table.insert(fields,{["name"]="👹  Curse Token", ["value"]="```fix\n"..CurseTokenVal.."\n```", ["inline"]=true}) end
-    if sf["Boss Coin"] or sf["bosscoin"] then table.insert(fields,{["name"]="👑  Boss Coin", ["value"]="```fix\n"..BossCoinsVal.."\n```", ["inline"]=true}) end
-    if sf["Level"] or sf["level"] then
-        local lvLine = levelVal..(( sf["EXP"] or sf["exp"] ) and ("  (EXP: "..expVal..")") or "")
-        table.insert(fields,{["name"]="⭐  Level",["value"]="```fix\n"..lvLine.."\n```",["inline"]=false})
-    elseif sf["EXP"] or sf["exp"] then
-        table.insert(fields,{["name"]="✨  EXP",["value"]="```fix\n"..expVal.."\n```",["inline"]=false})
-    end
-    if sf["Time"] or sf["time"] then
-        table.insert(fields,{["name"]="⏱️  Match Time",["value"]="```\n"..tostring(GameTime).."\n```",["inline"]=false}) end
-    if sf["Rewards"] or sf["rewards"] then
-        table.insert(fields,{["name"]="🎁  Rewards",["value"]="```\n"..(RewardsText~="" and RewardsText or "— none —").."\n```",["inline"]=false}) end
-
-    -- ── Footer จาก WH_Footer_Info ─────────────────────────
-    local fi = type(_G.SST.WH_Footer_Info)=="table" and _G.SST.WH_Footer_Info
-               or {HubName=true}
-    local footerParts = {}
-    if fi["Hub Name"]   or fi["HubName"]   then table.insert(footerParts, "Anitary Hub") end
-    if fi["Player Name"] or fi["PlayerName"] then table.insert(footerParts, plr.Name) end
-    if fi["Result"]     or fi["result"]    then table.insert(footerParts, isWin and "Victory" or "Defeat") end
-    local footerText = #footerParts > 0 and table.concat(footerParts," | ") or "Anitary Hub"
-
-    -- ── Ping ──────────────────────────────────────────────
-    local pingType = _G.SST.WH_Ping_Type or "None"
-    local contentStr = ""
-    if     pingType == "@everyone" then contentStr = "@everyone"
-    elseif pingType == "@here"     then contentStr = "@here"
-    elseif pingType == "Role ID"   then
-        local rid = _G.SST.WH_Role_ID or ""
-        if rid ~= "" then contentStr = "<@&"..rid..">" end
-    end
-
-    local avatarUrl = getAvatar(plr.UserId)
-    local payload = {
-        ["content"] = contentStr,
-        ["embeds"]  = {{
-            ["author"]      = {["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile"},
-            ["title"]       = "Anime Rangers X  ·  Match Result",
-            ["description"] = embedDesc,
-            ["thumbnail"]   = {["url"]=avatarUrl},
-            ["color"]       = colorInt,
-            ["fields"]      = fields,
-            ["timestamp"]   = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
-            ["footer"]      = {["text"]=footerText, ["icon_url"]=avatarUrl},
-        }}
-    }
-    local ok2, json = pcall(function() return HttpService:JSONEncode(payload) end)
-    if not ok2 then return end
-    local req = http_request or request or (syn and syn.request)
-    if not req then return end
-    pcall(function() req({Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json}) end)
-end
-
-
 -- shared refs
 local GetUnitPlayer = ReplicatedStorage.Player_Data[plr.Name].Collection
 local PlayerDataRef = ReplicatedStorage.Player_Data[plr.Name]
@@ -2927,7 +2791,7 @@ task.spawn(function()
                             ["embeds"] = {{
                                 ["author"]      = { ["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile" },
                                 ["title"]       = "Anime Rangers X  ·  Trait Reroll",
-                                ["description"] = "# ✨  TRAIT UNLOCKED!\n> **"..unit.Name.."** got the desired trait.",
+                                ["description"] = "# ✨  TRAIT UNLOCKED!\n> "..unit.Name.." got the desired trait.",
                                 ["thumbnail"]   = { ["url"]=avatarUrl },
                                 ["color"]       = 0xA855F7,
                                 ["fields"] = {
@@ -3097,6 +2961,233 @@ task.spawn(function()
     end
 end)
 
+-- ======================== HELPER ========================
+local function tableKeys(t)
+    local keys = {}
+    for k in pairs(t) do table.insert(keys, k) end
+    return keys
+end
+
+-- ======================== AVATAR CACHE ========================
+local _avatarCache = {}
+local function getAvatar(userId)
+    if _avatarCache[userId] then return _avatarCache[userId] end
+    local fallback = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
+    local req = http_request or request or (syn and syn.request)
+    if not req then return fallback end
+    local ok, res = pcall(function()
+        return req({ Url="https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png", Method="GET" })
+    end)
+    if not ok or not res or not res.Body then return fallback end
+    local parsed; pcall(function() parsed = HttpService:JSONDecode(res.Body) end)
+    local url = parsed and parsed.data and parsed.data[1] and parsed.data[1].imageUrl
+    local result = (url and url ~= "") and url or fallback
+    _avatarCache[userId] = result
+    return result
+end
+
+-- ======================== COLOR PRESETS ========================
+local WH_COLOR_PRESETS = {
+    ["Green / Red"]     = {win=0x00E676, lose=0xFF1744},
+    ["Blue / Orange"]   = {win=0x3B82F6, lose=0xF97316},
+    ["Purple / Yellow"] = {win=0xA855F7, lose=0xEAB308},
+    ["Cyan / Pink"]     = {win=0x06B6D4, lose=0xEC4899},
+    ["White / Black"]   = {win=0xFFFFFF, lose=0x111111},
+    ["Gold / Dark"]     = {win=0xF59E0B, lose=0x374151},
+}
+
+-- ======================== WEBHOOK SEND FUNCTION ========================
+local function sendWebhook(isWin, RewardsText, GameTime)
+    print("[DEBUG] sendWebhook ถูกเรียกแล้ว")
+    print("[DEBUG] isWin:", isWin, "RewardsText:", RewardsText, "GameTime:", GameTime)
+
+    local url = _G.SST.Place_WebHook_Link
+    print("[DEBUG] Webhook URL:", url)
+    if not url or url == "" then
+        warn("[DEBUG] Webhook URL ไม่ถูกตั้งค่า")
+        return
+    end
+
+    -- Win/Lose filter
+    local whType = _G.SST.Select_WebHook_Type or "Both"
+    if whType == "Win"  and not isWin then print("[DEBUG] Filter: ข้ามเพราะเป็น Lose แต่เลือกส่งเฉพาะ Win"); return end
+    if whType == "Lose" and isWin     then print("[DEBUG] Filter: ข้ามเพราะเป็น Win แต่เลือกส่งเฉพาะ Lose"); return end
+
+    -- ดึงข้อมูลผู้เล่น
+    local pd = ReplicatedStorage:FindFirstChild("Player_Data") and ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
+    if not pd or not pd:FindFirstChild("Data") then
+        warn("[DEBUG] ไม่พบ Player_Data ของผู้เล่น", plr.Name)
+        return
+    end
+    local dataFolder = pd.Data
+    local function safeVal(obj) return obj and tostring(obj.Value or obj.Text or "0") or "0" end
+
+    local gemVal        = safeVal(dataFolder:FindFirstChild("Gem"))
+    local goldVal       = safeVal(dataFolder:FindFirstChild("Gold"))
+    local RCellVal      = safeVal(dataFolder:FindFirstChild("RCCells"))
+    local SolTokenVal   = safeVal(dataFolder:FindFirstChild("Sol Token"))
+    local EsperTokenVal = safeVal(dataFolder:FindFirstChild("Esper Token"))
+    local CurseTokenVal = safeVal(dataFolder:FindFirstChild("CurseToken"))
+    local BossCoinsVal  = safeVal(dataFolder:FindFirstChild("Boss Coin"))
+    local levelVal      = safeVal(dataFolder:FindFirstChild("Level"))
+    local expVal        = safeVal(dataFolder:FindFirstChild("Exp"))
+
+    -- ดึงทรัพยากรทั้งหมดจาก Items (dynamic)
+    local itemsFolder = dataFolder:FindFirstChild("Items")
+    local resourcesValues = {}
+    if itemsFolder then
+        for _, child in ipairs(itemsFolder:GetChildren()) do
+            if child:IsA("Folder") then
+                local amountObj = child:FindFirstChild("Amount")
+                if amountObj then
+                    resourcesValues[child.Name] = tostring(amountObj.Value)
+                end
+            end
+        end
+    end
+    -- ✅ FIX: ใช้ tableKeys() แทน table.keys() ที่ไม่มีใน Lua
+    print("[DEBUG] พบทรัพยากรใน Items:", table.concat(tableKeys(resourcesValues), ", "))
+
+    -- ถ้ายังไม่มีข้อมูลทรัพยากรที่เลือก ให้เลือกทั้งหมดอัตโนมัติ
+    if not _G.SST.WH_Resources_Fields or next(_G.SST.WH_Resources_Fields) == nil then
+        _G.SST.WH_Resources_Fields = {}
+        for name, _ in pairs(resourcesValues) do
+            _G.SST.WH_Resources_Fields[name] = true
+        end
+        print("[DEBUG] เลือกทรัพยากรทั้งหมดโดยอัตโนมัติ (เพราะยังไม่มีค่า)")
+    else
+        print("[DEBUG] ทรัพยากรที่เลือกใน GUI:", table.concat(tableKeys(_G.SST.WH_Resources_Fields), ", "))
+    end
+
+    -- สีจาก preset
+    local preset   = WH_COLOR_PRESETS[_G.SST.WH_Color_Preset or "Green / Red"] or WH_COLOR_PRESETS["Green / Red"]
+    local colorInt = isWin and preset.win or preset.lose
+
+    -- Description
+    local ei = type(_G.SST.WH_Embed_Info)=="table" and _G.SST.WH_Embed_Info or {ResultEmoji=true, PlayerName=true}
+    local descParts = {}
+    if ei["Result Emoji"] or ei["ResultEmoji"] then
+        if isWin then table.insert(descParts, "# 🏆  VICTORY\n> The battle is won. Rangers stand victorious!")
+        else          table.insert(descParts, "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger.") end
+    end
+    if ei["Player Name"] or ei["PlayerName"] then
+        table.insert(descParts, "> 👤  **"..plr.Name.."**") end
+    if ei["Match Time"] or ei["MatchTime"] then
+        table.insert(descParts, "> ⏱️  Match Time : **"..tostring(GameTime).."**") end
+    if ei["Rewards Summary"] or ei["RewardsSummary"] then
+        local short = RewardsText ~= "" and RewardsText:gsub("\n"," | "):gsub(" | $","") or "— none —"
+        table.insert(descParts, "> 🎁  "..short) end
+    local embedDesc = #descParts > 0 and table.concat(descParts,"\n") or (isWin and "# 🏆  VICTORY" or "# 💀  DEFEAT")
+
+    -- ตัวเลือกที่ผู้ใช้ตั้งไว้
+    local currencyFields = type(_G.SST.WH_Currency_Fields)=="table" and _G.SST.WH_Currency_Fields
+                           or {Gold=true, Gem=true, RCCells=true, ["Sol Token"]=true, ["Esper Token"]=true, ["Curse Token"]=true, ["Boss Coin"]=true}
+    local resourcesFields = type(_G.SST.WH_Resources_Fields)=="table" and _G.SST.WH_Resources_Fields or {}
+    local showTime = (_G.SST.WH_Show_Time == nil) and true or _G.SST.WH_Show_Time
+    local showRewards = (_G.SST.WH_Show_Rewards == nil) and true or _G.SST.WH_Show_Rewards
+
+    local fields = {}
+
+    -- 1. INFO
+    local infoLines = {"👤 **" .. plr.Name .. "**", "⭐ Level: **" .. levelVal .. "**  (EXP: " .. expVal .. ")"}
+    table.insert(fields, {["name"]="📋 Info", ["value"]="```\n"..table.concat(infoLines,"\n").."\n```", ["inline"]=false})
+
+    -- 2. CURRENCY
+    local currencyOrder = {"Gold","Gem","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin"}
+    local currencyLines = {}
+    for _, item in ipairs(currencyOrder) do
+        if currencyFields[item] then
+            local value = item=="Gold" and goldVal or item=="Gem" and gemVal or item=="RCCells" and RCellVal or item=="Sol Token" and SolTokenVal or item=="Esper Token" and EsperTokenVal or item=="Curse Token" and CurseTokenVal or item=="Boss Coin" and BossCoinsVal or "0"
+            local icon = item=="Gold" and "🪙" or item=="Gem" and "💎" or item=="RCCells" and "🔋" or item=="Sol Token" and "🌟" or item=="Esper Token" and "🔮" or item=="Curse Token" and "👹" or item=="Boss Coin" and "👑" or "•"
+            table.insert(currencyLines, icon .. " " .. item .. ": **" .. value .. "**")
+        end
+    end
+    if #currencyLines > 0 then
+        table.insert(fields, {["name"]="💰 Currency", ["value"]="```\n"..table.concat(currencyLines,"\n").."\n```", ["inline"]=false})
+    end
+
+    -- 3. RESOURCES
+    local resourceLines = {}
+    for resName, resAmount in pairs(resourcesValues) do
+        if resourcesFields[resName] then
+            local icon = "📦"
+            if resName:find("Trait") then icon = "🔄"
+            elseif resName:find("Ticket") then icon = "🎫"
+            elseif resName:find("Box") then icon = "📦"
+            elseif resName:find("Token") then icon = "🎟️"
+            end
+            table.insert(resourceLines, icon .. " " .. resName .. ": **" .. resAmount .. "**")
+        end
+    end
+    if #resourceLines > 0 then
+        table.insert(fields, {["name"]="📦 Resources", ["value"]="```\n"..table.concat(resourceLines,"\n").."\n```", ["inline"]=false})
+    end
+
+    -- 4. TIME
+    if showTime then
+        table.insert(fields, {["name"]="⏱️ Match Time", ["value"]="```\n"..tostring(GameTime).."\n```", ["inline"]=false})
+    end
+
+    -- 5. REWARDS
+    if showRewards then
+        local rewardsDisplay = (RewardsText ~= "" and RewardsText) or "— none —"
+        table.insert(fields, {["name"]="🎁 Rewards", ["value"]="```\n"..rewardsDisplay.."\n```", ["inline"]=false})
+    end
+
+    -- Footer
+    local fi = type(_G.SST.WH_Footer_Info)=="table" and _G.SST.WH_Footer_Info or {HubName=true}
+    local footerParts = {}
+    if fi["Hub Name"] or fi["HubName"] then table.insert(footerParts, "Anitary Hub") end
+    if fi["Player Name"] or fi["PlayerName"] then table.insert(footerParts, plr.Name) end
+    if fi["Result"] or fi["result"] then table.insert(footerParts, isWin and "Victory" or "Defeat") end
+    local footerText = #footerParts > 0 and table.concat(footerParts," | ") or "Anitary Hub"
+
+    -- Ping
+    local pingType = _G.SST.WH_Ping_Type or "None"
+    local contentStr = ""
+    if pingType == "@everyone" then contentStr = "@everyone"
+    elseif pingType == "@here" then contentStr = "@here"
+    elseif pingType == "Role ID" then
+        local rid = _G.SST.WH_Role_ID or ""
+        if rid ~= "" then contentStr = "<@&"..rid..">" end
+    end
+
+    -- ส่ง webhook
+    local avatarUrl = getAvatar(plr.UserId)
+    local payload = {
+        ["content"] = contentStr,
+        ["embeds"]  = {{
+            ["author"]      = {["name"]="👤  "..plr.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..plr.UserId.."/profile"},
+            ["title"]       = "Anime Rangers X  ·  Match Result",
+            ["description"] = embedDesc,
+            ["thumbnail"]   = {["url"]=avatarUrl},
+            ["color"]       = colorInt,
+            ["fields"]      = fields,
+            ["timestamp"]   = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
+            ["footer"]      = {["text"]=footerText, ["icon_url"]=avatarUrl},
+        }}
+    }
+    local ok2, json = pcall(function() return HttpService:JSONEncode(payload) end)
+    if not ok2 then
+        warn("[DEBUG] JSONEncode ล้มเหลว")
+        return
+    end
+    local req = http_request or request or (syn and syn.request)
+    if not req then
+        warn("[DEBUG] ไม่พบฟังก์ชัน http_request/request/syn.request")
+        return
+    end
+    local success, res = pcall(function()
+        return req({Url=url, Method="POST", Headers={["Content-Type"]="application/json"}, Body=json})
+    end)
+    if not success then
+        warn("[DEBUG] ส่ง request ล้มเหลว:", res)
+    else
+        print("[DEBUG] ส่ง Webhook สำเร็จ")
+    end
+end
+
+-- ======================== GUI ========================
 WebHook_Misc:AddSeperatorL("WebHook Settings")
 WebHook_Misc:AddDropdownL("Sent On",{"Win","Lose","Both"},_G.SST.Select_WebHook_Type or "Both",function(v)
     _G.SST.Select_WebHook_Type = v; SS()
@@ -3112,16 +3203,77 @@ if type(_G.SST.WH_Embed_Info)=="table" then
     task.defer(function() pcall(function() embedInfoDD:Set(_G.SST.WH_Embed_Info) end) end)
 end
 
-WebHook_Misc:AddSeperatorL("Fields")
-local showFieldsDD = WebHook_Misc:AddMultiDropdownL(
-    "Show Fields",
-    {"Gem","Gold","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin","Level","EXP","Time","Rewards"},
-    function(v) _G.SST.WH_Show_Fields = v; SS() end
+-- Currency Fields
+WebHook_Misc:AddSeperatorL("Currency Fields")
+local currencyFieldsDD = WebHook_Misc:AddMultiDropdownL(
+    "Show Currency",
+    {"Gold","Gem","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin"},
+    function(v) _G.SST.WH_Currency_Fields = v; SS() end
 )
-if type(_G.SST.WH_Show_Fields)=="table" then
-    task.defer(function() pcall(function() showFieldsDD:Set(_G.SST.WH_Show_Fields) end) end)
+if type(_G.SST.WH_Currency_Fields)=="table" then
+    task.defer(function() pcall(function() currencyFieldsDD:Set(_G.SST.WH_Currency_Fields) end) end)
+else
+    _G.SST.WH_Currency_Fields = {Gold=true, Gem=true, RCCells=true, ["Sol Token"]=true, ["Esper Token"]=true, ["Curse Token"]=true, ["Boss Coin"]=true}
+    task.defer(function() pcall(function() currencyFieldsDD:Set(_G.SST.WH_Currency_Fields) end) end)
 end
 
+-- Resources Fields (รอให้ Items พร้อมแล้วดึงชื่อ)
+WebHook_Misc:AddSeperatorL("Resources Fields")
+coroutine.wrap(function()
+    print("[DEBUG] Loading Resources dropdown...")
+    local playerData = ReplicatedStorage:FindFirstChild("Player_Data")
+    if not playerData then playerData = ReplicatedStorage:WaitForChild("Player_Data", 5) end
+    if not playerData then warn("Player_Data not found!"); return end
+    local playerFolder = playerData:FindFirstChild(plr.Name)
+    if not playerFolder then playerFolder = playerData:WaitForChild(plr.Name, 5) end
+    if not playerFolder then warn("Player folder not found for", plr.Name); return end
+    local items = playerFolder:FindFirstChild("Items")
+    if not items then items = playerFolder:WaitForChild("Items", 5) end
+    if not items then warn("Items not found!"); return end
+
+    local resourceNames = {}
+    for _, child in ipairs(items:GetChildren()) do
+        if child:IsA("Folder") and child:FindFirstChild("Amount") then
+            table.insert(resourceNames, child.Name)
+        end
+    end
+    if #resourceNames == 0 then
+        resourceNames = {"Trait Reroll"}
+        print("[DEBUG] No resources found, using fallback.")
+    else
+        print("[DEBUG] Found resources:", table.concat(resourceNames, ", "))
+    end
+
+    local resourcesDropdown = WebHook_Misc:AddMultiDropdownL(
+        "Show Resources",
+        resourceNames,
+        function(v) _G.SST.WH_Resources_Fields = v; SS() end
+    )
+    if type(_G.SST.WH_Resources_Fields)=="table" then
+        task.defer(function() pcall(function() resourcesDropdown:Set(_G.SST.WH_Resources_Fields) end) end)
+    else
+        local default = {}
+        for _, name in ipairs(resourceNames) do default[name] = true end
+        _G.SST.WH_Resources_Fields = default
+        task.defer(function() pcall(function() resourcesDropdown:Set(default) end) end)
+    end
+end)()
+
+-- Additional Toggles
+WebHook_Misc:AddSeperatorL("Additional Fields")
+local timeToggle = WebHook_Misc:AddToggleL("Show Match Time", function(v)
+    _G.SST.WH_Show_Time = v; SS()
+end)
+if _G.SST.WH_Show_Time == nil then _G.SST.WH_Show_Time = true end
+task.defer(function() pcall(function() timeToggle:Set(_G.SST.WH_Show_Time) end) end)
+
+local rewardsToggle = WebHook_Misc:AddToggleL("Show Rewards", function(v)
+    _G.SST.WH_Show_Rewards = v; SS()
+end)
+if _G.SST.WH_Show_Rewards == nil then _G.SST.WH_Show_Rewards = true end
+task.defer(function() pcall(function() rewardsToggle:Set(_G.SST.WH_Show_Rewards) end) end)
+
+-- Footer
 WebHook_Misc:AddSeperatorL("Footer")
 local footerDD = WebHook_Misc:AddMultiDropdownL(
     "Footer Info",
@@ -3132,6 +3284,7 @@ if type(_G.SST.WH_Footer_Info)=="table" then
     task.defer(function() pcall(function() footerDD:Set(_G.SST.WH_Footer_Info) end) end)
 end
 
+-- Color Preset
 WebHook_Misc:AddSeperatorL("Embed Color")
 WebHook_Misc:AddDropdownL(
     "Color Preset (Win / Lose)",
@@ -3140,6 +3293,7 @@ WebHook_Misc:AddDropdownL(
     function(v) _G.SST.WH_Color_Preset = v; SS() end
 )
 
+-- Ping
 WebHook_Misc:AddSeperatorL("Ping")
 WebHook_Misc:AddDropdownL(
     "Ping Type",
@@ -3151,13 +3305,22 @@ WebHook_Misc:AddTextboxL("Role ID", _G.SST.WH_Role_ID or "", "Enter only when se
     _G.SST.WH_Role_ID = v; SS()
 end)
 
+-- Test Button
 WebHook_Misc:AddSeperatorL("Test")
 WebHook_Misc:AddButtonL("📤 Test Send Webhook", function()
+    print("[DEBUG] กดปุ่ม Test Webhook")
     if not _G.SST.Place_WebHook_Link or _G.SST.Place_WebHook_Link == "" then
-        AddNotification("[X] ใส่ WebHook Link ก่อน!"); return
+        AddNotification("[X] ใส่ WebHook Link ก่อน!")
+        warn("[DEBUG] ไม่มี Webhook URL ใน _G.SST.Place_WebHook_Link")
+        return
     end
-    sendWebhook(true, "TestItem: 5\nTestGem: 10\n", "02:30")
-    AddNotification("[OK] Test Webhook sent!")
+    local success, err = pcall(sendWebhook, true, "TestItem: 5\nTestGem: 10\n", "02:30")
+    if not success then
+        warn("[ERROR] sendWebhook ล้มเหลว:", err)
+        AddNotification("[X] ส่ง Webhook ล้มเหลว ดู Console")
+    else
+        AddNotification("[OK] Test Webhook sent!")
+    end
 end)
 
 WebHook_Misc:AddSeperatorR("Code")
