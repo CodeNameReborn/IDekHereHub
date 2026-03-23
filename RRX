@@ -1079,7 +1079,7 @@ local function AddTab(tabname)
 
         local sb=Instance.new("TextBox",wrap); sb.BackgroundColor3=Color3.fromRGB(35,35,35); sb.BorderSizePixel=0
         sb.Position=UDim2.new(0,0,0,SB_Y); sb.Size=UDim2.new(1,0,0,SB_H)
-        sb.Font=Enum.Font.Gotham; sb.PlaceholderText=">> ค้นหา..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
+        sb.Font=Enum.Font.Gotham; sb.PlaceholderText=">> Search ..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
         sb.Text=""; sb.TextColor3=Color3.fromRGB(200,200,200); sb.TextSize=11; sb.ClearTextOnFocus=false
         sb.Visible=false; sb.ZIndex=3
         Instance.new("UICorner",sb).CornerRadius=UDim.new(0,5)
@@ -1183,7 +1183,7 @@ local function AddTab(tabname)
 
         local sb=Instance.new("TextBox",wrap); sb.BackgroundColor3=Color3.fromRGB(35,35,35); sb.BorderSizePixel=0
         sb.Position=UDim2.new(0,0,0,SB_Y); sb.Size=UDim2.new(1,0,0,SB_H)
-        sb.Font=Enum.Font.Gotham; sb.PlaceholderText=">> ค้นหา..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
+        sb.Font=Enum.Font.Gotham; sb.PlaceholderText=">> Search ..."; sb.PlaceholderColor3=Color3.fromRGB(90,90,90)
         sb.Text=""; sb.TextColor3=Color3.fromRGB(200,200,200); sb.TextSize=11; sb.ClearTextOnFocus=false
         sb.Visible=false; sb.ZIndex=3
         Instance.new("UICorner",sb).CornerRadius=UDim.new(0,5)
@@ -1197,7 +1197,7 @@ local function AddTab(tabname)
         local function calcOpenH(n) return ITEMS_Y+n*IH end
         local function updSel()
             local k={}; for kk in pairs(selected) do table.insert(k,kk) end
-            if #k==0 then sel.Text="เลือกหลายรายการ..."; sel.TextColor3=Color3.fromRGB(90,90,90)
+            if #k==0 then sel.Text="Select multiple items..."; sel.TextColor3=Color3.fromRGB(90,90,90)
             else sel.Text=table.concat(k,", "); sel.TextColor3=Theme.Accent end
             pcall(cb,selected)
         end
@@ -2082,6 +2082,12 @@ local function sendWebhook(isWin, RewardsText, GameTime)
 
     local gemVal   = safeVal(dataFolder:FindFirstChild("Gem"))
     local goldVal  = safeVal(dataFolder:FindFirstChild("Gold"))
+    local RCellVal = safeVal(dataFolder:FindFirstChild("RCCells"))
+    local SolTokenVal = safeVal(dataFolder:FindFirstChild("Sol Token"))
+    local EsperTokenVal = safeVal(dataFolder:FindFirstChild("Esper Token"))
+    local CurseTokenVal = safeVal(dataFolder:FindFirstChild("CurseToken"))
+    local BossCoinsVal = safeVal(dataFolder:FindFirstChild("Boss Coin"))
+
     local levelVal = safeVal(dataFolder:FindFirstChild("Level"))
     local expVal   = safeVal(dataFolder:FindFirstChild("Exp"))
 
@@ -2113,6 +2119,11 @@ local function sendWebhook(isWin, RewardsText, GameTime)
     local fields = {}
     if sf["Gem"]  or sf["gem"]  then table.insert(fields,{["name"]="💎  Gem",  ["value"]="```fix\n"..gemVal.."\n```",  ["inline"]=true}) end
     if sf["Gold"] or sf["gold"] then table.insert(fields,{["name"]="🪙  Gold", ["value"]="```fix\n"..goldVal.."\n```", ["inline"]=true}) end
+    if sf["RCCells"] or sf["rccells"] then table.insert(fields,{["name"]="<Cell", ["value"]="```fix\n"..RCellVal.."\n```", ["inline"]=true}) end
+    if sf["Sol Token"] or sf["soltoken"] then table.insert(fields,{["name"]="🌟  Sol Token", ["value"]="```fix\n"..SolTokenVal.."\n```", ["inline"]=true}) end
+    if sf["Esper Token"] or sf["espertoken"] then table.insert(fields,{["name"]="🔮  Esper Token", ["value"]="```fix\n"..EsperTokenVal.."\n```", ["inline"]=true}) end
+    if sf["Curse Token"] or sf["cursetoken"] then table.insert(fields,{["name"]="👹  Curse Token", ["value"]="```fix\n"..CurseTokenVal.."\n```", ["inline"]=true}) end
+    if sf["Boss Coin"] or sf["bosscoin"] then table.insert(fields,{["name"]="👑  Boss Coin", ["value"]="```fix\n"..BossCoinsVal.."\n```", ["inline"]=true}) end
     if sf["Level"] or sf["level"] then
         local lvLine = levelVal..(( sf["EXP"] or sf["exp"] ) and ("  (EXP: "..expVal..")") or "")
         table.insert(fields,{["name"]="⭐  Level",["value"]="```fix\n"..lvLine.."\n```",["inline"]=false})
@@ -2271,32 +2282,38 @@ Main_Event:AddToggleR("Auto Ghoul Event",  _G.SST.Auto_Ghoul_Event,  function(v)
 Main_Event:AddToggleR("Auto Boss Attack",  _G.SST.Auto_Boss_Attack,  function(v) _G.SST.Auto_Boss_Attack=v;  SS() end)
 
 task.spawn(function()
-    local ev = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server")
-        :WaitForChild("PlayRoom"):WaitForChild("Event")
-    local busyG = false
-    local busyB = false
+    local ev = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
+    local busy = false
     while task.wait(1) do
         pcall(function()
-            if not busyG and _G.SST.Auto_Ghoul_Event
-            and workspace:FindFirstChild("Lobby")
-            and not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                busyG = true
-                ev:FireServer("Fate Mode")
-                task.wait(2); busyG = false
-                if not plr.PlayerGui:FindFirstChild("SystemMessage") then
+            if busy or not _G.SST.Auto_Ghoul_Event then return end
+            if not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage") then return end
+            busy = true
+            ev:FireServer("Fate Mode")
+            task.wait(0.5)
+            if not plr.PlayerGui:FindFirstChild("SystemMessage") then
                 ev:FireServer("Start")
             end
-            end
-            if not busyB and _G.SST.Auto_Boss_Attack
-            and workspace:FindFirstChild("Lobby")
-            and not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                busyB = true
-                ev:FireServer("Boss-Attack-2.5")
-                task.wait(2); busyB = false
-            end
+            task.wait(2)
+            busy = false
         end)
     end
 end)
+task.spawn(function()
+    local ev = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
+    local busy = false
+    while task.wait(1) do
+        pcall(function()
+            if busy or not _G.SST.Auto_Boss_Attack then return end
+            if not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage") then return end
+            busy = true
+            ev:FireServer("Boss-Attack-2.5")
+            task.wait(2)
+            busy = false
+        end)
+    end
+end)
+
 
 Main_Event:AddSeperatorR("CLAIM")
 
@@ -2308,18 +2325,18 @@ local function claimAllLevelMilestones()
         :WaitForChild("Gameplay"):WaitForChild("LevelMilestone")
     local pd = ReplicatedStorage.Player_Data:FindFirstChild(plr.Name)
     if not pd or not pd:FindFirstChild("Data") then
-        AddNotification("[X] ไม่พบข้อมูล Player!")
+        AddNotification("[X] Player data not found!")
         return
     end
     local currentLevel = tonumber(pd.Data.Level.Value) or 0
     if currentLevel <= 0 then
-        AddNotification("[X] ระดับผู้เล่นไม่ถูกต้อง!")
+        AddNotification("[X] Invalid player level!")
         return
     end
     -- เคลมทุก 5 เลเวล ตั้งแต่ 5 → currentLevel
     local maxMilestone = math.floor(currentLevel / 5) * 5
     if maxMilestone <= 0 then
-        AddNotification("[!] ยังไม่ถึง Level 5")
+        AddNotification("[!] Player has not reached Level 5 yet")
         return
     end
     local claimed = 0
@@ -2377,8 +2394,10 @@ Main_Event:AddToggleR("Claim Battle Pass", _G.SST.Claim_Battle_Pass, function(v)
 spawn(function()
     while task.wait(5) do
         pcall(function()
-            ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Events")
-                :WaitForChild("ClaimBp"):FireServer("Claim All")
+            if _G.SST.Claim_Battle_Pass then
+                ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Events")
+                    :WaitForChild("ClaimBp"):FireServer("Claim All")
+            end
         end)
     end
 end)
@@ -2401,7 +2420,6 @@ end)
 
 
 -- ══════════════════════════════════════════════════════
-
 AutoPlay_Function:AddSeperatorL("Auto Play")
 AutoPlay_Function:AddToggleL("Auto Play",_G.SST.Auto_Play,function(v) _G.SST.Auto_Play=v; SS() end)
 task.spawn(function()
@@ -2415,7 +2433,7 @@ task.spawn(function()
         end)
     end
 end)
-
+AutoPlay_Function:AddSeperatorL("Auto Evo Unit")
 AutoPlay_Function:AddSeperatorR("Game Server")
 local voteDD=AutoPlay_Function:AddMultiDropdownR("Select Vote",{"VoteRetry","VoteNext","VoteLeave"},function(v) _G.SST.Select_Vote=v; SS() end)
 if type(_G.SST.Select_Vote)=="table" then task.defer(function() pcall(function() voteDD:Set(_G.SST.Select_Vote) end) end) end
@@ -2423,6 +2441,24 @@ AutoPlay_Function:AddToggleR("Auto Vote",_G.SST.Auto_Vote,function(v) _G.SST.Aut
 AutoPlay_Function:AddSeperatorR("Vote Start")
 AutoPlay_Function:AddSliderR("Delay Vote",0,10,_G.SST.Select_Deley_Vote or 1,function(v) _G.SST.Select_Deley_Vote=v; SS() end)
 AutoPlay_Function:AddToggleR("Auto Vote Start",_G.SST.Auto_Vote_Start,function(v) _G.SST.Auto_Vote_Start=v; SS() end)
+
+AutoPlay_Function:AddSeperatorR("SetSpeed")
+AutoPlay_Function:AddToggleR("Auto Set Max Speed",_G.SST.Setting_AutoMaxSpeed,function(v)
+    _G.SST.Setting_AutoMaxSpeed = v; SS()
+    if _G.SST.Setting_AutoMaxSpeed then
+        local args = {
+    "Auto Set Max Speed",
+    true
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("Settings"):WaitForChild("Setting_Event"):FireServer(unpack(args))    else
+        local args = {
+    "Auto Set Max Speed",
+    false
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("Settings"):WaitForChild("Setting_Event"):FireServer(unpack(args))
+    end
+end)
+ 
 
 AutoPlay_Function:AddSeperatorR("Unit Upgrade")
 local unitsFolder=plr:FindFirstChild("UnitsFolder")
@@ -2573,19 +2609,7 @@ end
     end
 end)
 
-AutoPlay_Function:AddSeperatorL("Set Speed Game")
-AutoPlay_Function:AddDropdownL("Select Speed",{"x1","x2","x3"},_G.SST.Select_Speed,function(v) _G.SST.Select_Speed=v; SS() end)
 
-task.spawn(function()
-    local speedRemote = ReplicatedStorage:WaitForChild("Remote",9e9):WaitForChild("Server",9e9):WaitForChild("Gameplay",9e9):WaitForChild("SetGameSpeed",9e9)
-    while task.wait(0.5) do
-        pcall(function()
-            if not _G.SST.Select_Speed then return end
-            local speedVal = tonumber(tostring(_G.SST.Select_Speed or "x1"):gsub("x","")) or 1
-            speedRemote:FireServer(speedVal)
-        end)
-    end
-end)
 
 -- ══════════════════════════════════════════════════════
 --  Shop_UserInfo TABS
@@ -2671,7 +2695,18 @@ end)
 
 -- ── Ghoul Shop ────────────────────────────────────────
 Shop_UserInfo:AddSeperatorL("Ghoul Hunt Shop")
-local ghoulItems = {"Gourmet Meal","Premium Meal","Deluxe Meal","RC Cell","Kakuhou","Ghoul Flesh"}
+
+local ghoulItems={}
+pcall(function()
+    local GhoulHuntFolder=ReplicatedStorage.Player_Data[plr.Name]:FindFirstChild("GhoulHunt")
+    if GhoulHuntFolder then
+        for _,item in ipairs(GhoulHuntFolder:GetChildren()) do
+            table.insert(ghoulItems,item.Name)
+        end
+    end
+end)
+if #ghoulItems==0 then ghoulItems={"Gourmet Meal","Premium Meal","Deluxe Meal","RC Cell","Kakuhou","Ghoul Flesh"} end
+
 Shop_UserInfo:AddDropdownL("Ghoul Item", ghoulItems, _G.SST.Select_GhoulItem or "Gourmet Meal", function(v)
     _G.SST.Select_GhoulItem = v; SS()
 end)
@@ -2694,8 +2729,18 @@ end)
 
 -- ── Raid Shop ─────────────────────────────────────────
 Shop_UserInfo:AddSeperatorL("Raid Shop")
-local raidTypes = {"JJK","AOT","BleachSR","NarutoSR"}
-local raidItems = {"Dr. Megga Punk","Perfect Stats Key","Trial Key","Raid Token"}
+local raidItems={}
+pcall(function()
+    local RaidFolder=ReplicatedStorage.Player_Data[plr.Name]:FindFirstChild("JJK_Raid_Shop")
+    if RaidFolder then
+        for _,item in ipairs(RaidFolder:GetChildren()) do
+            table.insert(raidItems,item.Name)
+        end
+    end
+end)
+if #raidItems==0 then raidItems={"Dr. Megga Punk","Perfect Stats Key","Trial Key","Raid Token"} end
+
+local raidTypes = {"JJK","Esper"}
 Shop_UserInfo:AddDropdownL("Raid Type", raidTypes, _G.SST.Select_RaidType or "JJK", function(v)
     _G.SST.Select_RaidType = v; SS()
 end)
@@ -2725,12 +2770,23 @@ end)
 
 -- ── Calamity Shop ─────────────────────────────────────
 Shop_UserInfo:AddSeperatorL("Calamity Shop")
-local calamityTypes = {"JJK","AOT","BleachSR","NarutoSR"}
-local calamityItems = {"Perfect Stats Key","Unique Shard","Mythic Shard","Calamity Token"}
-Shop_UserInfo:AddDropdownL("Calamity Type", calamityTypes, _G.SST.Select_CalamityType or "JJK", function(v)
+
+local CalamityItems={}
+pcall(function()
+    local CalamityFolder=ReplicatedStorage.Player_Data[plr.Name]:FindFirstChild("Calamity_Shop")
+    if CalamityFolder then
+        for _,item in ipairs(CalamityFolder:GetChildren()) do
+            table.insert(CalamityItems,item.Name)
+        end
+    end
+end)
+if #CalamityItems==0 then CalamityItems={"Perfect Stats Key"} end
+
+local calamityTypes = {"JJK","FireForce"}
+Shop_UserInfo:AddDropdownL("Calamity Type", calamityTypes, _G.SST.Select_CalamityType or "FireForce", function(v)
     _G.SST.Select_CalamityType = v; SS()
 end)
-Shop_UserInfo:AddDropdownL("Calamity Item", calamityItems, _G.SST.Select_CalamityItem or "Perfect Stats Key", function(v)
+Shop_UserInfo:AddDropdownL("Calamity Item", CalamityItems, _G.SST.Select_CalamityItem or "Perfect Stats Key", function(v)
     _G.SST.Select_CalamityItem = v; SS()
 end)
 Shop_UserInfo:AddSliderL("Calamity Amount", 1, 99, _G.SST.BuyCalamity_Amount or 1, function(v)
@@ -2756,8 +2812,9 @@ end)
 
 Shop_UserInfo:AddSeperatorR("Info")
 Shop_UserInfo:AddLabelR("Name  : "..plr.Name)
-local LV=Shop_UserInfo:AddLabelR(""); local GemAmt=Shop_UserInfo:AddLabelR(""); local GoldAmt=Shop_UserInfo:AddLabelR("")
-
+local LV=Shop_UserInfo:AddLabelR("");
+Shop_UserInfo:AddSeperatorR("Token")
+local GemAmt=Shop_UserInfo:AddLabelR(""); local GoldAmt=Shop_UserInfo:AddLabelR("") local RCCellsAmt=Shop_UserInfo:AddLabelR("") local SolTokenAmt=Shop_UserInfo:AddLabelR("") local EsperTokenAmt=Shop_UserInfo:AddLabelR("") local CurseTokenAmt=Shop_UserInfo:AddLabelR("") local BossCoinsAmt=Shop_UserInfo:AddLabelR("")
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
@@ -2765,6 +2822,11 @@ task.spawn(function()
             LV:Set("Level : "..pd.Data.Level.Value.."  Exp : "..pd.Data.Exp.Value)
             GemAmt:Set("Gem   : "..pd.Data.Gem.Value)
             GoldAmt:Set("Gold  : "..pd.Data.Gold.Value)
+            RCCellsAmt:Set("RC Cells : "..pd.Data.RCCells.Value)
+            SolTokenAmt:Set("Sol Token : "..pd.Data:FindFirstChild("Sol Token").Value)
+            EsperTokenAmt:Set("Esper Token : "..pd.Data:FindFirstChild("Esper Token").Value)
+            CurseTokenAmt:Set("Curse Token : "..pd.Data:FindFirstChild("CurseToken").Value)
+            BossCoinsAmt:Set("Boss Coins : "..pd.Data:FindFirstChild("Boss Coins").Value)
         end)
     end
 end)
@@ -3036,11 +3098,11 @@ task.spawn(function()
 end)
 
 WebHook_Misc:AddSeperatorL("WebHook Settings")
-WebHook_Misc:AddDropdownL("ส่งเมื่อ",{"Win","Lose","Both"},_G.SST.Select_WebHook_Type or "Both",function(v)
+WebHook_Misc:AddDropdownL("Sent On",{"Win","Lose","Both"},_G.SST.Select_WebHook_Type or "Both",function(v)
     _G.SST.Select_WebHook_Type = v; SS()
 end)
 
-WebHook_Misc:AddSeperatorL("Description (ติ๊กสิ่งที่อยากให้แสดง)")
+WebHook_Misc:AddSeperatorL("Description")
 local embedInfoDD = WebHook_Misc:AddMultiDropdownL(
     "Embed Description",
     {"Result Emoji","Player Name","Match Time","Rewards Summary"},
@@ -3050,10 +3112,10 @@ if type(_G.SST.WH_Embed_Info)=="table" then
     task.defer(function() pcall(function() embedInfoDD:Set(_G.SST.WH_Embed_Info) end) end)
 end
 
-WebHook_Misc:AddSeperatorL("Fields (ข้อมูลเพิ่มเติม)")
+WebHook_Misc:AddSeperatorL("Fields")
 local showFieldsDD = WebHook_Misc:AddMultiDropdownL(
     "Show Fields",
-    {"Gem","Gold","Level","EXP","Time","Rewards"},
+    {"Gem","Gold","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin","Level","EXP","Time","Rewards"},
     function(v) _G.SST.WH_Show_Fields = v; SS() end
 )
 if type(_G.SST.WH_Show_Fields)=="table" then
@@ -3085,7 +3147,7 @@ WebHook_Misc:AddDropdownL(
     _G.SST.WH_Ping_Type or "None",
     function(v) _G.SST.WH_Ping_Type = v; SS() end
 )
-WebHook_Misc:AddTextboxL("Role ID", _G.SST.WH_Role_ID or "", "ใส่เฉพาะตอนเลือก Role ID", function(v)
+WebHook_Misc:AddTextboxL("Role ID", _G.SST.WH_Role_ID or "", "Enter only when selecting Role ID.", function(v)
     _G.SST.WH_Role_ID = v; SS()
 end)
 
@@ -3095,7 +3157,7 @@ WebHook_Misc:AddButtonL("📤 Test Send Webhook", function()
         AddNotification("[X] ใส่ WebHook Link ก่อน!"); return
     end
     sendWebhook(true, "TestItem: 5\nTestGem: 10\n", "02:30")
-    AddNotification("[OK] ส่ง Test Webhook แล้ว!")
+    AddNotification("[OK] Test Webhook sent!")
 end)
 
 WebHook_Misc:AddSeperatorR("Code")
@@ -3247,7 +3309,7 @@ task.spawn(function()
     end
 end)
 
-WebHook_Misc:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin ,function(v) _G.SST.Auto_Kick_Rejoin=v; SS() end)
+WebHook_Misc:AddToggleR("Auto Kick Rejoin",_G.SST.Auto_Kick_Rejoin or true,function(v) _G.SST.Auto_Kick_Rejoin=v; SS() end)
 
 task.spawn(function()
     pcall(function()
