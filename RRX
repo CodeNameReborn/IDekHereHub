@@ -3238,7 +3238,7 @@ end)()
 
 -- Additional Toggles
 WebHook_Misc:AddSeperatorL("Additional Fields")
-local timeToggle = WebHook_Misc:AddToggle("Show Match Time", function(v)
+local timeToggle = WebHook_Misc:AddToggleL("Show Match Time", function(v)
     _G.SST.WH_Show_Time = v; SS()
 end)
 if _G.SST.WH_Show_Time == nil then _G.SST.WH_Show_Time = true end
@@ -3248,7 +3248,7 @@ task.defer(function()
     _G.SST.WH_Show_Time = _savedShowTime
 end)
 
-local rewardsToggle = WebHook_Misc:AddToggle("Show Rewards", function(v)
+local rewardsToggle = WebHook_Misc:AddToggleL("Show Rewards", function(v)
     _G.SST.WH_Show_Rewards = v; SS()
 end)
 if _G.SST.WH_Show_Rewards == nil then _G.SST.WH_Show_Rewards = true end
