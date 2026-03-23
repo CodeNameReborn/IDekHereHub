@@ -3559,4 +3559,4 @@ task.spawn(function()
     end)
 end)
 
-AddNotification(L("Hello User"))
+AddNotification(L("Hello World"))
