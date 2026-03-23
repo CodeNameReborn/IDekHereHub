@@ -2888,17 +2888,6 @@ end)
 --  WebHook_Misc TABS
 -- ══════════════════════════════════════════════════════
 
--- ส่วนที่เพิ่ม WebHook settings
-WebHook_Misc:AddSeperatorL("WebHook")
-WebHook_Misc:AddTextboxL("WebHook Link", _G.SST.Place_WebHook_Link or "", "", function(v)
-    _G.SST.Place_WebHook_Link = v
-    SS()
-end)
-
-WebHook_Misc:AddToggleL("Send WebHook", _G.SST.Send_WebHook or false, function(v)
-    _G.SST.Send_WebHook = v
-    SS()
-end)
 -- ======================== HELPER ========================
 local function tableKeys(t)
     local keys = {}
