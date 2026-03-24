@@ -3367,7 +3367,7 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
 
     -- ── ส่ง (retry สูงสุด 3 ครั้ง) ─────────────────────────
 
-    local maxRetry = 3
+    local maxRetry = 1
 
     for attempt = 1, maxRetry do
         local success, res = pcall(function()
@@ -3821,4 +3821,4 @@ task.spawn(function()
     end)
 end)
 
-AddNotification(L("Hello Deley"))
+AddNotification(L("Hello World"))
