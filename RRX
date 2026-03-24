@@ -2094,7 +2094,7 @@ Main_Event:AddLineL()
 Main_Event:AddSeperatorL("JOIN STORY")
 local StageList={"Story","Ranger","Raid","Calamity"}
 local stageDD=Main_Event:AddDropdownL("Select Stage",StageList,_G.SST.Select_Stage,function(v) _G.SST.Select_Stage=v; SS() end)
-local WorldList={"OnePiece","Namek","Naruto","TokyoGhoul","SAO","JJK","FireForce"}
+local WorldList={"OnePiece","Namek","Naruto","TokyoGhoul","SAO","JJK"}
 local WorldDD=Main_Event:AddDropdownL("Select World",WorldList,_G.SST.Select_World,function(v) _G.SST.Select_World=v; SS() end)
 local ChapterList={"1","2","3","4","5","6","7","8","9","10"}
 local chapterDD=Main_Event:AddDropdownL("Select Chapter",ChapterList,_G.SST.Select_Chapter,function(v) _G.SST.Select_Chapter=v; SS() end)
@@ -2116,7 +2116,7 @@ task.spawn(function()
             elseif _G.SST.Select_Stage == "Raid" then
                 _G.Stage_Select = "RaidStage"
             elseif _G.SST.Select_Stage == "Calamity" then
-                _G.Stage_Select = "CalamityStage"
+                _G.Stage_Select = "Calamity_Chapter"
             end
             busy = true
             ev:FireServer("Create")
@@ -2127,7 +2127,11 @@ task.spawn(function()
             task.wait(0.5)
             ev:FireServer("Change-Difficulty", {Difficulty = _G.SST.Select_Mode})
             task.wait(0.5)
-            ev:FireServer("Change-Chapter",{Chapter = _G.SST.Select_Mode.."_".._G.Stage_Select.."".._G.SST.Select_Chapter})
+            if _G.SST.Select_Stage == "Calamity" then
+                ev:FireServer("Change-Chapter",{Chapter = _G.Stage_Select.."".._G.SST.Select_Chapter})
+            else
+                ev:FireServer("Change-Chapter",{Chapter = _G.SST.Select_Mode.."_".._G.Stage_Select.."".._G.SST.Select_Chapter})
+            end
             task.wait(0.5)
             ev:FireServer("Submit")
             task.wait(2)
@@ -2163,9 +2167,9 @@ task.spawn(function()
     end
 end)
 
-Main_Event:AddSeperatorR("SPECIAL EVENTS")
-Main_Event:AddToggleR("Auto Ghoul Event",  _G.SST.Auto_Ghoul_Event,  function(v) _G.SST.Auto_Ghoul_Event=v;  SS() end)
-Main_Event:AddToggleR("Auto Boss Attack",  _G.SST.Auto_Boss_Attack,  function(v) _G.SST.Auto_Boss_Attack=v;  SS() end)
+Main_Event:AddSeperatorL("SPECIAL EVENTS")
+Main_Event:AddToggleL("Auto Ghoul Event",  _G.SST.Auto_Ghoul_Event,  function(v) _G.SST.Auto_Ghoul_Event=v;  SS() end)
+Main_Event:AddToggleL("Auto Boss Attack",  _G.SST.Auto_Boss_Attack,  function(v) _G.SST.Auto_Boss_Attack=v;  SS() end)
 
 task.spawn(function()
     local ev = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
@@ -2200,6 +2204,7 @@ task.spawn(function()
     end
 end)
 
+Main_Event:AddSeperatorL("Auto Evo Unit")
 
 Main_Event:AddSeperatorR("CLAIM")
 
@@ -2319,7 +2324,7 @@ task.spawn(function()
         end)
     end
 end)
-AutoPlay_Function:AddSeperatorL("Auto Evo Unit")
+
 AutoPlay_Function:AddSeperatorR("Game Server")
 local voteDD=AutoPlay_Function:AddMultiDropdownR("Select Vote",{"VoteRetry","VoteNext","VoteLeave"},function(v) _G.SST.Select_Vote=v; SS() end)
 if type(_G.SST.Select_Vote)=="table" then task.defer(function() pcall(function() voteDD:Set(_G.SST.Select_Vote) end) end) end
