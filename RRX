@@ -2915,17 +2915,27 @@ end)
 -- ══════════════════════════════════════════════════════
 
 -- ======================== HELPER ========================
+-- ============================================================
+--  UTILITIES
+-- ============================================================
+
 local function tableKeys(t)
     local keys = {}
-    for k in pairs(t) do table.insert(keys, k) end
+    for k in pairs(t) do
+        table.insert(keys, k)
+    end
     return keys
 end
 
--- Ensure _G.SST exists
+-- ============================================================
+--  SERVICES & PLAYER
+-- ============================================================
+
 _G.SST = _G.SST or {}
 
--- Get local player
-local Players = game:GetService("Players")
+local Players          = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local plr = Players.LocalPlayer
 if not plr then
     warn("No local player found")
@@ -2933,66 +2943,115 @@ if not plr then
 end
 
 -- HttpService (อาจถูกปิดในบาง executor)
-local HttpService = pcall(function() return game:GetService("HttpService") end) and game:GetService("HttpService") or nil
+local HttpService = pcall(function() return game:GetService("HttpService") end)
+    and game:GetService("HttpService")
+    or nil
 
--- ======================== AVATAR CACHE ========================
+-- ============================================================
+--  CONSTANTS
+-- ============================================================
+
+local WH_COLOR_PRESETS = {
+    ["Green / Red"]     = { win = 0x00E676, lose = 0xFF1744 },
+    ["Blue / Orange"]   = { win = 0x3B82F6, lose = 0xF97316 },
+    ["Purple / Yellow"] = { win = 0xA855F7, lose = 0xEAB308 },
+    ["Cyan / Pink"]     = { win = 0x06B6D4, lose = 0xEC4899 },
+    ["White / Black"]   = { win = 0xFFFFFF, lose = 0x111111 },
+    ["Gold / Dark"]     = { win = 0xF59E0B, lose = 0x374151 },
+}
+
+-- ============================================================
+--  AVATAR CACHE
+-- ============================================================
+
 local _avatarCache = {}
+
 local function getAvatar(userId)
-    if _avatarCache[userId] then return _avatarCache[userId] end
-    local fallback = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
-    local req = http_request or request or (syn and syn.request)
-    if type(req) ~= "function" then return fallback end
+    if _avatarCache[userId] then
+        return _avatarCache[userId]
+    end
+
+    local fallback = "https://www.roblox.com/headshot-thumbnail/image?userId="
+        .. userId .. "&width=420&height=420&format=png"
+
+    local req = http_request
+        or request
+        or (syn and syn.request)
+
+    if type(req) ~= "function" then
+        return fallback
+    end
+
     local ok, res = pcall(function()
-        return req({ Url="https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..userId.."&size=420x420&format=Png", Method="GET" })
+        return req({
+            Url    = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="
+                     .. userId .. "&size=420x420&format=Png",
+            Method = "GET",
+        })
     end)
-    if not ok or not res or not res.Body then return fallback end
+
+    if not ok or not res or not res.Body then
+        return fallback
+    end
+
     local parsed
     if HttpService then
-        local decodeOk, decoded = pcall(function() return HttpService:JSONDecode(res.Body) end)
-        if decodeOk then parsed = decoded end
+        local decodeOk, decoded = pcall(function()
+            return HttpService:JSONDecode(res.Body)
+        end)
+        if decodeOk then
+            parsed = decoded
+        end
     end
-    local url = parsed and parsed.data and parsed.data[1] and parsed.data[1].imageUrl
+
+    local url    = parsed and parsed.data and parsed.data[1] and parsed.data[1].imageUrl
     local result = (url and url ~= "") and url or fallback
+
     _avatarCache[userId] = result
     return result
 end
 
--- ======================== COLOR PRESETS ========================
-local WH_COLOR_PRESETS = {
-    ["Green / Red"]     = {win=0x00E676, lose=0xFF1744},
-    ["Blue / Orange"]   = {win=0x3B82F6, lose=0xF97316},
-    ["Purple / Yellow"] = {win=0xA855F7, lose=0xEAB308},
-    ["Cyan / Pink"]     = {win=0x06B6D4, lose=0xEC4899},
-    ["White / Black"]   = {win=0xFFFFFF, lose=0x111111},
-    ["Gold / Dark"]     = {win=0xF59E0B, lose=0x374151},
-}
+-- ============================================================
+--  SEND WEBHOOK
+-- ============================================================
 
--- ======================== WEBHOOK SEND FUNCTION ========================
 local function sendWebhook(isWin, RewardsText, GameTime, player)
-    -- ตรวจสอบข้อมูลพื้นฐาน
+
+    -- ── ตรวจสอบข้อมูลพื้นฐาน ───────────────────────────────
+
     if not player then
         warn("[sendWebhook] No player provided")
         return false
     end
-    if not _G.SST or type(_G.SST.Place_WebHook_Link) ~= "string" or _G.SST.Place_WebHook_Link == "" then
+
+    if not _G.SST
+        or type(_G.SST.Place_WebHook_Link) ~= "string"
+        or _G.SST.Place_WebHook_Link == ""
+    then
         warn("[sendWebhook] Webhook URL missing")
         return false
     end
+
     if not HttpService then
         warn("[sendWebhook] HttpService not available")
         return false
     end
 
-    -- ตรวจสอบว่าผู้เล่นอยู่ในเกมและมีข้อมูล
-    local replicatedStorage = game:GetService("ReplicatedStorage")
-    local pd = replicatedStorage:FindFirstChild("Player_Data") and replicatedStorage.Player_Data:FindFirstChild(player.Name)
+    -- ── ดึง Player Data ────────────────────────────────────
+
+    local pd = ReplicatedStorage:FindFirstChild("Player_Data")
+        and ReplicatedStorage.Player_Data:FindFirstChild(player.Name)
+
     if not pd or not pd:FindFirstChild("Data") then
         warn("[sendWebhook] Player data not found")
         return false
     end
 
     local dataFolder = pd.Data
-    local function safeVal(obj) return obj and tostring(obj.Value or obj.Text or "0") or "0" end
+
+    local function safeVal(obj)
+        return obj and tostring(obj.Value or obj.Text or "0") or "0"
+    end
 
     local gemVal        = safeVal(dataFolder:FindFirstChild("Gem"))
     local goldVal       = safeVal(dataFolder:FindFirstChild("Gold"))
@@ -3004,9 +3063,11 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
     local levelVal      = safeVal(dataFolder:FindFirstChild("Level"))
     local expVal        = safeVal(dataFolder:FindFirstChild("Exp"))
 
-    -- ดึงทรัพยากรทั้งหมดจาก Items
-    local itemsFolder = pd:FindFirstChild("Items")
+    -- ── ดึงทรัพยากรจาก Items ───────────────────────────────
+
+    local itemsFolder     = pd:FindFirstChild("Items")
     local resourcesValues = {}
+
     if itemsFolder then
         for _, child in pairs(itemsFolder:GetChildren()) do
             if child:IsA("Folder") then
@@ -3018,191 +3079,279 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
         end
     end
 
-    -- ถ้ายังไม่มีข้อมูลทรัพยากรที่เลือก ให้เลือกทั้งหมดอัตโนมัติ
-    if type(_G.SST.WH_Resources_Fields) ~= "table" or next(_G.SST.WH_Resources_Fields) == nil then
+    -- ถ้ายังไม่มีรายการที่เลือก ให้เลือกทั้งหมดอัตโนมัติ
+    if type(_G.SST.WH_Resources_Fields) ~= "table"
+        or next(_G.SST.WH_Resources_Fields) == nil
+    then
         _G.SST.WH_Resources_Fields = {}
-        for name, _ in pairs(resourcesValues) do
+        for name in pairs(resourcesValues) do
             _G.SST.WH_Resources_Fields[name] = true
         end
     end
 
-    -- สีจาก preset
-    local preset   = WH_COLOR_PRESETS[_G.SST.WH_Color_Preset or "Green / Red"] or WH_COLOR_PRESETS["Green / Red"]
+    -- ── สี & Embed Description ──────────────────────────────
+
+    local preset   = WH_COLOR_PRESETS[_G.SST.WH_Color_Preset or "Green / Red"]
+        or WH_COLOR_PRESETS["Green / Red"]
     local colorInt = isWin and preset.win or preset.lose
 
-    -- Description
-    local ei = type(_G.SST.WH_Embed_Info)=="table" and _G.SST.WH_Embed_Info or {ResultEmoji=true, PlayerName=true}
+    local ei = type(_G.SST.WH_Embed_Info) == "table"
+        and _G.SST.WH_Embed_Info
+        or { ResultEmoji = true, PlayerName = true }
+
     local descParts = {}
+
     if ei["Result Emoji"] or ei["ResultEmoji"] then
-        if isWin then table.insert(descParts, "# 🏆  VICTORY\n> The battle is won. Rangers stand victorious!")
-        else          table.insert(descParts, "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger.") end
+        if isWin then
+            table.insert(descParts, "# 🏆  VICTORY\n> The battle is won. Rangers stand victorious!")
+        else
+            table.insert(descParts, "# 💀  DEFEAT\n> The battle is lost. Try again, Ranger.")
+        end
     end
+
     if ei["Player Name"] or ei["PlayerName"] then
-        table.insert(descParts, "> 👤  **"..player.Name.."**") end
-    if ei["Match Time"] or ei["MatchTime"] then
-        table.insert(descParts, "> ⏱️  Match Time : **"..tostring(GameTime).."**") end
-    if ei["Rewards Summary"] or ei["RewardsSummary"] then
-        local short = RewardsText ~= "" and RewardsText:gsub("\n"," | "):gsub(" | $","") or "— none —"
-        table.insert(descParts, "> 🎁  "..short) end
-    local embedDesc = #descParts > 0 and table.concat(descParts,"\n") or (isWin and "# 🏆  VICTORY" or "# 💀  DEFEAT")
-
-    -- ตัวเลือกที่ผู้ใช้ตั้งไว้
-    local currencyFields  = type(_G.SST.WH_Currency_Fields)=="table" and _G.SST.WH_Currency_Fields
-                            or {Gold=true, Gem=true, RCCells=true, ["Sol Token"]=true, ["Esper Token"]=true, ["Curse Token"]=true, ["Boss Coin"]=true}
-    local resourcesFields = type(_G.SST.WH_Resources_Fields)=="table" and _G.SST.WH_Resources_Fields or {}
-
-    -- helper: pad label ให้ align สวย
-    local function fmtRow(label, value)
-        return string.format("%-22s %s", label.." :", tostring(value))
+        table.insert(descParts, "> 👤  **" .. player.Name .. "**")
     end
 
-    -- helper: แบ่ง lines ยาวเป็นหลาย field ไม่เกิน 950 chars
+    if ei["Match Time"] or ei["MatchTime"] then
+        table.insert(descParts, "> ⏱️  Match Time : **" .. tostring(GameTime) .. "**")
+    end
+
+    if ei["Rewards Summary"] or ei["RewardsSummary"] then
+        local short = RewardsText ~= "" and RewardsText:gsub("\n", " | "):gsub(" | $", "") or "— none —"
+        table.insert(descParts, "> 🎁  " .. short)
+    end
+
+    local embedDesc = #descParts > 0
+        and table.concat(descParts, "\n")
+        or (isWin and "# 🏆  VICTORY" or "# 💀  DEFEAT")
+
+    -- ── ตัวเลือกของผู้ใช้ ──────────────────────────────────
+
+    local currencyFields = type(_G.SST.WH_Currency_Fields) == "table"
+        and _G.SST.WH_Currency_Fields
+        or {
+            Gold            = true,
+            Gem             = true,
+            RCCells         = true,
+            ["Sol Token"]   = true,
+            ["Esper Token"] = true,
+            ["Curse Token"] = true,
+            ["Boss Coin"]   = true,
+        }
+
+    local resourcesFields = type(_G.SST.WH_Resources_Fields) == "table"
+        and _G.SST.WH_Resources_Fields
+        or {}
+
+    -- ── Helper: แบ่ง block ยาวเป็นหลาย field (≤ 950 chars) ──
+
     local function insertChunked(fieldList, label, lines)
-        local part = 1
+        local part  = 1
         local block = ""
+
         for _, line in ipairs(lines) do
-            local row = line.."\n"
+            local row = line .. "\n"
             if #block + #row > 950 then
-                local n = part == 1 and label or (label.." ("..part..")")
-                table.insert(fieldList, {["name"]=n, ["value"]="```\n"..block.."```", ["inline"]=false})
+                local name = part == 1 and label or (label .. " (" .. part .. ")")
+                table.insert(fieldList, {
+                    ["name"]   = name,
+                    ["value"]  = "```\n" .. block .. "```",
+                    ["inline"] = false,
+                })
                 block = row
-                part = part + 1
+                part  = part + 1
             else
-                block = block..row
+                block = block .. row
             end
         end
+
         if block ~= "" then
-            local n = part == 1 and label or (label.." ("..part..")")
-            table.insert(fieldList, {["name"]=n, ["value"]="```\n"..block.."```", ["inline"]=false})
+            local name = part == 1 and label or (label .. " (" .. part .. ")")
+            table.insert(fieldList, {
+                ["name"]   = name,
+                ["value"]  = "```\n" .. block .. "```",
+                ["inline"] = false,
+            })
         end
     end
+
+    -- ── สร้าง Fields ────────────────────────────────────────
 
     local fields = {}
 
-    -- ── INFO
+    -- 📋 Info
     insertChunked(fields, "📋  Info", {
-        "Player : "..player.Name,
-        "Level  : "..levelVal,
-        "EXP    : "..expVal,
+        "Player : " .. player.Name,
+        "Level  : " .. levelVal,
+        "EXP    : " .. expVal,
     })
 
-    -- ── CURRENCY
-    local currencyOrder  = {"Gold","Gem","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin"}
-    local currencyValMap = {Gold=goldVal, Gem=gemVal, RCCells=RCellVal, ["Sol Token"]=SolTokenVal, ["Esper Token"]=EsperTokenVal, ["Curse Token"]=CurseTokenVal, ["Boss Coin"]=BossCoinsVal}
+    -- 💰 Currency
+    local currencyOrder = {
+        "Gold", "Gem", "RCCells",
+        "Sol Token", "Esper Token", "Curse Token", "Boss Coin",
+    }
+    local currencyValMap = {
+        Gold            = goldVal,
+        Gem             = gemVal,
+        RCCells         = RCellVal,
+        ["Sol Token"]   = SolTokenVal,
+        ["Esper Token"] = EsperTokenVal,
+        ["Curse Token"] = CurseTokenVal,
+        ["Boss Coin"]   = BossCoinsVal,
+    }
+
+    -- helper: จัด label ให้ชิดซ้าย 22 ตัวอักษร แล้วตามด้วย ": value"
+    local function fmtPad(label, value)
+        return string.format("%-22s: %s", label, tostring(value))
+    end
+
     local currencyLines = {}
     for _, item in ipairs(currencyOrder) do
         if currencyFields[item] then
-            table.insert(currencyLines, item.." : "..(currencyValMap[item] or "0"))
+            table.insert(currencyLines, fmtPad(item, currencyValMap[item] or "0"))
         end
     end
+
     if #currencyLines > 0 then
         insertChunked(fields, "💰  Currency", currencyLines)
     end
 
-    -- ── RESOURCES
+    -- 📦 Resources
     local sortedRes = {}
     for resName, resAmount in pairs(resourcesValues) do
         if resourcesFields[resName] then
-            table.insert(sortedRes, {name=resName, amount=resAmount})
+            table.insert(sortedRes, { name = resName, amount = resAmount })
         end
     end
-    table.sort(sortedRes, function(a,b) return a.name < b.name end)
+    table.sort(sortedRes, function(a, b) return a.name < b.name end)
+
     if #sortedRes > 0 then
         local resLines = {}
         for _, r in ipairs(sortedRes) do
-            table.insert(resLines, r.name.." : "..r.amount)
+            table.insert(resLines, fmtPad(r.name, r.amount))
         end
         insertChunked(fields, "📦  Resources", resLines)
     end
 
-    -- ── MATCH TIME
+    -- ⏱️ Match Time
     if _G.SST.WH_Show_Time == true then
-        insertChunked(fields, "⏱️  Match Time", {"Match Time : "..tostring(GameTime)})
+        insertChunked(fields, "⏱️  Match Time", {
+            "Match Time : " .. tostring(GameTime),
+        })
     end
 
-    -- ── REWARDS
+    -- 🎁 Rewards
     if _G.SST.WH_Show_Rewards == true then
-        local rewardsDisplay = (RewardsText ~= "" and RewardsText:gsub("\n$","")) or "— none —"
-        local rwLines = {}
-        for line in (rewardsDisplay.."\n"):gmatch("([^\n]*)\n") do
-            if line ~= "" then table.insert(rwLines, line) end
+        local rewardsDisplay = (RewardsText ~= "" and RewardsText:gsub("\n$", "")) or "— none —"
+        local rwLines        = {}
+
+        for line in (rewardsDisplay .. "\n"):gmatch("([^\n]*)\n") do
+            if line ~= "" then
+                table.insert(rwLines, line)
+            end
         end
-        if #rwLines == 0 then rwLines = {rewardsDisplay} end
+
+        if #rwLines == 0 then rwLines = { rewardsDisplay } end
         insertChunked(fields, "🎁  Rewards", rwLines)
     end
 
-    -- Footer
-    local fi = type(_G.SST.WH_Footer_Info)=="table" and _G.SST.WH_Footer_Info or {HubName=true}
+    -- ── Footer ─────────────────────────────────────────────
+
+    local fi = type(_G.SST.WH_Footer_Info) == "table"
+        and _G.SST.WH_Footer_Info
+        or { HubName = true }
+
     local footerParts = {}
     if fi["Hub Name"]    or fi["HubName"]    then table.insert(footerParts, "Anitary Hub") end
     if fi["Player Name"] or fi["PlayerName"] then table.insert(footerParts, player.Name) end
     if fi["Result"]      or fi["result"]     then table.insert(footerParts, isWin and "Victory" or "Defeat") end
-    local footerText = #footerParts > 0 and table.concat(footerParts," | ") or "Anitary Hub"
 
-    -- Ping
-    local pingType = _G.SST.WH_Ping_Type or "None"
+    local footerText = #footerParts > 0 and table.concat(footerParts, " | ") or "Anitary Hub"
+
+    -- ── Ping ───────────────────────────────────────────────
+
+    local pingType   = _G.SST.WH_Ping_Type or "None"
     local contentStr = ""
-    if pingType == "@everyone" then contentStr = "@everyone"
-    elseif pingType == "@here" then contentStr = "@here"
+
+    if pingType == "@everyone" then
+        contentStr = "@everyone"
+    elseif pingType == "@here" then
+        contentStr = "@here"
     elseif pingType == "Role ID" then
         local rid = _G.SST.WH_Role_ID or ""
-        if rid ~= "" then contentStr = "<@&"..rid..">" end
-    end
-
-    -- ========================
-    -- Sanitize fields ก่อนส่ง: Discord ไม่รับ name/value ว่าง และ value ยาวเกิน 1024
-    -- ========================
-    local cleanFields = {}
-    for _, f in ipairs(fields) do
-        local n = tostring(f["name"] or ""):gsub("%s+", " "):match("^%s*(.-)%s*$")
-        local v = tostring(f["value"] or ""):gsub("%s+", " "):match("^%s*(.-)%s*$")
-        -- ข้าม field ที่ name หรือ value ว่าง / เป็นแค่ code block เปล่า
-        if n ~= "" and v ~= "" and v ~= "``````" and v ~= "```\n```" then
-            -- ตัดถ้าเกิน 1024 chars (Discord limit)
-            if #v > 1024 then v = v:sub(1, 1021).."..." end
-            if #n > 256  then n = n:sub(1, 253).."..." end
-            table.insert(cleanFields, {["name"]=n, ["value"]=v, ["inline"]=f["inline"] or false})
+        if rid ~= "" then
+            contentStr = "<@&" .. rid .. ">"
         end
     end
 
-    -- description ต้องไม่ว่าง
-    local safeDesc = (embedDesc and embedDesc ~= "") and embedDesc or (isWin and "🏆 Victory" or "💀 Defeat")
-    if #safeDesc > 4096 then safeDesc = safeDesc:sub(1, 4093).."..." end
+    -- ── Sanitize Fields (Discord limits) ───────────────────
 
-    -- ส่ง webhook
+    local cleanFields = {}
+    for _, f in ipairs(fields) do
+        -- name: collapse whitespace ได้ปกติ
+        local n = tostring(f["name"] or ""):gsub("%s+", " "):match("^%s*(.-)%s*$")
+        -- value: trim แค่ขอบหน้า-หลัง ห้ามยุบ \n เพราะจะทำให้บรรทัดรวมกันเป็นบรรทัดเดียว
+        local v = tostring(f["value"] or ""):match("^%s*(.-)%s*$")
+
+        local isEmpty = n == "" or v == "" or v == "``````" or v == "```\n```"
+        if not isEmpty then
+            if #v > 1024 then v = v:sub(1, 1021) .. "..." end
+            if #n > 256  then n = n:sub(1, 253)  .. "..." end
+            table.insert(cleanFields, {
+                ["name"]   = n,
+                ["value"]  = v,
+                ["inline"] = f["inline"] or false,
+            })
+        end
+    end
+
+    local safeDesc = (embedDesc and embedDesc ~= "") and embedDesc
+        or (isWin and "🏆 Victory" or "💀 Defeat")
+    if #safeDesc > 4096 then
+        safeDesc = safeDesc:sub(1, 4093) .. "..."
+    end
+
+    -- ── Build Payload ──────────────────────────────────────
+
     local avatarUrl = getAvatar(player.UserId)
+
     local payload = {
         ["content"] = contentStr ~= "" and contentStr or nil,
         ["embeds"]  = {{
-            ["author"]      = {["name"]="👤  "..player.Name, ["icon_url"]=avatarUrl, ["url"]="https://www.roblox.com/users/"..player.UserId.."/profile"},
+            ["author"]      = {
+                ["name"]     = "👤  " .. player.Name,
+                ["icon_url"] = avatarUrl,
+                ["url"]      = "https://www.roblox.com/users/" .. player.UserId .. "/profile",
+            },
             ["title"]       = "Anime Rangers X  ·  Match Result",
             ["description"] = safeDesc,
-            ["thumbnail"]   = {["url"]=avatarUrl},
+            ["thumbnail"]   = { ["url"] = avatarUrl },
             ["color"]       = colorInt,
             ["fields"]      = cleanFields,
             ["timestamp"]   = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time()),
-            ["footer"]      = {["text"]=footerText, ["icon_url"]=avatarUrl},
-        }}
+            ["footer"]      = { ["text"] = footerText, ["icon_url"] = avatarUrl },
+        }},
     }
 
-    local ok2, json = pcall(function() return HttpService:JSONEncode(payload) end)
+    local ok2, json = pcall(function()
+        return HttpService:JSONEncode(payload)
+    end)
+
     if not ok2 then
         warn("[sendWebhook] Failed to encode JSON")
         return false
     end
 
-    -- รองรับ executor หลายแบบ: http_request, request, syn.request, fluxus, KRNL, etc.
+    -- ── ตรวจหา Request Function (Multi-executor support) ───
+
     local req = nil
-    if type(http_request) == "function" then
-        req = http_request
-    elseif type(request) == "function" then
-        req = request
-    elseif type(syn) == "table" and type(syn.request) == "function" then
-        req = syn.request
-    elseif type(fluxus) == "table" and type(fluxus.request) == "function" then
-        req = fluxus.request
-    elseif type(http) == "table" and type(http.request) == "function" then
-        req = http.request
+    if     type(http_request) == "function"                          then req = http_request
+    elseif type(request)      == "function"                          then req = request
+    elseif type(syn)     == "table" and type(syn.request)     == "function" then req = syn.request
+    elseif type(fluxus)  == "table" and type(fluxus.request)  == "function" then req = fluxus.request
+    elseif type(http)    == "table" and type(http.request)    == "function" then req = http.request
     end
 
     if type(req) ~= "function" then
@@ -3210,52 +3359,54 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
         return false
     end
 
-    -- ตรวจสอบ URL ว่าเป็น Discord webhook จริง
     local webhookUrl = _G.SST.Place_WebHook_Link
     if not webhookUrl:match("^https?://") then
         warn("[sendWebhook] Invalid webhook URL (must start with https://)")
         return false
     end
 
-    -- ลอง send สูงสุด 3 ครั้ง ถ้า rate limited (429) หรือ error
+    -- ── ส่ง (retry สูงสุด 3 ครั้ง) ─────────────────────────
+
     local maxRetry = 3
+
     for attempt = 1, maxRetry do
         local success, res = pcall(function()
             return req({
                 Url     = webhookUrl,
                 Method  = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body    = json
+                Headers = { ["Content-Type"] = "application/json" },
+                Body    = json,
             })
         end)
 
         if not success then
-            warn("[sendWebhook] Request error (attempt "..attempt.."): " .. tostring(res))
+            warn("[sendWebhook] Request error (attempt " .. attempt .. "): " .. tostring(res))
             if attempt < maxRetry then task.wait(1) end
         else
-            -- ตรวจ status code
-            local statusCode = (type(res) == "table") and (res.StatusCode or res.status_code or res.StatusMessage) or nil
-            local statusNum  = tonumber(statusCode) or 0
+            local statusCode = type(res) == "table"
+                and (res.StatusCode or res.status_code or res.StatusMessage)
+                or nil
+            local statusNum = tonumber(statusCode) or 0
 
             if statusNum == 204 or statusNum == 200 then
                 return true
+
             elseif statusNum == 429 then
-                -- Rate limited: รอแล้วลองใหม่
-                warn("[sendWebhook] Rate limited, waiting... (attempt "..attempt..")")
+                warn("[sendWebhook] Rate limited, waiting... (attempt " .. attempt .. ")")
                 if attempt < maxRetry then task.wait(2) end
+
             elseif statusNum >= 400 and statusNum < 500 then
-                -- Client error (invalid URL, bad token etc.) - ไม่ต้อง retry
-                warn("[sendWebhook] Client error "..tostring(statusNum)..": check your webhook URL")
+                warn("[sendWebhook] Client error " .. tostring(statusNum) .. ": check your webhook URL")
                 return false
+
             else
-                -- Server error / unknown - ลองใหม่
-                warn("[sendWebhook] Response "..tostring(statusNum).." (attempt "..attempt..")")
+                warn("[sendWebhook] Response " .. tostring(statusNum) .. " (attempt " .. attempt .. ")")
                 if attempt < maxRetry then task.wait(1) end
             end
         end
     end
 
-    warn("[sendWebhook] Failed after "..maxRetry.." attempts")
+    warn("[sendWebhook] Failed after " .. maxRetry .. " attempts")
     return false
 end
 
