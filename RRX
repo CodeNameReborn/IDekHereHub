@@ -2090,11 +2090,15 @@ Main_Event:AddLabelL("Map : <font color='#33ffff'>Re: Rangers X</font>")
 Main_Event:AddLabelL("Day : "..os.date("%d %B %Y"))
 Main_Event:AddLineL()
 
+
 Main_Event:AddSeperatorL("JOIN STORY")
-local ChapterList={"OnePiece","Namek","DemonSlayer","Naruto","OPM","TokyoGhoul","JoJo"}
-local chapterDD=Main_Event:AddDropdownL("Select Chapter",ChapterList,_G.SST.Select_Chapter,function(v) _G.SST.Select_Chapter=v; SS() end)
-local StageList={"1","2","3","4","5","6","7","8","9","10"}
+local StageList={"Story","Ranger","Raid","Calamity"}
 local stageDD=Main_Event:AddDropdownL("Select Stage",StageList,_G.SST.Select_Stage,function(v) _G.SST.Select_Stage=v; SS() end)
+local WorldList={"OnePiece","Namek","Naruto","TokyoGhoul","SAO","JJK"}
+local WorldDD=Main_Event:AddDropdownL("Select World",WorldList,_G.SST.Select_World,function(v) _G.SST.Select_World=v; SS() end)
+local ChapterList={"1","2","3","4","5","6","7","8","9","10"}
+local chapterDD=Main_Event:AddDropdownL("Select Chapter",ChapterList,_G.SST.Select_Chapter,function(v) _G.SST.Select_Chapter=v; SS() end)
+local ModeList=Main_Event:AddDropdownL("Select Mode",{"Normal","Hard","Nightmare"},_G.SST.Select_Mode,function(v) _G.SST.Select_Mode=v; SS() end)
 Main_Event:AddToggleL("Auto Join Story",_G.SST.Auto_Join_Story,function(v) _G.SST.Auto_Join_Story=v; SS() end)
 
 task.spawn(function()
@@ -2103,12 +2107,28 @@ task.spawn(function()
     while task.wait(1) do
         pcall(function()
             if busy or not _G.SST.Auto_Join_Story then return end
-            if not _G.SST.Select_Chapter or not _G.SST.Select_Stage then return end
+            if not _G.SST.Select_Chapter or not _G.SST.Select_Stage or not _G.SST.Select_World or not _G.SST.Select_Mode then return end
             if not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage") then return end
+            if _G.SST.Select_Stage == "Story" then
+                _G.Stage_Select = "Story"
+            elseif _G.SST.Select_Stage == "Ranger" then
+                _G.Stage_Select = "RangerStage"
+            elseif _G.SST.Select_Stage == "Raid" then
+                _G.Stage_Select = "RaidStage"
+            elseif _G.SST.Select_Stage == "Calamity" then
+                _G.Stage_Select = "CalamityStage"
+            end
             busy = true
             ev:FireServer("Create")
-            ev:FireServer("Change-World",  {World   = _G.SST.Select_Chapter})
-            ev:FireServer("Change-Chapter",{Chapter = _G.SST.Select_Chapter.."_Chapter".._G.SST.Select_Stage})
+            task.wait(0.5)
+            ev:FireServer("Change-Mode",   {Mode    = _G.SST.Select_Stage})
+            task.wait(0.5)
+            ev:FireServer("Change-World",  {World   = _G.SST.Select_World})
+            task.wait(0.5)
+            ev:FireServer("Change-Difficulty", {Difficulty = _G.SST.Select_Mode})
+            task.wait(0.5)
+            ev:FireServer("Change-Chapter",{Chapter = _G.SST.Select_Mode.."_".._G.Stage_Select.."".._G.SST.Select_Chapter})
+            task.wait(0.5)
             ev:FireServer("Submit")
             task.wait(2)
             if not plr.PlayerGui:FindFirstChild("SystemMessage") then
@@ -2120,31 +2140,7 @@ task.spawn(function()
     end
 end)
 
-Main_Event:AddToggleL("Auto Join Ranger",_G.SST.Auto_Join_Ranger,function(v) _G.SST.Auto_Join_Ranger=v; SS() end)
 
-task.spawn(function()
-    local ev = ReplicatedStorage:WaitForChild("Remote"):WaitForChild("Server"):WaitForChild("PlayRoom"):WaitForChild("Event")
-    local busy = false
-    while task.wait(1) do
-        pcall(function()
-            if busy or not _G.SST.Auto_Join_Ranger then return end
-            if not _G.SST.Select_Chapter or not _G.SST.Select_Stage then return end
-            if not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage") then return end
-            busy = true
-            ev:FireServer("Create")
-            ev:FireServer("Change-Mode",   {Mode    = "Ranger Stage"})
-            ev:FireServer("Change-World",  {World   = _G.SST.Select_Chapter})
-            ev:FireServer("Change-Chapter",{Chapter = _G.SST.Select_Chapter.."_RangerStage".._G.SST.Select_Stage})
-            ev:FireServer("Submit")
-            task.wait(2)
-            if not plr.PlayerGui:FindFirstChild("SystemMessage") then
-                ev:FireServer("Start")
-            end
-            task.wait(2)
-            busy = false
-        end)
-    end
-end)
 
 Main_Event:AddSeperatorL("CHALLENGES")
 Main_Event:AddToggleL("Auto Join Challenge",_G.SST.Auto_Join_Challenge,function(v) _G.SST.Auto_Join_Challenge=v; SS() end)
