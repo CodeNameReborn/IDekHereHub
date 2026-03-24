@@ -2123,7 +2123,11 @@ task.spawn(function()
             task.wait(0.5)
             ev:FireServer("Change-Mode",   {Mode    = _G.SST.Select_Stage})
             task.wait(0.5)
-            ev:FireServer("Change-World",  {World   = _G.SST.Select_World})
+            if _G.SST.Select_Stage == "Calamity" then
+
+            else
+                ev:FireServer("Change-World",  {World   = _G.SST.Select_World})
+            end
             task.wait(0.5)
             ev:FireServer("Change-Difficulty", {Difficulty = _G.SST.Select_Mode})
             task.wait(0.5)
