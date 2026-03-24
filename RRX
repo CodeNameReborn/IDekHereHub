@@ -2110,7 +2110,7 @@ task.spawn(function()
             ev:FireServer("Change-World",  {World   = _G.SST.Select_Chapter})
             ev:FireServer("Change-Chapter",{Chapter = _G.SST.Select_Chapter.."_Chapter".._G.SST.Select_Stage})
             ev:FireServer("Submit")
-            task.wait(0.5)
+            task.wait(2)
             if not plr.PlayerGui:FindFirstChild("SystemMessage") then
                 ev:FireServer("Start")
             end
@@ -2136,7 +2136,7 @@ task.spawn(function()
             ev:FireServer("Change-World",  {World   = _G.SST.Select_Chapter})
             ev:FireServer("Change-Chapter",{Chapter = _G.SST.Select_Chapter.."_RangerStage".._G.SST.Select_Stage})
             ev:FireServer("Submit")
-            task.wait(0.5)
+            task.wait(2)
             if not plr.PlayerGui:FindFirstChild("SystemMessage") then
                 ev:FireServer("Start")
             end
@@ -2157,7 +2157,7 @@ task.spawn(function()
             if not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage") then return end
             busy = true
             ev:FireServer("Create",{CreateChallengeRoom=true})
-            task.wait(0.5)
+            task.wait(2)
             if not plr.PlayerGui:FindFirstChild("SystemMessage") then
                 ev:FireServer("Start")
             end
@@ -2180,7 +2180,7 @@ task.spawn(function()
             if not workspace:FindFirstChild("Lobby") or plr.PlayerGui:FindFirstChild("SystemMessage") then return end
             busy = true
             ev:FireServer("Fate Mode")
-            task.wait(0.5)
+            task.wait(2)
             if not plr.PlayerGui:FindFirstChild("SystemMessage") then
                 ev:FireServer("Start")
             end
@@ -3821,4 +3821,4 @@ task.spawn(function()
     end)
 end)
 
-AddNotification(L("Hello World"))
+AddNotification(L("Hello Deley"))
