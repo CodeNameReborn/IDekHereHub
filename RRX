@@ -3056,47 +3056,50 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
         return string.format("%-22s %s", label.." :", tostring(value))
     end
 
-    -- helper: แบ่ง list ยาวออกเป็น chunk ไม่เกิน 1000 chars ต่อ field
-    local function chunkLines(lines, chunkMax)
-        local chunks = {}
-        local cur = ""
+    -- helper: แบ่ง lines ยาวเป็นหลาย field ไม่เกิน 950 chars
+    local function insertChunked(fieldList, label, lines)
+        local part = 1
+        local block = ""
         for _, line in ipairs(lines) do
-            local add = (cur == "" and "" or "\n") .. line
-            if #cur + #add > chunkMax then
-                table.insert(chunks, cur)
-                cur = line
+            local row = line.."\n"
+            if #block + #row > 950 then
+                local n = part == 1 and label or (label.." ("..part..")")
+                table.insert(fieldList, {["name"]=n, ["value"]="```\n"..block.."```", ["inline"]=false})
+                block = row
+                part = part + 1
             else
-                cur = cur .. add
+                block = block..row
             end
         end
-        if cur ~= "" then table.insert(chunks, cur) end
-        return chunks
+        if block ~= "" then
+            local n = part == 1 and label or (label.." ("..part..")")
+            table.insert(fieldList, {["name"]=n, ["value"]="```\n"..block.."```", ["inline"]=false})
+        end
     end
 
     local fields = {}
 
-    -- ── INFO (plain code block, เรียงบรรทัด)
-    local infoBlock = string.format("%-10s : %s\n%-10s : %s\n%-10s : %s",
-        "Player", player.Name,
-        "Level",  levelVal,
-        "EXP",    expVal)
-    table.insert(fields, {["name"]="📋  Info", ["value"]="```\n"..infoBlock.."\n```", ["inline"]=false})
+    -- ── INFO
+    insertChunked(fields, "📋  Info", {
+        "Player : "..player.Name,
+        "Level  : "..levelVal,
+        "EXP    : "..expVal,
+    })
 
-    -- ── CURRENCY (plain code block, เรียงบรรทัด)
+    -- ── CURRENCY
     local currencyOrder  = {"Gold","Gem","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin"}
     local currencyValMap = {Gold=goldVal, Gem=gemVal, RCCells=RCellVal, ["Sol Token"]=SolTokenVal, ["Esper Token"]=EsperTokenVal, ["Curse Token"]=CurseTokenVal, ["Boss Coin"]=BossCoinsVal}
     local currencyLines = {}
     for _, item in ipairs(currencyOrder) do
         if currencyFields[item] then
-            local val = currencyValMap[item] or "0"
-            table.insert(currencyLines, string.format("%-22s : %s", item, val))
+            table.insert(currencyLines, item.." : "..(currencyValMap[item] or "0"))
         end
     end
     if #currencyLines > 0 then
-        table.insert(fields, {["name"]="💰  Currency", ["value"]="```\n"..table.concat(currencyLines,"\n").."\n```", ["inline"]=false})
+        insertChunked(fields, "💰  Currency", currencyLines)
     end
 
-    -- ── RESOURCES (plain code block, แบ่ง chunk ถ้ายาว)
+    -- ── RESOURCES
     local sortedRes = {}
     for resName, resAmount in pairs(resourcesValues) do
         if resourcesFields[resName] then
@@ -3104,22 +3107,17 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
         end
     end
     table.sort(sortedRes, function(a,b) return a.name < b.name end)
-
     if #sortedRes > 0 then
         local resLines = {}
         for _, r in ipairs(sortedRes) do
-            table.insert(resLines, string.format("%-28s : %s", r.name, r.amount))
+            table.insert(resLines, r.name.." : "..r.amount)
         end
-        local chunks = chunkLines(resLines, 980)
-        for i, chunk in ipairs(chunks) do
-            local label = i == 1 and "📦  Resources" or ("📦  Resources (cont. "..i..")")
-            table.insert(fields, {["name"]=label, ["value"]="```\n"..chunk.."\n```", ["inline"]=false})
-        end
+        insertChunked(fields, "📦  Resources", resLines)
     end
 
     -- ── MATCH TIME
     if _G.SST.WH_Show_Time == true then
-        table.insert(fields, {["name"]="⏱️  Match Time", ["value"]="```\n"..string.format("%-10s : %s", "Match Time", tostring(GameTime)).."\n```", ["inline"]=false})
+        insertChunked(fields, "⏱️  Match Time", {"Match Time : "..tostring(GameTime)})
     end
 
     -- ── REWARDS
@@ -3127,14 +3125,10 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
         local rewardsDisplay = (RewardsText ~= "" and RewardsText:gsub("\n$","")) or "— none —"
         local rwLines = {}
         for line in (rewardsDisplay.."\n"):gmatch("([^\n]*)\n") do
-            table.insert(rwLines, line)
+            if line ~= "" then table.insert(rwLines, line) end
         end
         if #rwLines == 0 then rwLines = {rewardsDisplay} end
-        local rwChunks = chunkLines(rwLines, 980)
-        for i, chunk in ipairs(rwChunks) do
-            local label = i == 1 and "🎁  Rewards" or ("🎁  Rewards (cont. "..i..")")
-            table.insert(fields, {["name"]=label, ["value"]="```\n"..chunk.."\n```", ["inline"]=false})
-        end
+        insertChunked(fields, "🎁  Rewards", rwLines)
     end
 
     -- Footer
@@ -3676,4 +3670,4 @@ task.spawn(function()
     end)
 end)
 
-AddNotification(L("Hello Wor6666ld"))
+AddNotification(L("Hello World"))
