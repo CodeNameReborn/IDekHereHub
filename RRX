@@ -3075,30 +3075,28 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
 
     local fields = {}
 
-    -- ── INFO (เรียงลงมา)
-    local infoBlock = string.format("👤  %-12s %s\n⭐  %-12s %s\n✨  %-12s %s",
-        "Player :", player.Name,
-        "Level  :", levelVal,
-        "EXP    :", expVal)
-    table.insert(fields, {["name"]="📋  Info", ["value"]="```"..infoBlock.."```", ["inline"]=false})
+    -- ── INFO (plain code block, เรียงบรรทัด)
+    local infoBlock = string.format("%-10s : %s\n%-10s : %s\n%-10s : %s",
+        "Player", player.Name,
+        "Level",  levelVal,
+        "EXP",    expVal)
+    table.insert(fields, {["name"]="📋  Info", ["value"]="```\n"..infoBlock.."\n```", ["inline"]=false})
 
-    -- ── CURRENCY (เรียงลงมาในบล็อกเดียว)
+    -- ── CURRENCY (plain code block, เรียงบรรทัด)
     local currencyOrder  = {"Gold","Gem","RCCells","Sol Token","Esper Token","Curse Token","Boss Coin"}
-    local currencyEmoji  = {Gold="🪙", Gem="💎", RCCells="🔴", ["Sol Token"]="☀️", ["Esper Token"]="🌀", ["Curse Token"]="💀", ["Boss Coin"]="👑"}
     local currencyValMap = {Gold=goldVal, Gem=gemVal, RCCells=RCellVal, ["Sol Token"]=SolTokenVal, ["Esper Token"]=EsperTokenVal, ["Curse Token"]=CurseTokenVal, ["Boss Coin"]=BossCoinsVal}
     local currencyLines = {}
     for _, item in ipairs(currencyOrder) do
         if currencyFields[item] then
-            local emoji = currencyEmoji[item] or "•"
-            local val   = currencyValMap[item] or "0"
-            table.insert(currencyLines, string.format("%s  %-22s %s", emoji, item.." :", val))
+            local val = currencyValMap[item] or "0"
+            table.insert(currencyLines, string.format("%-22s : %s", item, val))
         end
     end
     if #currencyLines > 0 then
-        table.insert(fields, {["name"]="💰  Currency", ["value"]="```"..table.concat(currencyLines,"\n").."```", ["inline"]=false})
+        table.insert(fields, {["name"]="💰  Currency", ["value"]="```\n"..table.concat(currencyLines,"\n").."\n```", ["inline"]=false})
     end
 
-    -- ── RESOURCES (แบ่ง chunk ถ้ายาว แต่ละ chunk ≤ 1000 chars)
+    -- ── RESOURCES (plain code block, แบ่ง chunk ถ้ายาว)
     local sortedRes = {}
     for resName, resAmount in pairs(resourcesValues) do
         if resourcesFields[resName] then
@@ -3110,18 +3108,18 @@ local function sendWebhook(isWin, RewardsText, GameTime, player)
     if #sortedRes > 0 then
         local resLines = {}
         for _, r in ipairs(sortedRes) do
-            table.insert(resLines, fmtRow(r.name, r.amount))
+            table.insert(resLines, string.format("%-28s : %s", r.name, r.amount))
         end
         local chunks = chunkLines(resLines, 980)
         for i, chunk in ipairs(chunks) do
             local label = i == 1 and "📦  Resources" or ("📦  Resources (cont. "..i..")")
-            table.insert(fields, {["name"]=label, ["value"]="```ansi\n"..chunk.."\n```", ["inline"]=false})
+            table.insert(fields, {["name"]=label, ["value"]="```\n"..chunk.."\n```", ["inline"]=false})
         end
     end
 
     -- ── MATCH TIME
     if _G.SST.WH_Show_Time == true then
-        table.insert(fields, {["name"]="⏱️  Match Time", ["value"]="```"..tostring(GameTime).."```", ["inline"]=false})
+        table.insert(fields, {["name"]="⏱️  Match Time", ["value"]="```\n"..string.format("%-10s : %s", "Match Time", tostring(GameTime)).."\n```", ["inline"]=false})
     end
 
     -- ── REWARDS
@@ -3678,4 +3676,4 @@ task.spawn(function()
     end)
 end)
 
-AddNotification(L("Hello World"))
+AddNotification(L("Hello Wor6666ld"))
