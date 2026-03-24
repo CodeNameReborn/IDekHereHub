@@ -2094,7 +2094,7 @@ Main_Event:AddLineL()
 Main_Event:AddSeperatorL("JOIN STORY")
 local StageList={"Story","Ranger","Raid","Calamity"}
 local stageDD=Main_Event:AddDropdownL("Select Stage",StageList,_G.SST.Select_Stage,function(v) _G.SST.Select_Stage=v; SS() end)
-local WorldList={"OnePiece","Namek","Naruto","TokyoGhoul","SAO","JJK"}
+local WorldList={"OnePiece","Namek","Naruto","TokyoGhoul","SAO","JJK","FireForce"}
 local WorldDD=Main_Event:AddDropdownL("Select World",WorldList,_G.SST.Select_World,function(v) _G.SST.Select_World=v; SS() end)
 local ChapterList={"1","2","3","4","5","6","7","8","9","10"}
 local chapterDD=Main_Event:AddDropdownL("Select Chapter",ChapterList,_G.SST.Select_Chapter,function(v) _G.SST.Select_Chapter=v; SS() end)
