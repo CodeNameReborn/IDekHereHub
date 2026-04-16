@@ -2015,10 +2015,7 @@ local Moblist = {
 --  TABS
 -- ══════════════════════════════════════════════════════
 
-local Main_Event = AddTab("Main - Event")
-local AutoPlay_Function   = AddTab("AutoPlay Function")
-local Shop_UserInfo   = AddTab("Shop - UserInfo")
-local Traits_Potential   = AddTab("Traits - Potential")
+local Main_Event = AddTab("Main")
 local WebHook_Misc   = AddTab("WebHook - Misc")
 
 -- ══════════════════════════════════════════════════════
@@ -2134,3 +2131,227 @@ do
         end
     end)
 end
+
+-- ══════════════════════════════════════════════════════
+--  FIX: Variables
+-- ══════════════════════════════════════════════════════
+local Select_Weapon = _G.SST.Select_Weapon or ""
+local Pos_X = _G.SST.Pos_X or 0
+local Pos_Y = _G.SST.Pos_Y or 2
+local Pos_Z = _G.SST.Pos_Z or 4  -- FIX: เดิมใช้ Pos_X ผิด
+
+-- ══════════════════════════════════════════════════════
+--  FARM MOB LOOP
+-- ══════════════════════════════════════════════════════
+task.spawn(function()
+    while true do
+        task.wait(0.15)
+        if not _G.SST.Farm_Mob then task.wait(0.5) continue end
+
+        local mobName = _G.SST.Select_Mob
+        if not mobName or not Moblist[mobName] then task.wait(0.5) continue end
+
+        local char = player.Character
+        if not char then task.wait(0.5) continue end
+
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChild("Humanoid")
+        if not hrp or not hum or hum.Health <= 0 then task.wait(0.5) continue end
+
+        local mobData = Moblist[mobName]
+
+        -- หา mob ที่ยังมีชีวิตอยู่ใกล้ที่สุด
+        local nearestMob, nearestDist = nil, math.huge
+        for _, folder in ipairs(mobData.Folders) do
+            if not folder then continue end
+            for _, model in ipairs(folder:GetChildren()) do
+                local mHum = model:FindFirstChildOfClass("Humanoid")
+                local mHRP = model:FindFirstChild("HumanoidRootPart")
+                if mHum and mHRP and mHum.Health > 0 then
+                    local d = (hrp.Position - mHRP.Position).Magnitude
+                    if d < nearestDist then
+                        nearestDist = d
+                        nearestMob = model
+                    end
+                end
+            end
+        end
+
+        if nearestMob then
+            local mHRP = nearestMob:FindFirstChild("HumanoidRootPart")
+            if mHRP then
+                -- teleport ติดข้าง mob
+                hrp.CFrame = mHRP.CFrame * CFrame.new(
+                    _G.SST.Pos_X or 0,
+                    _G.SST.Pos_Y or 2,
+                    _G.SST.Pos_Z or 4
+                )
+                task.wait(0.08)
+
+                -- equip + attack weapon
+                local wName = _G.SST.Select_Weapon or ""
+                local tool = player.Backpack:FindFirstChild(wName)
+                    or char:FindFirstChild(wName)
+                if tool and tool:IsA("Tool") then
+                    if not char:FindFirstChild(wName) then
+                        hum:EquipTool(tool)
+                        task.wait(0.12)
+                    end
+                    local eq = char:FindFirstChild(wName)
+                    if eq then pcall(function() eq:Activate() end) end
+                end
+            end
+        else
+            -- ไม่มี mob → teleport กลับไปที่ spawn
+            hrp.CFrame = mobData.SpawnCFrame
+            task.wait(1)
+        end
+    end
+end)
+
+-- Respawn: รีเซ็ต farm
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+end)
+
+-- ══════════════════════════════════════════════════════
+--  WEBHOOK TAB
+-- ══════════════════════════════════════════════════════
+local function sendWebhook(payload)
+    local url = _G.SST.WebhookURL or ""
+    if url == "" then return end
+    pcall(function()
+        local req = (syn and syn.request) or (http and http.request) or request
+        if req then
+            req({
+                Url    = url,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body   = HttpService:JSONEncode(payload)
+            })
+        end
+    end)
+end
+
+WebHook_Misc:AddSeperatorL("⚙ ตั้งค่า Webhook")
+WebHook_Misc:AddTextboxL("Webhook URL", "https://discord.com/api/webhooks/...",
+    _G.SST.WebhookURL or "",
+    function(v)
+        _G.SST.WebhookURL = v
+        SS()
+    end
+)
+WebHook_Misc:AddToggleL("📢 แจ้งเตือนเมื่อ Mob ตาย", _G.SST.WH_Kill, function(v)
+    _G.SST.WH_Kill = v
+    SS()
+end)
+WebHook_Misc:AddToggleL("💀 แจ้งเตือนเมื่อตาย", _G.SST.WH_Death, function(v)
+    _G.SST.WH_Death = v
+    SS()
+end)
+
+WebHook_Misc:AddSeperatorR("📤 Actions")
+WebHook_Misc:AddButtonR("🔔 Test Webhook", function()
+    if (_G.SST.WebhookURL or "") == "" then
+        AddNotification("ใส่ Webhook URL ก่อน!")
+        return
+    end
+    sendWebhook({
+        username = "Anitary Hub",
+        embeds = {{
+            title       = "🔔 Test Webhook",
+            description = "**Anitary Hub** กำลังทำงาน!",
+            color       = 0x33ffff,
+            footer      = { text = "Pilgrammed | " .. plr.Name },
+            timestamp   = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
+    })
+    AddNotification("ส่ง Test แล้ว!")
+end)
+
+WebHook_Misc:AddButtonR("📊 Send Stats", function()
+    if (_G.SST.WebhookURL or "") == "" then
+        AddNotification("ใส่ Webhook URL ก่อน!")
+        return
+    end
+    local char = player.Character
+    local hum  = char and char:FindFirstChild("Humanoid")
+    sendWebhook({
+        username = "Anitary Hub",
+        embeds = {{
+            title  = "📊 Player Stats",
+            color  = 0x33ffff,
+            fields = {
+                { name = "👤 Player", value = plr.Name,                                               inline = true },
+                { name = "❤️ HP",     value = hum and math.floor(hum.Health).."/"..math.floor(hum.MaxHealth) or "?", inline = true },
+                { name = "🗺️ Map",    value = "Pilgrammed",                                           inline = true },
+                { name = "⚔️ Mob",    value = _G.SST.Select_Mob or "None",                            inline = true },
+                { name = "🔫 Weapon", value = _G.SST.Select_Weapon or "None",                         inline = true },
+                { name = "🤖 Farm",   value = _G.SST.Farm_Mob and "ON" or "OFF",                      inline = true },
+            },
+            footer    = { text = "Anitary Hub" },
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
+    })
+    AddNotification("ส่ง Stats แล้ว!")
+end)
+
+-- ── Auto Webhook: แจ้งเมื่อตาย ──────────────────────
+local function setupDeathWebhook()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hum  = char:WaitForChild("Humanoid")
+    hum.Died:Connect(function()
+        if not _G.SST.WH_Death then return end
+        sendWebhook({
+            username = "Anitary Hub",
+            embeds = {{
+                title       = "💀 ตายแล้ว!",
+                description = "**" .. plr.Name .. "** ถูกสังหารใน Pilgrammed",
+                color       = 0xff3333,
+                footer      = { text = "Anitary Hub" },
+                timestamp   = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            }}
+        })
+    end)
+end
+setupDeathWebhook()
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    setupDeathWebhook()
+end)
+
+-- ── Auto Webhook: แจ้งเมื่อ Mob ตาย (Kill) ──────────
+task.spawn(function()
+    local tracked = {}
+    while true do
+        task.wait(0.5)
+        if not _G.SST.WH_Kill or not _G.SST.Select_Mob then continue end
+        local mobData = Moblist[_G.SST.Select_Mob]
+        if not mobData then continue end
+        for _, folder in ipairs(mobData.Folders) do
+            if not folder then continue end
+            for _, model in ipairs(folder:GetChildren()) do
+                local mHum = model:FindFirstChildOfClass("Humanoid")
+                if mHum and not tracked[model] then
+                    tracked[model] = true
+                    mHum.Died:Connect(function()
+                        tracked[model] = nil
+                        sendWebhook({
+                            username = "Anitary Hub",
+                            embeds = {{
+                                title       = "⚔️ Kill!",
+                                description = "สังหาร **" .. model.Name .. "** สำเร็จ!",
+                                color       = 0x00ff99,
+                                fields = {
+                                    { name = "👤 Player", value = plr.Name, inline = true },
+                                    { name = "🗡️ Mob",   value = _G.SST.Select_Mob or "?", inline = true },
+                                },
+                                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                            }}
+                        })
+                    end)
+                end
+            end
+        end
+    end
+end)
