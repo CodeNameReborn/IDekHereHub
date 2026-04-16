@@ -2016,6 +2016,10 @@ local Moblist = {
 -- ══════════════════════════════════════════════════════
 
 local Main_Event = AddTab("Main")
+local Tab_Player   = AddTab("⚡ Player")
+local Tab_Combat   = AddTab("⚔️ Combat")
+local Tab_Visual   = AddTab("🔍 Visual")
+local Tab_Teleport = AddTab("🌀 Teleport")
 local WebHook_Misc   = AddTab("WebHook - Misc")
 
 -- ══════════════════════════════════════════════════════
@@ -2131,9 +2135,12 @@ do
         end
     end)
 end
+-- ══════════════════════════════════════════════════════
+--  เพิ่ม Mob ใน Moblist (วางแทน Moblist เดิม)
+-- ══════════════════════════════════════════════════════
 
 -- ══════════════════════════════════════════════════════
---  FIX: Variables
+--  VARIABLES (แก้ bug + declare)
 -- ══════════════════════════════════════════════════════
 local Select_Weapon = _G.SST.Select_Weapon or ""
 local Pos_X = _G.SST.Pos_X or 0
@@ -2141,7 +2148,12 @@ local Pos_Y = _G.SST.Pos_Y or 2
 local Pos_Z = _G.SST.Pos_Z or 4  -- FIX: เดิมใช้ Pos_X ผิด
 
 -- ══════════════════════════════════════════════════════
---  FARM MOB LOOP
+--  TABS (เพิ่มใหม่)
+-- ══════════════════════════════════════════════════════
+
+
+-- ══════════════════════════════════════════════════════
+--  FARM MOB LOOP (logic จริง)
 -- ══════════════════════════════════════════════════════
 task.spawn(function()
     while true do
@@ -2153,15 +2165,12 @@ task.spawn(function()
 
         local char = player.Character
         if not char then task.wait(0.5) continue end
-
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        local hum = char:FindFirstChild("Humanoid")
+        local hrp  = char:FindFirstChild("HumanoidRootPart")
+        local hum  = char:FindFirstChild("Humanoid")
         if not hrp or not hum or hum.Health <= 0 then task.wait(0.5) continue end
 
         local mobData = Moblist[mobName]
-
-        -- หา mob ที่ยังมีชีวิตอยู่ใกล้ที่สุด
-        local nearestMob, nearestDist = nil, math.huge
+        local nearest, nearDist = nil, math.huge
         for _, folder in ipairs(mobData.Folders) do
             if not folder then continue end
             for _, model in ipairs(folder:GetChildren()) do
@@ -2169,53 +2178,763 @@ task.spawn(function()
                 local mHRP = model:FindFirstChild("HumanoidRootPart")
                 if mHum and mHRP and mHum.Health > 0 then
                     local d = (hrp.Position - mHRP.Position).Magnitude
-                    if d < nearestDist then
-                        nearestDist = d
-                        nearestMob = model
-                    end
+                    if d < nearDist then nearDist = d; nearest = model end
                 end
             end
         end
 
-        if nearestMob then
-            local mHRP = nearestMob:FindFirstChild("HumanoidRootPart")
+        if nearest then
+            local mHRP = nearest:FindFirstChild("HumanoidRootPart")
             if mHRP then
-                -- teleport ติดข้าง mob
                 hrp.CFrame = mHRP.CFrame * CFrame.new(
                     _G.SST.Pos_X or 0,
                     _G.SST.Pos_Y or 2,
                     _G.SST.Pos_Z or 4
                 )
                 task.wait(0.08)
-
-                -- equip + attack weapon
                 local wName = _G.SST.Select_Weapon or ""
-                local tool = player.Backpack:FindFirstChild(wName)
-                    or char:FindFirstChild(wName)
+                local tool  = player.Backpack:FindFirstChild(wName) or char:FindFirstChild(wName)
                 if tool and tool:IsA("Tool") then
                     if not char:FindFirstChild(wName) then
                         hum:EquipTool(tool)
-                        task.wait(0.12)
+                        task.wait(0.1)
                     end
                     local eq = char:FindFirstChild(wName)
                     if eq then pcall(function() eq:Activate() end) end
                 end
             end
         else
-            -- ไม่มี mob → teleport กลับไปที่ spawn
             hrp.CFrame = mobData.SpawnCFrame
-            task.wait(1)
+            task.wait(1.5)
         end
     end
 end)
 
--- Respawn: รีเซ็ต farm
-player.CharacterAdded:Connect(function()
-    task.wait(1)
+-- ══════════════════════════════════════════════════════
+--  ⚡ PLAYER TAB
+-- ══════════════════════════════════════════════════════
+
+-- ── LEFT ──────────────────────────────────────────────
+Tab_Player:AddSeperatorL("🏃 Movement")
+
+Tab_Player:AddSliderL("WalkSpeed", 16, 200, _G.SST.WalkSpeed or 16, function(v)
+    _G.SST.WalkSpeed = v; SS()
+    local char = player.Character
+    local hum  = char and char:FindFirstChild("Humanoid")
+    if hum then hum.WalkSpeed = v end
+end)
+
+Tab_Player:AddSliderL("JumpPower", 7, 150, _G.SST.JumpPower or 7, function(v)
+    _G.SST.JumpPower = v; SS()
+    local char = player.Character
+    local hum  = char and char:FindFirstChild("Humanoid")
+    if hum then hum.JumpPower = v end
+end)
+
+Tab_Player:AddToggleL("∞ Inf Jump", _G.SST.InfJump, function(v)
+    _G.SST.InfJump = v; SS()
+end)
+
+Tab_Player:AddToggleL("🚫 Noclip", _G.SST.Noclip, function(v)
+    _G.SST.Noclip = v; SS()
+end)
+
+Tab_Player:AddToggleL("🦅 Fly", _G.SST.Fly, function(v)
+    _G.SST.Fly = v; SS()
+end)
+
+Tab_Player:AddSliderL("Fly Speed", 1, 100, _G.SST.FlySpeed or 30, function(v)
+    _G.SST.FlySpeed = v; SS()
+end)
+
+-- ── RIGHT ──────────────────────────────────────────────
+Tab_Player:AddSeperatorR("❤️ Survival")
+
+Tab_Player:AddToggleR("🍎 Auto Eat (Heal)", _G.SST.AutoEat, function(v)
+    _G.SST.AutoEat = v; SS()
+end)
+
+Tab_Player:AddSliderR("Eat เมื่อ HP% <", 10, 90, _G.SST.AutoEatHP or 50, function(v)
+    _G.SST.AutoEatHP = v; SS()
+end)
+
+Tab_Player:AddToggleR("🔄 Auto Respawn", _G.SST.AutoRespawn, function(v)
+    _G.SST.AutoRespawn = v; SS()
+end)
+
+Tab_Player:AddSeperatorR("🛡️ Anti")
+
+Tab_Player:AddToggleR("🤖 Anti-AFK", _G.SST.AntiAFK, function(v)
+    _G.SST.AntiAFK = v; SS()
+end)
+
+Tab_Player:AddToggleR("☠️ Anti-Die (God)", _G.SST.GodMode, function(v)
+    _G.SST.GodMode = v; SS()
+end)
+
+Tab_Player:AddButtonR("🔃 Reset Character", function()
+    local char = player.Character
+    if char then
+        local hum = char:FindFirstChild("Humanoid")
+        if hum then hum.Health = 0 end
+    end
 end)
 
 -- ══════════════════════════════════════════════════════
---  WEBHOOK TAB
+--  PLAYER LOGIC
+-- ══════════════════════════════════════════════════════
+
+-- Inf Jump
+UserInputService.JumpRequest:Connect(function()
+    if not _G.SST.InfJump then return end
+    local char = player.Character
+    local hum  = char and char:FindFirstChild("Humanoid")
+    if hum and hum:GetState() == Enum.HumanoidStateType.Jumping then
+        hum:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- Noclip loop
+RunService.Stepped:Connect(function()
+    if not _G.SST.Noclip then return end
+    local char = player.Character
+    if not char then return end
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end)
+
+-- WalkSpeed + JumpPower apply on respawn
+player.CharacterAdded:Connect(function(char)
+    task.wait(1)
+    local hum = char:WaitForChild("Humanoid")
+    if _G.SST.WalkSpeed then hum.WalkSpeed = _G.SST.WalkSpeed end
+    if _G.SST.JumpPower  then hum.JumpPower  = _G.SST.JumpPower  end
+    if _G.SST.AutoRespawn then
+        hum.Died:Connect(function()
+            task.wait(2.5)
+            player:LoadCharacter()
+        end)
+    end
+end)
+
+-- Fly system
+local _flyConn, _flyBV = nil, nil
+local function startFly()
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChild("Humanoid")
+    if not hrp or not hum then return end
+    hum.PlatformStand = true
+    _flyBV = Instance.new("BodyVelocity", hrp)
+    _flyBV.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+    _flyBV.Velocity = Vector3.zero
+    local cam = workspace.CurrentCamera
+    _flyConn = RunService.Heartbeat:Connect(function()
+        if not _G.SST.Fly then return end
+        local spd    = _G.SST.FlySpeed or 30
+        local moveDir = Vector3.zero
+        local look   = cam.CFrame.LookVector
+        local right  = cam.CFrame.RightVector
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + look  end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - look  end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - right end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + right end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.yAxis end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.yAxis end
+        if _flyBV and _flyBV.Parent then
+            _flyBV.Velocity = moveDir.Magnitude > 0 and moveDir.Unit * spd or Vector3.zero
+        end
+    end)
+end
+local function stopFly()
+    if _flyConn  then _flyConn:Disconnect(); _flyConn = nil end
+    if _flyBV    then _flyBV:Destroy(); _flyBV = nil end
+    local char = player.Character
+    local hum  = char and char:FindFirstChild("Humanoid")
+    if hum then hum.PlatformStand = false end
+end
+RunService.Heartbeat:Connect(function()
+    if _G.SST.Fly and not _flyConn then startFly()
+    elseif not _G.SST.Fly and _flyConn then stopFly() end
+end)
+player.CharacterAdded:Connect(function()
+    _flyConn = nil; _flyBV = nil
+    task.wait(1)
+    if _G.SST.Fly then startFly() end
+end)
+
+-- Auto Eat
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if not _G.SST.AutoEat then continue end
+        local char = player.Character
+        local hum  = char and char:FindFirstChild("Humanoid")
+        if not hum or hum.Health <= 0 then continue end
+        local pct = (hum.Health / hum.MaxHealth) * 100
+        if pct < (_G.SST.AutoEatHP or 50) then
+            -- หา food ใน backpack
+            for _, item in ipairs(player.Backpack:GetChildren()) do
+                if item:IsA("Tool") and (
+                    item.Name:lower():find("food") or
+                    item.Name:lower():find("bread") or
+                    item.Name:lower():find("apple") or
+                    item.Name:lower():find("meat") or
+                    item.Name:lower():find("fish") or
+                    item.Name:lower():find("potion") or
+                    item.Name:lower():find("heal")
+                ) then
+                    hum:EquipTool(item)
+                    task.wait(0.2)
+                    local eq = char:FindFirstChild(item.Name)
+                    if eq then pcall(function() eq:Activate() end) end
+                    task.wait(1)
+                    break
+                end
+            end
+        end
+    end
+end)
+
+-- Anti-AFK
+task.spawn(function()
+    while true do
+        task.wait(60)
+        if not _G.SST.AntiAFK then continue end
+        pcall(function() VirtualUser:CaptureController() end)
+        pcall(function() VirtualUser:ClickButton2(Vector2.new()) end)
+    end
+end)
+
+-- God Mode (จริงๆใช้ HealthChanged)
+local _godConn = nil
+local function setupGod()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hum  = char:WaitForChild("Humanoid")
+    if _godConn then _godConn:Disconnect() end
+    _godConn = hum.HealthChanged:Connect(function(hp)
+        if not _G.SST.GodMode then return end
+        if hp < hum.MaxHealth then
+            hum.Health = hum.MaxHealth
+        end
+    end)
+end
+task.spawn(setupGod)
+player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    setupGod()
+end)
+
+-- ══════════════════════════════════════════════════════
+--  ⚔️ COMBAT TAB
+-- ══════════════════════════════════════════════════════
+
+-- ── LEFT ──────────────────────────────────────────────
+Tab_Combat:AddSeperatorL("⚔️ Kill Aura")
+
+Tab_Combat:AddToggleL("Kill Aura", _G.SST.KillAura, function(v)
+    _G.SST.KillAura = v; SS()
+end)
+
+Tab_Combat:AddSliderL("Kill Aura Range", 5, 80, _G.SST.KillAuraRange or 20, function(v)
+    _G.SST.KillAuraRange = v; SS()
+end)
+
+Tab_Combat:AddSliderL("Attack Delay (ms)", 50, 500, _G.SST.KillAuraDelay or 150, function(v)
+    _G.SST.KillAuraDelay = v; SS()
+end)
+
+Tab_Combat:AddSeperatorL("📦 Loot")
+
+Tab_Combat:AddToggleL("Auto Collect Loot", _G.SST.AutoLoot, function(v)
+    _G.SST.AutoLoot = v; SS()
+end)
+
+Tab_Combat:AddSliderL("Loot Range", 5, 100, _G.SST.LootRange or 30, function(v)
+    _G.SST.LootRange = v; SS()
+end)
+
+-- ── RIGHT ──────────────────────────────────────────────
+Tab_Combat:AddSeperatorR("🎯 Combat Misc")
+
+Tab_Combat:AddToggleR("Auto Dodge", _G.SST.AutoDodge, function(v)
+    _G.SST.AutoDodge = v; SS()
+end)
+
+Tab_Combat:AddSliderR("HitBox Size", 1, 20, _G.SST.HitboxSize or 1, function(v)
+    _G.SST.HitboxSize = v; SS()
+    -- expand mob hitboxes
+    pcall(function()
+        for _, model in ipairs(workspace:GetDescendants()) do
+            if model:IsA("BasePart") and model.Parent and
+               model.Parent:FindFirstChildOfClass("Humanoid") and
+               model.Parent ~= player.Character then
+                model.Size = model.Size * v
+            end
+        end
+    end)
+end)
+
+Tab_Combat:AddSeperatorR("📊 Stats")
+local killCount = 0
+local lootCount = 0
+local _killLbl  = Tab_Combat:AddLabelR("⚔️ Kills : 0")
+local _lootLbl  = Tab_Combat:AddLabelR("📦 Loots : 0")
+
+Tab_Combat:AddButtonR("🔄 Reset Stats", function()
+    killCount = 0; lootCount = 0
+    _killLbl:Set("⚔️ Kills : 0")
+    _lootLbl:Set("📦 Loots : 0")
+end)
+
+-- ══════════════════════════════════════════════════════
+--  COMBAT LOGIC
+-- ══════════════════════════════════════════════════════
+
+-- Kill Aura
+task.spawn(function()
+    while true do
+        local delay = math.max((_G.SST.KillAuraDelay or 150) / 1000, 0.05)
+        task.wait(delay)
+        if not _G.SST.KillAura then continue end
+        local char = player.Character
+        local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+        local hum  = char and char:FindFirstChild("Humanoid")
+        if not hrp or not hum or hum.Health <= 0 then continue end
+
+        local range = _G.SST.KillAuraRange or 20
+        for _, model in ipairs(workspace:GetDescendants()) do
+            if model:IsA("Model") and model ~= char then
+                local mHum = model:FindFirstChildOfClass("Humanoid")
+                local mHRP = model:FindFirstChild("HumanoidRootPart")
+                if mHum and mHRP and mHum.Health > 0 then
+                    local d = (hrp.Position - mHRP.Position).Magnitude
+                    if d <= range then
+                        -- equip + activate weapon
+                        local wName = _G.SST.Select_Weapon or ""
+                        local tool  = player.Backpack:FindFirstChild(wName) or char:FindFirstChild(wName)
+                        if tool and tool:IsA("Tool") then
+                            if not char:FindFirstChild(wName) then
+                                hum:EquipTool(tool)
+                                task.wait(0.08)
+                            end
+                            local eq = char:FindFirstChild(wName)
+                            if eq then pcall(function() eq:Activate() end) end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- Auto Collect Loot
+task.spawn(function()
+    while true do
+        task.wait(0.3)
+        if not _G.SST.AutoLoot then continue end
+        local char = player.Character
+        local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then continue end
+        local range = _G.SST.LootRange or 30
+
+        -- หา dropped items ใน workspace
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj:IsA("Tool") or (obj:IsA("Model") and obj:FindFirstChild("Handle")) then
+                local part = obj:IsA("Tool") and obj:FindFirstChild("Handle") or obj.PrimaryPart or obj:FindFirstChildOfClass("BasePart")
+                if part then
+                    local d = (hrp.Position - part.Position).Magnitude
+                    if d <= range then
+                        hrp.CFrame = CFrame.new(part.Position + Vector3.new(0, 3, 0))
+                        task.wait(0.1)
+                        lootCount = lootCount + 1
+                        _lootLbl:Set("📦 Loots : " .. lootCount)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- Track kills
+task.spawn(function()
+    local tracked = {}
+    while true do
+        task.wait(0.5)
+        for _, model in ipairs(workspace:GetDescendants()) do
+            if model:IsA("Model") and not tracked[model] then
+                local mHum = model:FindFirstChildOfClass("Humanoid")
+                if mHum and mHum.Health > 0 and model ~= player.Character then
+                    tracked[model] = true
+                    mHum.Died:Connect(function()
+                        tracked[model] = nil
+                        killCount = killCount + 1
+                        _killLbl:Set("⚔️ Kills : " .. killCount)
+                    end)
+                end
+            end
+        end
+    end
+end)
+
+-- Auto Dodge (เมื่อ HP ลด ให้กระโดดหนี)
+local _dodgeCooldown = false
+local _dodgeConn = nil
+local function setupDodge()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hum  = char:WaitForChild("Humanoid")
+    local hrp  = char:WaitForChild("HumanoidRootPart")
+    local lastHP = hum.Health
+    if _dodgeConn then _dodgeConn:Disconnect() end
+    _dodgeConn = hum.HealthChanged:Connect(function(newHP)
+        if not _G.SST.AutoDodge or _dodgeCooldown then return end
+        if newHP < lastHP then
+            _dodgeCooldown = true
+            local bv = Instance.new("BodyVelocity", hrp)
+            bv.MaxForce = Vector3.new(1e4, 1e4, 1e4)
+            local back = hrp.CFrame.LookVector * -1 + Vector3.yAxis * 0.5
+            bv.Velocity = back.Unit * 40
+            task.delay(0.25, function()
+                bv:Destroy()
+                task.delay(0.6, function() _dodgeCooldown = false end)
+            end)
+        end
+        lastHP = newHP
+    end)
+end
+task.spawn(setupDodge)
+player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    setupDodge()
+end)
+
+-- ══════════════════════════════════════════════════════
+--  🔍 VISUAL TAB (ESP)
+-- ══════════════════════════════════════════════════════
+
+-- ── LEFT ──────────────────────────────────────────────
+Tab_Visual:AddSeperatorL("👾 Mob ESP")
+
+Tab_Visual:AddToggleL("Mob ESP", _G.SST.MobESP, function(v)
+    _G.SST.MobESP = v; SS()
+end)
+
+Tab_Visual:AddToggleL("แสดง HP Bar", _G.SST.MobESPHP, function(v)
+    _G.SST.MobESPHP = v; SS()
+end)
+
+Tab_Visual:AddToggleL("แสดงชื่อ + Distance", _G.SST.MobESPName, function(v)
+    _G.SST.MobESPName = v; SS()
+end)
+
+Tab_Visual:AddSliderL("ESP Range", 50, 1000, _G.SST.ESPRange or 300, function(v)
+    _G.SST.ESPRange = v; SS()
+end)
+
+Tab_Visual:AddSeperatorL("👤 Player ESP")
+
+Tab_Visual:AddToggleL("Player ESP", _G.SST.PlayerESP, function(v)
+    _G.SST.PlayerESP = v; SS()
+end)
+
+Tab_Visual:AddToggleL("แสดง Team Color", _G.SST.PlayerESPColor, function(v)
+    _G.SST.PlayerESPColor = v; SS()
+end)
+
+-- ── RIGHT ──────────────────────────────────────────────
+Tab_Visual:AddSeperatorR("💎 Loot ESP")
+
+Tab_Visual:AddToggleR("Item ESP", _G.SST.ItemESP, function(v)
+    _G.SST.ItemESP = v; SS()
+end)
+
+Tab_Visual:AddSeperatorR("🌍 Visual Misc")
+
+Tab_Visual:AddToggleR("Full Bright", _G.SST.FullBright, function(v)
+    _G.SST.FullBright = v; SS()
+    if v then
+        Lighting.Brightness      = 10
+        Lighting.ClockTime       = 14
+        Lighting.FogEnd          = 100000
+        Lighting.GlobalShadows   = false
+        Lighting.Ambient         = Color3.fromRGB(178,178,178)
+        Lighting.OutdoorAmbient  = Color3.fromRGB(178,178,178)
+    else
+        Lighting.Brightness      = 2
+        Lighting.ClockTime       = 14
+        Lighting.FogEnd          = 100000
+        Lighting.GlobalShadows   = true
+        Lighting.Ambient         = Color3.fromRGB(70,70,70)
+        Lighting.OutdoorAmbient  = Color3.fromRGB(128,128,128)
+    end
+end)
+
+Tab_Visual:AddToggleR("Remove Fog", _G.SST.NoFog, function(v)
+    _G.SST.NoFog = v; SS()
+    Lighting.FogEnd   = v and 999999 or 1000
+    Lighting.FogStart = v and 999999 or 0
+end)
+
+Tab_Visual:AddToggleR("No Terrain Decoration", _G.SST.NoGrass, function(v)
+    _G.SST.NoGrass = v; SS()
+    if Terrain then
+        Terrain.Decoration = not v
+    end
+end)
+
+Tab_Visual:AddSliderR("Field of View", 70, 120, _G.SST.FOV or 70, function(v)
+    _G.SST.FOV = v; SS()
+    workspace.CurrentCamera.FieldOfView = v
+end)
+
+-- ══════════════════════════════════════════════════════
+--  ESP LOGIC
+-- ══════════════════════════════════════════════════════
+local espStorage = {}
+
+local function makeESPBox(model, color)
+    local existing = espStorage[model]
+    if existing then return existing end
+
+    local box = Instance.new("SelectionBox", game.CoreGui)
+    box.Color3          = color or Color3.fromRGB(255, 80, 80)
+    box.SurfaceColor3   = color or Color3.fromRGB(255, 80, 80)
+    box.SurfaceTransparency = 0.7
+    box.LineThickness   = 0.04
+    box.Adornee         = model
+
+    local bill = Instance.new("BillboardGui", game.CoreGui)
+    bill.Adornee       = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChildOfClass("BasePart")
+    bill.AlwaysOnTop   = true
+    bill.Size          = UDim2.new(0, 120, 0, 36)
+    bill.StudsOffset   = Vector3.new(0, 3, 0)
+
+    local lbl = Instance.new("TextLabel", bill)
+    lbl.BackgroundTransparency = 1
+    lbl.Size   = UDim2.new(1, 0, 1, 0)
+    lbl.Font   = Enum.Font.GothamBold
+    lbl.TextSize = 11
+    lbl.TextColor3 = Color3.new(1, 1, 1)
+    lbl.TextStrokeTransparency = 0
+    lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    lbl.Text = model.Name
+
+    espStorage[model] = { box = box, bill = bill, lbl = lbl }
+    return espStorage[model]
+end
+
+local function removeESP(model)
+    local e = espStorage[model]
+    if e then
+        if e.box  and e.box.Parent  then e.box:Destroy()  end
+        if e.bill and e.bill.Parent then e.bill:Destroy() end
+        espStorage[model] = nil
+    end
+end
+
+-- ESP update loop
+RunService.Heartbeat:Connect(function()
+    local char = player.Character
+    local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+    local espRange = _G.SST.ESPRange or 300
+
+    -- clean invalid
+    for model, _ in pairs(espStorage) do
+        if not model or not model.Parent then removeESP(model) end
+    end
+
+    -- Mob ESP
+    if _G.SST.MobESP and hrp then
+        for _, model in ipairs(workspace:GetDescendants()) do
+            if model:IsA("Model") and model ~= char then
+                local mHum = model:FindFirstChildOfClass("Humanoid")
+                local mHRP = model:FindFirstChild("HumanoidRootPart")
+                if mHum and mHRP and mHum.Health > 0 then
+                    local d = (hrp.Position - mHRP.Position).Magnitude
+                    if d <= espRange then
+                        local e = makeESPBox(model, Color3.fromRGB(255, 80, 80))
+                        if e then
+                            e.box.Visible  = true
+                            e.bill.Enabled = _G.SST.MobESPName == true
+                            if _G.SST.MobESPName then
+                                local pct = math.floor((mHum.Health / mHum.MaxHealth) * 100)
+                                e.lbl.Text = model.Name .. "\n❤️ " .. pct .. "% | " .. math.floor(d) .. "m"
+                            end
+                        end
+                    else
+                        removeESP(model)
+                    end
+                end
+            end
+        end
+    else
+        -- ปิด mob ESP ทั้งหมด
+        for model, e in pairs(espStorage) do
+            local mHum = model:FindFirstChildOfClass("Humanoid")
+            -- ถ้าเป็น mob (ไม่ใช่ player)
+            local isPlayer = false
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character == model then isPlayer = true; break end
+            end
+            if not isPlayer and mHum then removeESP(model) end
+        end
+    end
+
+    -- Player ESP
+    if _G.SST.PlayerESP and hrp then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= player and p.Character then
+                local pChar = p.Character
+                local pHRP  = pChar:FindFirstChild("HumanoidRootPart")
+                local pHum  = pChar:FindFirstChild("Humanoid")
+                if pHRP and pHum and pHum.Health > 0 then
+                    local d = (hrp.Position - pHRP.Position).Magnitude
+                    local col = _G.SST.PlayerESPColor and p.TeamColor.Color or Color3.fromRGB(80, 80, 255)
+                    local e = makeESPBox(pChar, col)
+                    if e then
+                        e.box.Visible  = true
+                        e.bill.Enabled = true
+                        e.lbl.Text     = p.Name .. "\n❤️ " .. math.floor(pHum.Health) .. " | " .. math.floor(d) .. "m"
+                        e.lbl.TextColor3 = col
+                    end
+                end
+            end
+        end
+    end
+
+    -- Item ESP
+    if _G.SST.ItemESP and hrp then
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj:IsA("Tool") then
+                local handle = obj:FindFirstChild("Handle")
+                if handle then
+                    local d = (hrp.Position - handle.Position).Magnitude
+                    if d <= espRange then
+                        local e = makeESPBox(obj, Color3.fromRGB(255, 215, 0))
+                        if e then
+                            e.box.Visible  = true
+                            e.bill.Enabled = true
+                            e.lbl.Text     = "📦 " .. obj.Name .. "\n" .. math.floor(d) .. "m"
+                            e.lbl.TextColor3 = Color3.fromRGB(255, 215, 0)
+                        end
+                    else
+                        removeESP(obj)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ══════════════════════════════════════════════════════
+--  🌀 TELEPORT TAB
+-- ══════════════════════════════════════════════════════
+local TeleportLocations = {
+    -- Towns / Safe zones
+    { name = "🏘️ Town (Spawn)",   pos = CFrame.new(0, 5, 0)                         },
+    { name = "🏪 Market",         pos = CFrame.new(120.5, 5.2, -85.3)               },
+    { name = "⛪ Church",         pos = CFrame.new(-45.2, 5.0, 112.8)               },
+    { name = "🏰 Castle",         pos = CFrame.new(-380.0, 20.0, -620.0)            },
+    -- Mob Zones
+    { name = "🌾 Prairie",        pos = CFrame.new(639.6, 14.0, -496.7)             },
+    { name = "🌲 Forest",         pos = CFrame.new(-400.0, 15.0, 600.0)             },
+    { name = "🗻 Mountain",       pos = CFrame.new(-1200.0, 85.0, 900.0)            },
+    { name = "🕸️ Cave",           pos = CFrame.new(-850.5, 32.0, 340.2)             },
+    { name = "☠️ Dungeon",        pos = CFrame.new(120.0, 6.0, -900.0)              },
+    { name = "🌾 Scarecrow Field",pos = CFrame.new(-2228.7, -8.0, 1148.7)          },
+    -- Special
+    { name = "🌊 Beach",          pos = CFrame.new(900.0, 3.0, 400.0)               },
+    { name = "❄️ Snow Area",      pos = CFrame.new(-1800.0, 60.0, -400.0)           },
+    { name = "🔥 Volcano",        pos = CFrame.new(1500.0, 120.0, -800.0)           },
+    { name = "🏝️ Island",         pos = CFrame.new(2200.0, 5.0, 800.0)              },
+}
+
+-- ── LEFT: Location buttons ─────────────────────────────
+Tab_Teleport:AddSeperatorL("📍 Locations")
+
+for i = 1, math.ceil(#TeleportLocations / 2) do
+    local loc = TeleportLocations[i]
+    if loc then
+        Tab_Teleport:AddButtonL(loc.name, function()
+            local char = player.Character
+            local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = loc.pos
+                AddNotification("Teleport → " .. loc.name)
+            end
+        end)
+    end
+end
+
+-- ── RIGHT: Location buttons (ครึ่งหลัง) ────────────────
+Tab_Teleport:AddSeperatorR("📍 Locations")
+
+for i = math.ceil(#TeleportLocations / 2) + 1, #TeleportLocations do
+    local loc = TeleportLocations[i]
+    if loc then
+        Tab_Teleport:AddButtonR(loc.name, function()
+            local char = player.Character
+            local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = loc.pos
+                AddNotification("Teleport → " .. loc.name)
+            end
+        end)
+    end
+end
+
+-- ── Custom TP ──────────────────────────────────────────
+Tab_Teleport:AddSeperatorR("🎯 Custom / Players")
+
+-- Teleport to Player
+local playerNames = {}
+for _, p in ipairs(Players:GetPlayers()) do
+    if p ~= player then table.insert(playerNames, p.Name) end
+end
+if #playerNames == 0 then playerNames = {"(ไม่มีผู้เล่นอื่น)"} end
+
+local _playerTPDrop = Tab_Teleport:AddDropdownR("Teleport to Player", playerNames, nil, function() end)
+
+Tab_Teleport:AddButtonR("🚀 TP ไปหาผู้เล่น", function()
+    local name = _playerTPDrop:Get()
+    local target = Players:FindFirstChild(name)
+    if target and target.Character then
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        local tHRP = target.Character:FindFirstChild("HumanoidRootPart")
+        if hrp and tHRP then
+            hrp.CFrame = tHRP.CFrame * CFrame.new(3, 0, 0)
+            AddNotification("TP ไปหา " .. name)
+        end
+    else
+        AddNotification("ไม่พบผู้เล่น: " .. name)
+    end
+end)
+
+Tab_Teleport:AddButtonR("🔄 Refresh Players", function()
+    local names = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player then table.insert(names, p.Name) end
+    end
+    if #names == 0 then names = {"(ไม่มีผู้เล่นอื่น)"} end
+    _playerTPDrop:Update(names)
+    AddNotification("Refresh players แล้ว!")
+end)
+
+Tab_Teleport:AddButtonR("🏠 TP กลับ Spawn", function()
+    local char = player.Character
+    local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.CFrame = CFrame.new(0, 5, 0)
+        AddNotification("กลับ Spawn แล้ว!")
+    end
+end)
+
+-- ══════════════════════════════════════════════════════
+--  WEBHOOK TAB (เพิ่ม features)
 -- ══════════════════════════════════════════════════════
 local function sendWebhook(payload)
     local url = _G.SST.WebhookURL or ""
@@ -2224,134 +2943,156 @@ local function sendWebhook(payload)
         local req = (syn and syn.request) or (http and http.request) or request
         if req then
             req({
-                Url    = url,
-                Method = "POST",
+                Url     = url,
+                Method  = "POST",
                 Headers = { ["Content-Type"] = "application/json" },
-                Body   = HttpService:JSONEncode(payload)
+                Body    = HttpService:JSONEncode(payload)
             })
         end
     end)
 end
 
-WebHook_Misc:AddSeperatorL("⚙ ตั้งค่า Webhook")
-WebHook_Misc:AddTextboxL("Webhook URL", "https://discord.com/api/webhooks/...",
+WebHook_Misc:AddSeperatorL("⚙️ ตั้งค่า")
+
+WebHook_Misc:AddTextboxL("Webhook URL",
+    "https://discord.com/api/webhooks/...",
     _G.SST.WebhookURL or "",
-    function(v)
-        _G.SST.WebhookURL = v
-        SS()
-    end
+    function(v) _G.SST.WebhookURL = v; SS() end
 )
-WebHook_Misc:AddToggleL("📢 แจ้งเตือนเมื่อ Mob ตาย", _G.SST.WH_Kill, function(v)
-    _G.SST.WH_Kill = v
-    SS()
+
+WebHook_Misc:AddToggleL("📢 Kill Notify", _G.SST.WH_Kill, function(v)
+    _G.SST.WH_Kill = v; SS()
 end)
-WebHook_Misc:AddToggleL("💀 แจ้งเตือนเมื่อตาย", _G.SST.WH_Death, function(v)
-    _G.SST.WH_Death = v
-    SS()
+
+WebHook_Misc:AddToggleL("💀 Death Notify", _G.SST.WH_Death, function(v)
+    _G.SST.WH_Death = v; SS()
+end)
+
+WebHook_Misc:AddToggleL("⏱️ Auto Stats (ทุก 5 นาที)", _G.SST.WH_AutoStats, function(v)
+    _G.SST.WH_AutoStats = v; SS()
+end)
+
+WebHook_Misc:AddToggleL("📦 Loot Notify", _G.SST.WH_Loot, function(v)
+    _G.SST.WH_Loot = v; SS()
 end)
 
 WebHook_Misc:AddSeperatorR("📤 Actions")
+
 WebHook_Misc:AddButtonR("🔔 Test Webhook", function()
     if (_G.SST.WebhookURL or "") == "" then
-        AddNotification("ใส่ Webhook URL ก่อน!")
-        return
+        AddNotification("ใส่ Webhook URL ก่อน!"); return
     end
-    sendWebhook({
-        username = "Anitary Hub",
-        embeds = {{
-            title       = "🔔 Test Webhook",
-            description = "**Anitary Hub** กำลังทำงาน!",
-            color       = 0x33ffff,
-            footer      = { text = "Pilgrammed | " .. plr.Name },
-            timestamp   = os.date("!%Y-%m-%dT%H:%M:%SZ")
-        }}
-    })
+    sendWebhook({ username = "Anitary Hub", embeds = {{
+        title       = "🔔 Test",
+        description = "**Anitary Hub** ทำงานปกติ! ✅",
+        color       = 0x33ffff,
+        footer      = { text = "Pilgrammed | " .. plr.Name },
+        timestamp   = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    }}})
     AddNotification("ส่ง Test แล้ว!")
 end)
 
-WebHook_Misc:AddButtonR("📊 Send Stats", function()
+WebHook_Misc:AddButtonR("📊 Send Stats Now", function()
     if (_G.SST.WebhookURL or "") == "" then
-        AddNotification("ใส่ Webhook URL ก่อน!")
-        return
+        AddNotification("ใส่ Webhook URL ก่อน!"); return
     end
     local char = player.Character
     local hum  = char and char:FindFirstChild("Humanoid")
-    sendWebhook({
-        username = "Anitary Hub",
-        embeds = {{
-            title  = "📊 Player Stats",
-            color  = 0x33ffff,
-            fields = {
-                { name = "👤 Player", value = plr.Name,                                               inline = true },
-                { name = "❤️ HP",     value = hum and math.floor(hum.Health).."/"..math.floor(hum.MaxHealth) or "?", inline = true },
-                { name = "🗺️ Map",    value = "Pilgrammed",                                           inline = true },
-                { name = "⚔️ Mob",    value = _G.SST.Select_Mob or "None",                            inline = true },
-                { name = "🔫 Weapon", value = _G.SST.Select_Weapon or "None",                         inline = true },
-                { name = "🤖 Farm",   value = _G.SST.Farm_Mob and "ON" or "OFF",                      inline = true },
-            },
-            footer    = { text = "Anitary Hub" },
-            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-        }}
-    })
+    sendWebhook({ username = "Anitary Hub", embeds = {{
+        title  = "📊 Player Stats",
+        color  = 0x33ffff,
+        fields = {
+            { name = "👤 Player",  value = plr.Name,                                                               inline = true },
+            { name = "❤️ HP",      value = hum and math.floor(hum.Health).."/"..math.floor(hum.MaxHealth) or "?", inline = true },
+            { name = "⚔️ Kills",   value = tostring(killCount),                                                    inline = true },
+            { name = "📦 Loots",   value = tostring(lootCount),                                                    inline = true },
+            { name = "🗺️ Map",     value = "Pilgrammed",                                                           inline = true },
+            { name = "👾 Mob",     value = _G.SST.Select_Mob   or "None",                                          inline = true },
+            { name = "🔫 Weapon",  value = _G.SST.Select_Weapon or "None",                                         inline = true },
+            { name = "🤖 Farm",    value = _G.SST.Farm_Mob and "ON ✅" or "OFF ❌",                                 inline = true },
+            { name = "🦅 Fly",     value = _G.SST.Fly       and "ON ✅" or "OFF ❌",                               inline = true },
+        },
+        footer    = { text = "Anitary Hub" },
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    }}})
     AddNotification("ส่ง Stats แล้ว!")
 end)
 
--- ── Auto Webhook: แจ้งเมื่อตาย ──────────────────────
+-- Auto Stats every 5 minutes
+task.spawn(function()
+    while true do
+        task.wait(300)
+        if not _G.SST.WH_AutoStats then continue end
+        if (_G.SST.WebhookURL or "") == "" then continue end
+        local char = player.Character
+        local hum  = char and char:FindFirstChild("Humanoid")
+        sendWebhook({ username = "Anitary Hub", embeds = {{
+            title  = "⏱️ Auto Stats Report",
+            color  = 0x33ffff,
+            fields = {
+                { name = "👤 Player", value = plr.Name, inline = true },
+                { name = "❤️ HP",     value = hum and math.floor(hum.Health).."/"..math.floor(hum.MaxHealth) or "?", inline = true },
+                { name = "⚔️ Kills",  value = tostring(killCount), inline = true },
+                { name = "📦 Loots",  value = tostring(lootCount), inline = true },
+                { name = "🤖 Farm",   value = _G.SST.Farm_Mob and "ON ✅" or "OFF ❌", inline = true },
+            },
+            footer    = { text = "Auto Report | Pilgrammed" },
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}})
+    end
+end)
+
+-- Death webhook
 local function setupDeathWebhook()
     local char = player.Character or player.CharacterAdded:Wait()
     local hum  = char:WaitForChild("Humanoid")
     hum.Died:Connect(function()
         if not _G.SST.WH_Death then return end
-        sendWebhook({
-            username = "Anitary Hub",
-            embeds = {{
-                title       = "💀 ตายแล้ว!",
-                description = "**" .. plr.Name .. "** ถูกสังหารใน Pilgrammed",
-                color       = 0xff3333,
-                footer      = { text = "Anitary Hub" },
-                timestamp   = os.date("!%Y-%m-%dT%H:%M:%SZ")
-            }}
-        })
+        if (_G.SST.WebhookURL or "") == "" then return end
+        sendWebhook({ username = "Anitary Hub", embeds = {{
+            title       = "💀 ตายแล้ว!",
+            description = "**" .. plr.Name .. "** ถูกสังหาร\nTotal Kills ก่อนตาย: **" .. killCount .. "**",
+            color       = 0xff3333,
+            footer      = { text = "Pilgrammed | Anitary Hub" },
+            timestamp   = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}})
     end)
 end
-setupDeathWebhook()
+task.spawn(setupDeathWebhook)
 player.CharacterAdded:Connect(function()
     task.wait(1)
     setupDeathWebhook()
 end)
 
--- ── Auto Webhook: แจ้งเมื่อ Mob ตาย (Kill) ──────────
+-- Kill webhook (track all mobs globally)
 task.spawn(function()
-    local tracked = {}
+    local wh_tracked = {}
     while true do
-        task.wait(0.5)
-        if not _G.SST.WH_Kill or not _G.SST.Select_Mob then continue end
-        local mobData = Moblist[_G.SST.Select_Mob]
-        if not mobData then continue end
-        for _, folder in ipairs(mobData.Folders) do
-            if not folder then continue end
-            for _, model in ipairs(folder:GetChildren()) do
+        task.wait(1)
+        for _, model in ipairs(workspace:GetDescendants()) do
+            if model:IsA("Model") and not wh_tracked[model] and model ~= player.Character then
                 local mHum = model:FindFirstChildOfClass("Humanoid")
-                if mHum and not tracked[model] then
-                    tracked[model] = true
+                if mHum and mHum.Health > 0 then
+                    wh_tracked[model] = true
                     mHum.Died:Connect(function()
-                        tracked[model] = nil
-                        sendWebhook({
-                            username = "Anitary Hub",
-                            embeds = {{
-                                title       = "⚔️ Kill!",
-                                description = "สังหาร **" .. model.Name .. "** สำเร็จ!",
-                                color       = 0x00ff99,
-                                fields = {
-                                    { name = "👤 Player", value = plr.Name, inline = true },
-                                    { name = "🗡️ Mob",   value = _G.SST.Select_Mob or "?", inline = true },
-                                },
-                                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-                            }}
-                        })
+                        wh_tracked[model] = nil
+                        if not _G.SST.WH_Kill then return end
+                        if (_G.SST.WebhookURL or "") == "" then return end
+                        sendWebhook({ username = "Anitary Hub", embeds = {{
+                            title  = "⚔️ Kill!",
+                            color  = 0x00ff99,
+                            fields = {
+                                { name = "👤 Player", value = plr.Name,    inline = true },
+                                { name = "👾 Mob",    value = model.Name,  inline = true },
+                                { name = "🗡️ Total",  value = tostring(killCount), inline = true },
+                            },
+                            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                        }}})
                     end)
                 end
             end
         end
     end
 end)
+
+AddNotification("Anitary Hub โหลดสำเร็จ! 🎉")
