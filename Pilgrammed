@@ -1,5 +1,5 @@
 --[[
-    Anitary Hub for Anime Rangers X
+    Anitary Hub for PG
     Fixed and Optimized Version
 ]]
 
@@ -2075,9 +2075,9 @@ Main_Event:AddToggleR("Auto Block",_G.SST.Auto_Block,function(value)
     _G.SST.Auto_Block = value 
     SS()
 end)
-
 do
     local _blockConn = nil
+    local _cooldown = false
 
     local function setupAutoBlock()
         if _blockConn then
@@ -2085,49 +2085,51 @@ do
             _blockConn = nil
         end
 
-        local charac = game:GetService("Players").LocalPlayer.Character
-        if not charac then return end
+        local player = game:GetService("Players").LocalPlayer
+        local char = player.Character or player.CharacterAdded:Wait()
+        local human = char:WaitForChild("Humanoid")
 
-        local human = charac:FindFirstChild("Humanoid")
-        if not human then return end
+        local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Block")
 
-        local remote = game:GetService("ReplicatedStorage").Remotes.Block
-        local isBlocking = false
         local lastHP = human.Health
 
         _blockConn = human.HealthChanged:Connect(function(newHP)
-            if not _G.SST.Auto_Block then
-                _blockConn:Disconnect()
-                _blockConn = nil
-                return
-            end
+            if not _G.SST.Auto_Block then return end
+            if _cooldown then return end
 
-            if newHP < lastHP and not isBlocking then
-                isBlocking = true
+            if newHP < lastHP then
+                _cooldown = true
+
                 remote:FireServer(true)
-                task.wait(0.05)
                 remote:FireServer(false)
-                isBlocking = false
+
+                -- cooldown กัน spam (สำคัญมาก)
+                task.delay(0.15, function()
+                    _cooldown = false
+                end)
             end
 
             lastHP = newHP
         end)
     end
 
-    -- ตั้งค่าเมื่อ toggle เปิด และ respawn
-    game:GetService("RunService").Heartbeat:Connect(function()
-        if _G.SST.Auto_Block and not _blockConn then
-            setupAutoBlock()
-        elseif not _G.SST.Auto_Block and _blockConn then
-            _blockConn:Disconnect()
-            _blockConn = nil
+    -- Toggle trigger (เรียกแค่ตอนเปิด/ปิด)
+    task.spawn(function()
+        while true do
+            if _G.SST.Auto_Block and not _blockConn then
+                setupAutoBlock()
+            elseif not _G.SST.Auto_Block and _blockConn then
+                _blockConn:Disconnect()
+                _blockConn = nil
+            end
+            task.wait(0.5) -- เช็คห่างๆพอ ไม่ต้องทุกเฟรม
         end
     end)
 
-    -- รองรับ respawn
+    -- Respawn support
     game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function()
-        task.wait(1)
         if _G.SST.Auto_Block then
+            task.wait(0.5)
             setupAutoBlock()
         end
     end)
